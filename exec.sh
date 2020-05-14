@@ -2,8 +2,8 @@
 
 
 function initialise () {
-    for runnum in {237..237..1}
-#		      for runnum in {237..248..1}
+#    for runnum in {237..237..1}
+    for runnum in {237..248..1}
     do
 	list=$list' '$runnum
 #	echo $runnum
@@ -15,7 +15,8 @@ function initialise () {
 function myfunc () {
 #    time root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
     #    time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
-    time root -l -b -q 'sofia_offline.C('"$1"')' &> /dev/null
+    #time root -l -b -q 'sofia_offline.C('"$1"')' &> /dev/null
+    time root -l -b -q 'nearline.C('"$1"')' &> /dev/null
     echo 'Finished run:'$1
 }
 
