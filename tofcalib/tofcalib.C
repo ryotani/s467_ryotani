@@ -16,8 +16,9 @@ TF1 *f = new TF1("func","[0]*TMath::Gaus(x,[1],[2])");
 TF1 *fline = new TF1("line","[0]+x*[1]");
 TFile *fin[NUMRUNS];
 TFile *fout;
-TString fileout = "~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/www/ToFCalibOut.root";
-TString pdfout = "~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofcalib/ToFCalibOut.pdf";
+TString suffix = "_noTRef";
+TString fileout = "~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/www/ToFCalibOut"+suffix+".root";
+TString pdfout = "~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofcalib/ToFCalibOut"+suffix+".pdf";
 
 int  gettoffit(int runid){
   //TString filename = "/u/taniuchi/s467/rootfiles/data_s467_0" + run[runid] +".root";
@@ -30,9 +31,13 @@ int  gettoffit(int runid){
   //h[runid][1]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_wTref_Sci03_to_Sci04")->Clone());
   //h[runid][2]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_wTref_Sci02_to_Sci03")->Clone());
   //RawTofNs_wTref_Sci should be better
-  h[runid][0]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci02_to_Sci04")->Clone());
-  h[runid][1]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci03_to_Sci04")->Clone());
-  h[runid][2]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci02_to_Sci03")->Clone());
+  //h[runid][0]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci02_to_Sci04")->Clone());
+  //h[runid][1]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci03_to_Sci04")->Clone());
+  //h[runid][2]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci02_to_Sci03")->Clone());
+  //RawTofNs without Tref
+  h[runid][0]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_Sci02_to_Sci04")->Clone());
+  h[runid][1]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_Sci03_to_Sci04")->Clone());
+  h[runid][2]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_Sci02_to_Sci03")->Clone());
   for(int i=0; i<NUMTOF; i++){
     h[runid][i]->SetName(Form("%4d_%s",run[runid],tofname[i]));
     h[runid][i]->SetTitle(Form("%s %s",settingname[setting[i]],h[runid][i]->GetName()));
