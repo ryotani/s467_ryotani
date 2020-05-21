@@ -1,8 +1,8 @@
 const int NUMTOF = 3;
 const char *tofname[NUMTOF] = {"S2-CaveC", "S8-CaveC", "S2-S8"};
 const char *settingname[3] = {"580AMeV no Target", "450AMeV no Target", "580AMeV Be Target"};
-const int run[] = {237, 238, 239, 240, 241, 242};//, 245, 246, 248}; // no 247
-const int setting[] = {0,0,1,2,2,2};//,0,0,0};
+const int run[] = {237, 238, 239, 240, 241, 242, 245, 246, 248}; // no 247
+const int setting[] = {0,0,1,2,2,2,0,0,0};
 const int NUMRUNS = sizeof(run)/sizeof(run[0]);
 const double veloc28[3] = {0.7812423, 0.7494637, 0.7286703}; // s2-s8
 const double veloc8c[3] = {0.7796387, 0.7473292, 0.7261188}; // s8-caveC
@@ -17,7 +17,6 @@ TF1 *fline = new TF1("line","[0]+x*[1]");
 TFile *fin[NUMRUNS];
 TFile *fout;
 TString fileout = "~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/www/ToFCalibOut.root";
-  //TFile::Open("~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofcalib/ToFCalibOut.root","RECREATE");
 TString pdfout = "~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofcalib/ToFCalibOut.pdf";
 
 int  gettoffit(int runid){
@@ -26,9 +25,14 @@ int  gettoffit(int runid){
   //
   fin[runid] = TFile::Open(filename, "READ");
   if(!fin[runid]) cerr<<"err";
-  h[runid][0]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_wTref_Sci02_to_Sci04")->Clone());
-  h[runid][1]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_wTref_Sci03_to_Sci04")->Clone());
-  h[runid][2]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_wTref_Sci02_to_Sci03")->Clone());
+  //Mult ==1 in reference timing
+  //h[runid][0]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_wTref_Sci02_to_Sci04")->Clone());
+  //h[runid][1]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_wTref_Sci03_to_Sci04")->Clone());
+  //h[runid][2]= (TH1D*)(fin[runid]->Get("RawTofNs_m1_wTref_Sci02_to_Sci03")->Clone());
+  //RawTofNs_wTref_Sci should be better
+  h[runid][0]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci02_to_Sci04")->Clone());
+  h[runid][1]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci03_to_Sci04")->Clone());
+  h[runid][2]= (TH1D*)(fin[runid]->Get("RawTofNs_wTref_Sci02_to_Sci03")->Clone());
   for(int i=0; i<NUMTOF; i++){
     h[runid][i]->SetName(Form("%4d_%s",run[runid],tofname[i]));
     h[runid][i]->SetTitle(Form("%s %s",settingname[setting[i]],h[runid][i]->GetName()));
