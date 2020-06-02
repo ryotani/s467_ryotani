@@ -31,13 +31,14 @@ int  gethist(int runid){
   //
   hpid[runid] = (TH2D*)(fin[runid]->Get("fh2v_Aq_vs_q_frs")->Clone());
   if(cutu==0){
-    cutd = hpid[runid]->GetXaxis()->FindBin(2.545);
-    cutu = hpid[runid]->GetXaxis()->FindBin(2.560);
+    cutd = hpid[runid]->GetXaxis()->FindBin(2.550);
+    cutu = hpid[runid]->GetXaxis()->FindBin(2.555);
     lined = new TLine(cutd, 8., cutd, 39.5);
     lineu = new TLine(cutu, 8., cutu, 39.5);
   }
-  hproj[runid] = hpid[runid]->ProjectionY(Form("Prj%i",run[runid]), cutd, cutu);  
+  hproj[runid] = hpid[runid]->ProjectionY(Form("Run%i",run[runid]), cutd, cutu);  
   hproj[runid]->SetFillStyle(0);
+  hproj[runid]->SetTitle("MUSIC charge distribution in {}^{50}Ca setting");
   /*
   double maxX=h[runid]->GetBinCenter(h[runid]->GetMaximumBin());
     cerr << maxX <<endl;
@@ -74,7 +75,7 @@ void musiccalib(){
   for(int i=0; i<NUMRUNS; i++){
     if(setting[i]!=0) continue;
     fout->cd();
-    h[i]->GetXaxis()->SetRangeUser(15,25);
+    h[i]->GetXaxis()->SetRangeUser(15,28);
     h[i]->Write();
     p1 = (TPad*)(c->cd(i+1));
     p1->SetLogy();
@@ -110,7 +111,7 @@ void musiccalib(){
     cproj->cd(i+1);
     p1 = (TPad*)(cproj->cd(i+1));
     p1->SetLogy();
-    hproj[i]->GetXaxis()->SetRangeUser(15,25);
+    hproj[i]->GetXaxis()->SetRangeUser(15,28);
     hproj[i]->Draw();
     hsumproj.Add(hproj[i]);
     //
@@ -125,7 +126,8 @@ void musiccalib(){
   //
   cprojst->cd();
   cprojst->SetLogy();
-  hsumproj.Draw();
+  //hsumproj.Draw();
+  hproj[2]->Draw();//run342 is 1hr run
   hsumproj.Write();
   cprojst->Write();
   cprojst->Print(pdfout);
