@@ -1,8 +1,8 @@
 const int NUMTOF = 3;
 const char *tofname[NUMTOF] = {"S2-CaveC", "S8-CaveC", "S2-S8"};
 const char *settingname[3] = {"580AMeV no Target", "450AMeV no Target", "580AMeV Be Target"};
-const int run[] = {237, 238, 239, 240, 241, 242, 245, 246, 248}; // no 247
-const int setting[] = {0,0,1,2,2,2,0,0,0};
+const int run[] = {237, 238, 239, 240, 241, 242};//, 245, 246, 248}; // no 247
+const int setting[] = {0,0,1,2,2,2};//,0,0,0};
 const int NUMRUNS = sizeof(run)/sizeof(run[0]);
 const double veloc28[3] = {0.7812423, 0.7494637, 0.7286703}; // s2-s8
 const double veloc8c[3] = {0.7796387, 0.7473292, 0.7261188}; // s8-caveC
@@ -16,7 +16,7 @@ TF1 *f = new TF1("func","[0]*TMath::Gaus(x,[1],[2])");
 TF1 *fline = new TF1("line","[0]+x*[1]");
 TFile *fin[NUMRUNS];
 TFile *fout;
-TString suffix = "_m1TRef";
+TString suffix = "_m1TRef_237-242";
 TString fileout = "~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/www/ToFCalibOut"+suffix+".root";
 TString pdfout = "~/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofcalib/ToFCalibOut"+suffix+".pdf";
 TLatex *latex = new TLatex();
@@ -83,8 +83,8 @@ void tofcalib(){
       h[i][j]->Draw();
     }
     c[j]->Write();
-    if(j==0) c[j]->Print(pdfout+"(");
-    c[j]->Print(pdfout);
+    if(j==0) c[j]->Print(pdfout+"[","pdf");
+    c[j]->Print(pdfout,"pdf");
   }
   //
   //
@@ -114,8 +114,8 @@ void tofcalib(){
     latex->DrawLatex(0.75,tofbeta[0]-0.01*fline->GetParameter(1),Form("PATH/c: %f",fline->GetParameter(0)));
   }
   c2->Write();
-  c2->Print(pdfout);  
+  c2->Print(pdfout,"pdf");  
   //
-  c[0]->Print(pdfout+")");
+  c2->Print(pdfout+"]","pdf");
   fout->Close();
 }

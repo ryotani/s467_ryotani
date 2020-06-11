@@ -4,7 +4,8 @@
 function initialise () {
 #    for runnum in {237..237..1}
 #    for runnum in {237..248..1}
-    for runnum in {340..349..1}
+    #    for runnum in {340..349..1}
+    for runnum in {248..253..1}
     do
 	list=$list' '$runnum
 #	echo $runnum
