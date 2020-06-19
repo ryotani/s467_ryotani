@@ -2,10 +2,11 @@
 
 
 function initialise () {
-#    for runnum in {237..237..1}
-#    for runnum in {237..248..1}
+#    for runnum in {239..239..1}
+#    for runnum in {237..242..1} # ToF calib runs
     #    for runnum in {340..349..1}
-    for runnum in {248..253..1}
+    #    for runnum in {245..254..1} # Around 40Ca runs
+    for runnum in {248..251..1} # Around 40Ca runs
     do
 	list=$list' '$runnum
 #	echo $runnum
@@ -18,7 +19,7 @@ function myfunc () {
 #    time root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
     #    time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
     #time root -l -b -q 'sofia_offline.C('"$1"')' &> /dev/null
-    time root -l -b -q 'nearline.C('"$1"')' &> /dev/null
+    time root -l -b -q 'nearline.C('"$1"')' 1> ./log/run$1.log 2>> ./log/err.log
     echo 'Finished run:'$1
 }
 

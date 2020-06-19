@@ -1,0 +1,7 @@
+*~
+*.d
+core*
+*.root
+log/*
+*.swp
+nohup.out
