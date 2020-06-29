@@ -6,12 +6,16 @@ function initialise () {
 #    for runnum in {237..242..1} # ToF calib runs
     #    for runnum in {340..349..1}
     #    for runnum in {245..254..1} # Around 40Ca runs
-    for runnum in {248..251..1} # Around 40Ca runs
+    #for runnum in {248..251..1} # Around 40Ca runs
+    #for runnum in {237..259..1} # Around 40-39Ca runs
+    #for runnum in {257..274..1} # 39,38Ca runs after changing gain of music
+    for runnum in {276..279..1} # 50Ca runs
     do
 	list=$list' '$runnum
 #	echo $runnum
     done
-#    echo $list
+    #    echo $list
+    #    rm -f ./log/err.log 
 }
     
 #eval parallel --gnu --ungroup -j20 "root -l -b -q 'rawsofsci_offline.C('"{}"')'" ::: ${SEQ}
@@ -19,7 +23,7 @@ function myfunc () {
 #    time root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
     #    time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
     #time root -l -b -q 'sofia_offline.C('"$1"')' &> /dev/null
-    time root -l -b -q 'nearline.C('"$1"')' 1> ./log/run$1.log 2>> ./log/err.log
+    time root -l -b -q 'nearline.C('"$1"')' 1> ./log/run$1.log 2> ./log/err$1.log
     echo 'Finished run:'$1
 }
 
