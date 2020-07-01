@@ -2,14 +2,8 @@
 
 
 function initialise () {
-#    for runnum in {239..239..1}
-#    for runnum in {237..242..1} # ToF calib runs
-    #    for runnum in {340..349..1}
-    #    for runnum in {245..254..1} # Around 40Ca runs
-    #for runnum in {248..251..1} # Around 40Ca runs
-    #for runnum in {237..259..1} # Around 40-39Ca runs
-    #for runnum in {257..274..1} # 39,38Ca runs after changing gain of music
-    for runnum in {276..279..1} # 50Ca runs
+    for runnum in {237..358..1}
+    #for runnum in {258..259..1}
     do
 	list=$list' '$runnum
 #	echo $runnum
@@ -20,10 +14,11 @@ function initialise () {
     
 #eval parallel --gnu --ungroup -j20 "root -l -b -q 'rawsofsci_offline.C('"{}"')'" ::: ${SEQ}
 function myfunc () {
-#    time root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
+    #    time root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
     #    time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
     #time root -l -b -q 'sofia_offline.C('"$1"')' &> /dev/null
-    time root -l -b -q 'nearline.C('"$1"')' 1> ./log/run$1.log 2> ./log/err$1.log
+    #time nice root -l -b -q 'nearline.C('"$1"')' 1> ./log/run$1.log 2> ./log/err$1.log
+    time nice root -l -b -q 'filltree.C('"$1"')' 1> ./log/run$1.log 2> ./log/err$1.log
     echo 'Finished run:'$1
 }
 
@@ -32,7 +27,7 @@ function mapp() {
     if [[ -z $MAPP_NR_CPUS ]] ; then
 	#local MAPP_NR_CPUS=$(grep "processor:" < /proc/cpuinfo | wc -l)
 	#   max core for calculation; modified by Toshiyuki Sumikama
-	local MAPP_NR_CPUS=10
+	local MAPP_NR_CPUS=20 # should be half as number of cores
     fi
     local mapp_pid=$(exec bash -c 'echo $PPID')
     local mapp_funname=$1
