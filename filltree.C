@@ -119,7 +119,7 @@ void filltree(int runnum)
 	i++;
       }
       
-      filename = Form("/u/taniuchi/s467/s467_lustertmp/main%04d_*.lmd", runnum);
+      filename = Form("/u/taniuchi/s467/lmd_stitched/main%04d_*.lmd", runnum);
       sofiacaldir = dir + "/sofia/macros/s467_ryotani/parameters/";
       if(musicgain[i] == 0){
 	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_Jun2020.par";
