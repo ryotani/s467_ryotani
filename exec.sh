@@ -3,7 +3,7 @@
 
 function initialise () {
     #for runnum in {237..358..1}
-    for runnum in {317..381..1}
+    for runnum in {272..380..1}
     #for runnum in {258..259..1}
     do
 	list=$list' '$runnum
