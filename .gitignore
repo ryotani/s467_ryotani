@@ -5,3 +5,4 @@ core*
 log/*
 *.swp
 nohup.out
+calibration/parameters/*par

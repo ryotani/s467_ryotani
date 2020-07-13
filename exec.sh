@@ -3,8 +3,8 @@
 
 function initialise () {
     #for runnum in {237..358..1}
-    for runnum in {272..380..1}
-    #for runnum in {258..259..1}
+    #for runnum in {272..380..1} #all frs13
+    for runnum in {276..285..1}
     do
 	list=$list' '$runnum
 #	echo $runnum

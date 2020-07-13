@@ -122,11 +122,11 @@ void filltree(int runnum)
       filename = Form("/u/taniuchi/s467/lmd_stitched/main%04d_*.lmd", runnum);
       sofiacaldir = dir + "/sofia/macros/s467_ryotani/parameters/";
       if(musicgain[i] == 0){
-	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_Jun2020.par";
+	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_FRS" + to_string(FRSsetting[i]) + ".par";
       } else {
-	sofiacalfilename = sofiacaldir + "CalibParam_highgain_Jun2020.par";
+	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
       }
-      outputFilename = Form("./rootfiles_local/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE: " << sofiacalfilename << std::endl;

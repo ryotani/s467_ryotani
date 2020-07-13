@@ -1,15 +1,18 @@
 struct EXT_STR_h101_t
 {
   EXT_STR_h101_unpack_t unpack;
+    EXT_STR_h101_TPAT_t unpacktpat;
   EXT_STR_h101_SOFSCI_onion_t sci;
+  EXT_STR_h101_SOFSCALERS_onion_t scalers;
 };
 
 void rawsofsci_offline(int runnum)
 {
   TStopwatch timer;
   timer.Start();
-
-  const Int_t nev = -1; /* number of events to read, -1 - until CTRL+C */
+  
+  //const Int_t nev = -1; /* number of events to read, -1 - until CTRL+C */
+  const Int_t nev = 1e8; /* number of events to read, -1 - until CTRL+C */
 
   // *********************************** //
   // PLEASE COMPLETE THE FOLLOWING LINES //
@@ -41,12 +44,12 @@ void rawsofsci_offline(int runnum)
   // Create input -----------------------------------------
   TString filename;
   if (expId==444)      filename = "/media/audrey/COURGE/SOFIA/ANALYSE/SOFIA3/data/202002_eng/main*.lmd";
-  else if (expId==467)  filename = "/u/taniuchi/s467/s467_lustertmp/main0" + to_string(runnum) + "_*.lmd";
-  //filename = "/media/audrey/COURGE/SOFIA/ANALYSE/SOFIA3/data/202002_s467/main0341_0001.lmd";
+  else if (expId==467)  filename = "/u/taniuchi/s467/lmd_stitched/main0" + to_string(runnum) + "_*.lmd";
   else                 filename = "--stream=lxlanddaq01:9000";
 
   // Output file ----------------------------------------------------
-  TString outputFileName = "rootfiles/SofSciRawPosRawTof" + to_string(runnum) + ".root";
+  //TString outputFileName = "../rootfiles/SofSciRawPosRawTof" + to_string(runnum) + ".root";
+  TString outputFileName = "../rootfiles/rootfiletmp/SofSciRawPosRawTof" + to_string(runnum) + ".root";
  
   // UCESB configuration --------------------------------------------
   TString ntuple_options = "RAW";
@@ -71,13 +74,27 @@ void rawsofsci_offline(int runnum)
   R3BUcesbSource* source = new R3BUcesbSource(filename, ntuple_options,ucesb_path, &ucesb_struct, sizeof(ucesb_struct));
   source->AddReader(new R3BUnpackReader((EXT_STR_h101_unpack_t *)&ucesb_struct,offsetof(EXT_STR_h101, unpack)));
   source->AddReader(new R3BSofSciReader((EXT_STR_h101_SOFSCI_t *)&ucesb_struct.sci,offsetof(EXT_STR_h101, sci),NumSofSci));
+  //
+  Bool_t NOTstoremappeddata = true; // if true, don't store mapped data in the root file
+  R3BTrloiiTpatReader* unpacktpat =
+    new R3BTrloiiTpatReader((EXT_STR_h101_TPAT*)&ucesb_struct, offsetof(EXT_STR_h101, unpacktpat));
+  R3BSofScalersReader* unpackscalers;
+  unpackscalers =
+    new R3BSofScalersReader((EXT_STR_h101_SOFSCALERS_t*)&ucesb_struct.scalers, offsetof(EXT_STR_h101, scalers));
+  unpackscalers->SetOnline(NOTstoremappeddata);
+  source->AddReader(unpacktpat);
+  source->AddReader(unpackscalers);
+  //source->AddReader(new R3BSofScalersReader((EXT_STR_h101_SOFSCALERS_t*)&ucesb_struct.scalers, offsetof(EXT_STR_h101, scalers)));
+		    
     
   // --- ----------------- --- //
   // --- Create online run --- //
   // --- ----------------- --- //
   FairRunOnline* run = new FairRunOnline(source);
   run->SetRunId(1);
-  run->SetOutputFile(outputFileName);
+  //run->SetOutputFile(outputFileName);
+  run->SetSink(new FairRootFileSink(outputFileName));
+  run->ActivateHttpServer(1, 8080);
 
   // --- ----------------- --- //
   // --- Runtime data base --- //
@@ -107,7 +124,7 @@ void rawsofsci_offline(int runnum)
   sci_poscalibrator->SetNumPmts(3); // number of Pmts (2) + reference signal (1)
   sci_poscalibrator->SetNumSignals();
   sci_poscalibrator->SetNumParsPerSignal(2);
-  sci_poscalibrator->SetMinStatistics(10000);
+  //sci_poscalibrator->SetMinStatistics(1000);
   run->AddTask(sci_poscalibrator);
 
   // === Tcal2RawTof for SofSci === //
@@ -119,9 +136,14 @@ void rawsofsci_offline(int runnum)
   sci_tofcalibrator->SetDetIdCaveC(IdCaveC);
   sci_tofcalibrator->SetNumSignals();
   sci_tofcalibrator->SetNumParsPerSignal(2);
-  sci_tofcalibrator->SetMinStatistics(1000);
+  //sci_tofcalibrator->SetMinStatistics(1000);
   run->AddTask(sci_tofcalibrator);
 
+  // === Scaler histogram to confirm all the events are reconstucted === //
+  R3BSofScalersOnlineSpectra* scalersonline = new R3BSofScalersOnlineSpectra();
+  run->AddTask(scalersonline);
+
+		    
   // --- ---------- --- //
   // --- Initialize --- //
   // --- ---------- --- //
@@ -134,7 +156,7 @@ void rawsofsci_offline(int runnum)
   // ---  ascii file with the calibration parameters --- //
   // --- ------------------------------------------- --- //
   FairParAsciiFileIo* parOut = new FairParAsciiFileIo();
-  TString outputFileNamePar = "parameters/out_sofsci" + to_string(runnum) + ".par";
+  TString outputFileNamePar = "../calibration/parameters/out_sofsci" + to_string(runnum) + ".par";
   parOut->open(outputFileNamePar,"out");
   rtdb->setOutput(parOut);
   rtdb->print();

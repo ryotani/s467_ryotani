@@ -2,7 +2,7 @@
 
 
 function initialise () {
-    for runnum in {237..248..1}
+    for runnum in {237..380..1}
     do
 	list=$list' '$runnum
 #	echo $runnum
@@ -12,8 +12,8 @@ function initialise () {
     
 #eval parallel --gnu --ungroup -j20 "root -l -b -q 'rawsofsci_offline.C('"{}"')'" ::: ${SEQ}
 function myfunc () {
-#    time root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
-    time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
+    time nice root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
+    #time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
     echo 'Finished run:'$1
 }
 
@@ -22,7 +22,7 @@ function mapp() {
     if [[ -z $MAPP_NR_CPUS ]] ; then
 	#local MAPP_NR_CPUS=$(grep "processor:" < /proc/cpuinfo | wc -l)
 	#   max core for calculation; modified by Toshiyuki Sumikama
-	local MAPP_NR_CPUS=10
+	local MAPP_NR_CPUS=20
     fi
     local mapp_pid=$(exec bash -c 'echo $PPID')
     local mapp_funname=$1
