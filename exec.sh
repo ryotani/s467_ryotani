@@ -2,9 +2,9 @@
 
 
 function initialise () {
-    #for runnum in {237..358..1}
-    #for runnum in {272..380..1} #all frs13
-    for runnum in {276..285..1}
+    for runnum in {249..358..1} #FRS9-13
+    #for runnum in {272..358..1} #all frs13
+    #for runnum in {276..285..1}
     do
 	list=$list' '$runnum
 #	echo $runnum
@@ -71,9 +71,10 @@ function mapp() {
     unset -f mapp_trap
 }
 
-
+date
 initialise
 echo $list
 (mapp myfunc $list)
 unset list
+date
 echo 'done' #$list

@@ -121,7 +121,9 @@ void filltree(int runnum)
       
       filename = Form("/u/taniuchi/s467/lmd_stitched/main%04d_*.lmd", runnum);
       sofiacaldir = dir + "/sofia/macros/s467_ryotani/parameters/";
-      if(musicgain[i] == 0){
+      if(FRSsetting[i] < 9){
+	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_Jun2020.par";
+      } else if(musicgain[i] == 0){
 	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_FRS" + to_string(FRSsetting[i]) + ".par";
       } else {
 	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
