@@ -14,11 +14,21 @@ char *focus[3] = {"S2", "S8", "Cave"};
 void FRStree(int FRSsetting){
   //TProof *proof = TProof::Open("lite://", "workers=20");
   //TProof::Open("");
-  infilename = Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/rootfiletmp/s467_FRSTree_Setting%i_0*.root", FRSsetting);
-  dummy = infilename + "/FrsTree";
+  if(FRSsetting<100){
+    infilename = Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/rootfiletmp/s467_FRSTree_Setting%i_0*.root", FRSsetting);
+    dummy = infilename + "/FrsTree";
+    ch->Add(dummy);
+  }else{
+    infilename = Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/rootfiletmp/s467_FRSTree_Setting%i_0*.root", FRSsetting%100);
+    dummy = infilename + "/FrsTree";
+    ch->Add(dummy);
+    //
+    infilename = Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/rootfiletmp/s467_FRSTree_Setting%i_0*.root", (int)(FRSsetting/100));
+    dummy = infilename + "/FrsTree";
+    ch->Add(dummy);
+  }
   outfilename = Form("./FRStree/Histograms_FRS%i", FRSsetting);
   //
-  ch->Add(dummy);
   //ch->SetProof();
   //
   cout << ch->GetListOfFiles()->GetEntries() << "files were imported." <<endl;
@@ -61,9 +71,6 @@ void FRStree(int FRSsetting){
   gPad->SetLogz();
   ch->Draw("MusicZ:AoQ_S2_S8>>hPID28","MusicE>0","colz");
   hPID[0]->Write();
-  dummy = outfilename + ".pdf";
-  //c->Write();
-  //c->Print(dummy);
   //
   c->cd(2);
   gPad->SetLogz();
@@ -83,6 +90,8 @@ void FRStree(int FRSsetting){
   c->Write();
   dummy = outfilename + ".pdf";
   c->Print(dummy);
+  dummy = outfilename + "_PID.png";
+  c->Print(dummy);
   ///
   c->cd(1);
   ch->Draw("AoQ_S2_S8:AoQ_S2_Cave>>hAoQcorr0","","colz");
@@ -100,6 +109,8 @@ void FRStree(int FRSsetting){
   c->Write();
   dummy = outfilename + ".pdf";
   c->Print(dummy);
+  dummy = outfilename + "_AoQCorr.png";
+  c->Print(dummy);
   ///
   for(int i = 0; i < 3; i++){
     c->cd(1+i);
@@ -112,6 +123,8 @@ void FRStree(int FRSsetting){
   c->Write();
   dummy = outfilename + ".pdf";
   c->Print(dummy);
+  dummy = outfilename + "_mult.png";
+  c->Print(dummy);
   /////  
   for(int i = 0; i < 3; i++){
     c->cd(1+i);
@@ -123,6 +136,8 @@ void FRStree(int FRSsetting){
   //
   c->Write();
   dummy = outfilename + ".pdf";
+  c->Print(dummy);
+  dummy = outfilename + "_pos.png";
   c->Print(dummy);
   ////
   dummy = outfilename + ".pdf]";
