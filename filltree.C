@@ -44,8 +44,8 @@ void filltree(int runnum)
     TStopwatch timer;
     timer.Start();
 
-    // const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
-    const Int_t nev = -1; // Only nev events to read
+    const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
+    //const Int_t nev = 1000000; // Only nev events to read
     const Int_t fRunId = 1;
 
     // *********************************** //
@@ -128,7 +128,8 @@ void filltree(int runnum)
       } else {
 	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
       }
-      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
+      //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_tpat.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE: " << sofiacalfilename << std::endl;
@@ -195,11 +196,18 @@ void filltree(int runnum)
     source->SetMaxEvents(nev);
 
     // Definition of reader ---------------------------------
+    /*
     R3BUnpackReader* unpackreader =
         new R3BUnpackReader((EXT_STR_h101_unpack*)&ucesb_struct, offsetof(EXT_STR_h101, unpack));
     R3BTrloiiTpatReader* unpacktpat =
         new R3BTrloiiTpatReader((EXT_STR_h101_TPAT*)&ucesb_struct, offsetof(EXT_STR_h101, unpacktpat));
-
+    source->AddReader(unpackreader);
+    source->AddReader(unpacktpat);
+    */
+    
+    source->AddReader(new R3BUnpackReader(&ucesb_struct.unpack,offsetof(EXT_STR_h101, unpack)));
+    source->AddReader(new R3BTrloiiTpatReader(&ucesb_struct.unpacktpat,offsetof(EXT_STR_h101, unpacktpat)));
+    
     R3BFrsReaderNov19* unpackfrs;
     R3BMusicReader* unpackmusic;
     R3BSofSciReader* unpacksci;
@@ -246,8 +254,8 @@ void filltree(int runnum)
         unpackscalers =
             new R3BSofScalersReader((EXT_STR_h101_SOFSCALERS_t*)&ucesb_struct.scalers, offsetof(EXT_STR_h101, scalers));
     // Add readers ------------------------------------------
-    source->AddReader(unpackreader);
-    source->AddReader(unpacktpat);
+    //source->AddReader(unpackreader);
+    //source->AddReader(unpacktpat);
 
     if (fFrsTpcs)
     {
