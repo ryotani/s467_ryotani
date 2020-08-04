@@ -2,8 +2,8 @@
 
 
 function initialise () {
-    for runnum in {249..358..1} #FRS9-13
-    #for runnum in {272..358..1} #all frs13
+    #for runnum in {249..358..1} #FRS9-13
+    for runnum in {272..358..1} #all frs13
     #for runnum in {276..285..1}
     do
 	list=$list' '$runnum
