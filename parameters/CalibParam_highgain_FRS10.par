@@ -361,16 +361,22 @@ twimZHitPar:  Float_t \
 [soffrsAnaPar]
 //----------------------------------------------------------------------------
 //-- PathS2Cave is effective length ------------------------------------------
-DisperisionS2:  Double_t  12.397 
-MagnificationS2Cave:  Double_t 1.829
-PathS2Cave:  Double_t  15424.3 
-ToFS2Cave:  Double_t  0.0 
-PosFocalS2:  Double_t  1205.0 
-PosFocalCave:  Double_t  0.0
-Rho_S0_S2:  Double_t  11.25 
-Bfield_S0_S2:  Double_t  0.60551 
-Rho_S2_Cave:  Double_t  1.0 
-Bfield_S2_Cave:  Double_t  9.048
+BrhoS2S8:    Float_t  6.9389
+NumTof:      Int_t  3
+StaSciId:  Int_t \
+  2 2 3
+StoSciId:   Int_t \
+  4 3 4
+PathLength:  Float_t \
+  462.837731 279.088230 183.845298
+TofOffset:   Float_t \
+  -1318.258541 -694.519095 -623.62812
+UseS2x:	     Int_t \
+ 1 1 0
+S2PosCoef:   Float_t -5.8
+S2PosOffset: Float_t 0.
+//New update by RT in R3BSofFrsPar.h
+//SciId starting from 1. 1: FRS-S2, 2: SofSci-S2, 3: FRS-S8, 4: SofSci-Cave
 ##############################################################################
  /----------------------------------------------------------------------------
 ##############################################################################

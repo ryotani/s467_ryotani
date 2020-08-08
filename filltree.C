@@ -404,6 +404,13 @@ void filltree(int runnum)
         TwimCal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(TwimCal2Hit);
     }
+    // Add sofana task ------------------------------------
+    if (fSci&&fMusic&&fTwim)
+    {
+      R3BSofFrsAnalysis* frsana = new R3BSofFrsAnalysis();
+      run -> AddTask(frsana);
+    }
+
     // Add online task ------------------------------------
     if (fFrsTpcs)
     {
@@ -417,23 +424,14 @@ void filltree(int runnum)
         run->AddTask(scalersonline);
     }
     if (fSci&&fMusic&&fTwim){
-      	R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFillTree(brho28, 0.0, -5.8);
+      	R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFillTree();
 	frsfilltree->SetNbDetectors(NumSofSci);
 	frsfilltree->SetNbChannels(3);
+	/*
 	frsfilltree->SetIdS2(IdS2);
 	frsfilltree->SetIdS8(IdS8);
-        run->AddTask(frsfilltree);
-	/*
-        R3BSofSciOnlineSpectra* scionline = new R3BSofSciOnlineSpectra();
-	scionline->SetNbDetectors(NumSofSci);
-	scionline->SetNbChannels(3);
-	scionline->SetIdS2(IdS2);
-	scionline->SetIdS8(IdS8);
-	//scionline->SetBrho0(7.1175);
-	//scionline->SetBrho0(6.9389); // for 39Ca
-	scionline->SetBrho0(9.0607); // for 50Ca
-        run->AddTask(scionline);
 	*/
+        run->AddTask(frsfilltree);
     }
     R3BSofOnlineSpectra* sofonline = new R3BSofOnlineSpectra();
     run->AddTask(sofonline);
