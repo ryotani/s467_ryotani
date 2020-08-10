@@ -72,7 +72,6 @@ void filltree(int runnum)
       IdS8 = 0;
       sofiaWR = 0x500;
       
-      //filename = "--stream=lxir123:7803";
       filename = "/lustre/land/202002_s444/stitched/main0040_0001.lmd";
       outputFilename = "data_s444_online.root";
       
@@ -129,7 +128,7 @@ void filltree(int runnum)
 	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
       }
       //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_tpat.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_FRSFragmentTree.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE: " << sofiacalfilename << std::endl;
@@ -173,7 +172,7 @@ void filltree(int runnum)
     Bool_t fMwpc2 = true;    // MWPC2 for tracking of fragments before GLAD
     Bool_t fTwim = true;     // Twim: Ionization chamber for charge-Z of fragments
     Bool_t fMwpc3 = true;    // MWPC3 for tracking of fragments behind GLAD
-    //Bool_t fTofW = true;     // ToF-Wall for time-of-flight of fragments behind GLAD
+    Bool_t fTofW = true;     // ToF-Wall for time-of-flight of fragments behind GLAD
     Bool_t fScalers = true;  // SIS3820 scalers at Cave C
     //Bool_t fNeuland = true;  // NeuLAND for neutrons behind GLAD
     //Bool_t fTracking = true; // Tracking of fragments inside GLAD
@@ -196,15 +195,6 @@ void filltree(int runnum)
     source->SetMaxEvents(nev);
 
     // Definition of reader ---------------------------------
-    /*
-    R3BUnpackReader* unpackreader =
-        new R3BUnpackReader((EXT_STR_h101_unpack*)&ucesb_struct, offsetof(EXT_STR_h101, unpack));
-    R3BTrloiiTpatReader* unpacktpat =
-        new R3BTrloiiTpatReader((EXT_STR_h101_TPAT*)&ucesb_struct, offsetof(EXT_STR_h101, unpacktpat));
-    source->AddReader(unpackreader);
-    source->AddReader(unpacktpat);
-    */
-    
     source->AddReader(new R3BUnpackReader(&ucesb_struct.unpack,offsetof(EXT_STR_h101, unpack)));
     source->AddReader(new R3BTrloiiTpatReader(&ucesb_struct.unpacktpat,offsetof(EXT_STR_h101, unpacktpat)));
     
@@ -250,6 +240,8 @@ void filltree(int runnum)
         unpackmwpc = new R3BSofMwpcReader((EXT_STR_h101_SOFMWPC_t*)&ucesb_struct.mwpc, offsetof(EXT_STR_h101, mwpc));
     if (fTwim)
         unpacktwim = new R3BSofTwimReader((EXT_STR_h101_SOFTWIM_t*)&ucesb_struct.twim, offsetof(EXT_STR_h101, twim));
+    if (fTofW)
+        unpacktofw = new R3BSofTofWReader((EXT_STR_h101_SOFTOFW_t*)&ucesb_struct.tofw, offsetof(EXT_STR_h101, tofw));
     if (fScalers)
         unpackscalers =
             new R3BSofScalersReader((EXT_STR_h101_SOFSCALERS_t*)&ucesb_struct.scalers, offsetof(EXT_STR_h101, scalers));
@@ -293,6 +285,11 @@ void filltree(int runnum)
     {
         unpacktwim->SetOnline(NOTstoremappeddata);
         source->AddReader(unpacktwim);
+    }
+      if (fTofW)
+    {
+        unpacktofw->SetOnline(NOTstoremappeddata);
+        source->AddReader(unpacktofw);
     }
     if (fScalers)
     {
@@ -393,6 +390,19 @@ void filltree(int runnum)
         SofSciSTcal2Hit->SetCalParams(675.,-1922.);//ToF calibration at Cave-C
         run->AddTask(SofSciSTcal2Hit);
     }
+
+    // MWPC1
+    if (fMwpc1)
+    {
+        R3BSofMwpc1Mapped2Cal* MW1Map2Cal = new R3BSofMwpc1Mapped2Cal();
+        MW1Map2Cal->SetOnline(NOTstorecaldata);
+        run->AddTask(MW1Map2Cal);
+
+        R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
+        MW1Cal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(MW1Cal2Hit);
+    }
+
     // TWIM
     if (fTwim)
     {
@@ -411,6 +421,55 @@ void filltree(int runnum)
       run -> AddTask(frsana);
     }
 
+
+    // MWPC2
+    if (fMwpc2)
+    {
+        R3BSofMwpc2Mapped2Cal* MW2Map2Cal = new R3BSofMwpc2Mapped2Cal();
+        MW2Map2Cal->SetOnline(NOTstorecaldata);
+        run->AddTask(MW2Map2Cal);
+
+        R3BSofMwpc2Cal2Hit* MW2Cal2Hit = new R3BSofMwpc2Cal2Hit();
+        MW2Cal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(MW2Cal2Hit);
+    }
+
+    // MWPC3
+    if (fMwpc3)
+    {
+        R3BSofMwpc3Mapped2Cal* MW3Map2Cal = new R3BSofMwpc3Mapped2Cal();
+        MW3Map2Cal->SetOnline(NOTstorecaldata);
+        run->AddTask(MW3Map2Cal);
+
+        R3BSofMwpc3Cal2Hit* MW3Cal2Hit = new R3BSofMwpc3Cal2Hit();
+        MW3Cal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(MW3Cal2Hit);
+    }
+
+    // ToF-Wall
+    if (fTofW)
+    {
+        // --- Mapped 2 Tcal for SofTofW
+        R3BSofTofWMapped2Tcal* SofTofWMap2Tcal = new R3BSofTofWMapped2Tcal();
+        SofTofWMap2Tcal->SetOnline(NOTstorecaldata);
+        run->AddTask(SofTofWMap2Tcal);
+
+        // --- Tcal 2 SingleTcal for SofTofW
+        R3BSofTofWTcal2SingleTcal* SofTofWTcal2STcal = new R3BSofTofWTcal2SingleTcal();
+        SofTofWTcal2STcal->SetOnline(NOTstorecaldata);
+        run->AddTask(SofTofWTcal2STcal);
+
+        // --- Tcal 2 Hit for SofTofW : TO CHECK why not SingleTcal2Hit ?
+        R3BSofTofWTCal2Hit* SofTofWTcal2Hit = new R3BSofTofWTCal2Hit();
+        SofTofWTcal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(SofTofWTcal2Hit);
+    }
+    // Add sofana task ------------------------------------
+    if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
+      R3BSofFragmentAnalysis* fragmentana = new R3BSofFragmentAnalysis();
+      run -> AddTask(fragmentana);
+    }
+    
     // Add online task ------------------------------------
     if (fFrsTpcs)
     {
@@ -423,15 +482,22 @@ void filltree(int runnum)
         R3BSofScalersOnlineSpectra* scalersonline = new R3BSofScalersOnlineSpectra();
         run->AddTask(scalersonline);
     }
+    /*
     if (fSci&&fMusic&&fTwim){
       	R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFillTree();
 	frsfilltree->SetNbDetectors(NumSofSci);
 	frsfilltree->SetNbChannels(3);
-	/*
 	frsfilltree->SetIdS2(IdS2);
 	frsfilltree->SetIdS8(IdS8);
-	*/
         run->AddTask(frsfilltree);
+    }*/
+    if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
+      R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree(brho28, 0.0, -5.8);
+      frsfragmenttree->SetNbDetectors(NumSofSci);
+      frsfragmenttree->SetNbChannels(3);
+      frsfragmenttree->SetIdS2(IdS2);
+      frsfragmenttree->SetIdS8(IdS8);
+      run->AddTask(frsfragmenttree);
     }
     R3BSofOnlineSpectra* sofonline = new R3BSofOnlineSpectra();
     run->AddTask(sofonline);
