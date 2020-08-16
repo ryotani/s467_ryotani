@@ -128,7 +128,7 @@ void filltree(int runnum)
 	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
       }
       //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_FRSFragmentTree.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_FRSTree_freetrig.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE: " << sofiacalfilename << std::endl;
@@ -159,7 +159,7 @@ void filltree(int runnum)
     Int_t port = 10000 + runnum; // Port number for the online visualization, example lxgXXXX:8888
 
     // Setup: Selection of detectors ------------------------
-    //Bool_t fFrs = false;      // FRS for production of exotic beams (just scintillators)
+    Bool_t fFrs = true;      // FRS for production of exotic beams (just scintillators)
     Bool_t fFrsTpcs = false; // Tpcs at FRS (S2) for scintillator calibration in position
     Bool_t fFrsMws = false;  // MWs at FRS (S8) for beam position
     Bool_t fFrsSci = true;   // Start: Plastic scintillators at FRS
@@ -216,7 +216,7 @@ void filltree(int runnum)
     R3BWhiterabbitNeulandReader* unpackWRNeuland;
     
 
-    if (fFrsTpcs)
+    if (fFrs)
       unpackfrs= new R3BFrsReaderNov19((EXT_STR_h101_FRS*)&ucesb_struct.frs,
 					     offsetof(EXT_STR_h101, frs));
 
@@ -249,7 +249,7 @@ void filltree(int runnum)
     //source->AddReader(unpackreader);
     //source->AddReader(unpacktpat);
 
-    if (fFrsTpcs)
+    if (fFrs)
     {
      unpackfrs->SetOnline(NOTstoremappeddata);
      source->AddReader(unpackfrs);
