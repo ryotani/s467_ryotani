@@ -128,7 +128,7 @@ void filltree(int runnum)
 	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
       }
       //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_FRSTree_freetrig.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_FRSTree.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE: " << sofiacalfilename << std::endl;
