@@ -1,0 +1,6 @@
+
+
+void rootlogoff()
+{
+  //  stop();
+}
