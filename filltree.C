@@ -128,7 +128,7 @@ void filltree(int runnum)
 	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
       }
       //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_FRSTree.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_newUpexps.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE: " << sofiacalfilename << std::endl;
@@ -138,7 +138,8 @@ void filltree(int runnum)
       upexps_dir = ucesb_dir + "/../upexps/";                      // for local computers // copied from fake and recompiled
       // upexps_dir = "/u/land/fake_cvmfs/upexps";                 // for lxlandana computers
       // upexps_dir = "/u/land/lynx.landexp/202002_s467/upexps/";  // for lxg computers
-      ucesb_path = upexps_dir + "/202002_s467/202002_s467 --allow-errors --input-buffer=100Mi";
+      // ucesb_path = upexps_dir + "/202002_s467/202002_s467 --allow-errors --input-buffer=100Mi";
+      ucesb_path = upexps_dir + "/202002_s467_Aug20/202002_s467 --allow-errors --input-buffer=100Mi";
     }
     else{
       std::cout << "Experiment was not selected" << std::endl;
@@ -463,12 +464,12 @@ void filltree(int runnum)
       R3BSofFrsAnalysis* frsana = new R3BSofFrsAnalysis();
       run -> AddTask(frsana);
     }
-    /*
+
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
       R3BSofFragmentAnalysis* fragmentana = new R3BSofFragmentAnalysis();
       run -> AddTask(fragmentana);
     }
-    */
+
     // Add online task ------------------------------------
     if (fFrsTpcs)
     {
@@ -481,16 +482,16 @@ void filltree(int runnum)
         R3BSofScalersOnlineSpectra* scalersonline = new R3BSofScalersOnlineSpectra();
         run->AddTask(scalersonline);
     }
-
+    /*
     if (fSci&&fMusic&&fTwim){
-      	R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFillTree();
-	/*frsfilltree->SetNbDetectors(NumSofSci);
+      R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFillTree();
+	/ *frsfilltree->SetNbDetectors(NumSofSci);
 	frsfilltree->SetNbChannels(3);
 	frsfilltree->SetIdS2(IdS2);
-	frsfilltree->SetIdS8(IdS8);*/
+	frsfilltree->SetIdS8(IdS8);* /
         run->AddTask(frsfilltree);
     }
-    /*
+*/
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
       R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree(); //(brho28, 0.0, -5.8);
       //frsfragmenttree->SetNbDetectors(NumSofSci);
@@ -499,7 +500,7 @@ void filltree(int runnum)
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
     }
-    */
+    //*/
     R3BSofOnlineSpectra* sofonline = new R3BSofOnlineSpectra();
     run->AddTask(sofonline);
 

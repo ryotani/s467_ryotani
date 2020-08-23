@@ -15,8 +15,6 @@ Double_t aoqmin[5] = {1.7, 1.7, 1.7, 1.7, 2.2};
 Double_t aoqmax[5] = {2.2, 2.2, 2.2, 2.2, 2.7};
 
 void FRSplotForGPAC20(int FRSsetting){
-  TColor *dummyColor = new TColor();
-  dummyColor->SetPalette(54,0);
   //TProof *proof = TProof::Open("lite://", "workers=20");
   //TProof::Open("");
   if(FRSsetting<100){
@@ -86,6 +84,10 @@ void FRSplotForGPAC20(int FRSsetting){
   c->cd(1);
   gPad->SetLogz();
   */
+  ch->Draw(">>elist","multMapSci[11]>0");
+  auto *evtlist = (TEventList*)gROOT->FindObject("elist");
+  ch->SetEventList(evtlist);
+  //
   ch->Draw("MusicZ_S2_S8:AoQ_S2_S8>>hPID28","multMapSci[11]>0","colz");
   hPID[0]->Write();
   dummy = outfilename + ".pdf";
@@ -101,14 +103,14 @@ void FRSplotForGPAC20(int FRSsetting){
   c->Print(dummy);
   //
   //c->cd(3);
-  gPad->SetLogz();
+  //gPad->SetLogz();
   ch->Draw("MusicZ_S8_Cave:AoQ_S8_Cave>>hPID8C","multMapSci[11]>0","colz");
   hPID[2]->Write();
   dummy = outfilename + ".pdf";
   c->Print(dummy);
   //
   //c->cd(4);
-  gPad->SetLogz();
+  //gPad->SetLogz();
   ch->Draw("MusicZ:TheAoQ>>hPID","multMapSci[11]>0","colz");
   hPID[3]->Write();
   //*/

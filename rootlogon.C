@@ -84,7 +84,11 @@ void rootlogon() {
 
   
   TColor *dummyColor = new TColor();
-  dummyColor->SetPalette(54,0);
+  //dummyColor->SetPalette(54,0);
+  //dummyColor->InvertPalette();
+  dummyColor->SetPalette(kInvertedDarkBodyRadiator,0);
+  //dummyColor->SetPalette(kDeepSea,0);
+  //dummyColor->InvertPalette();
   
   /*
   UInt_t Number = 4;
