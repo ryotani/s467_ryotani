@@ -7206,7 +7206,7 @@ nTcalParsPerSignal:  Int_t  1000
 [SofSciRawPosPar]
 //----------------------------------------------------------------------------
 RawPosPar:  Float_t \
-  0 0 -7.485 9.315 -6.106 2.64 -0.141 1.707 
+  0 0 -1000. 1000. -1000. 1000. -1000. 1000. 
 nDetectorsRawPosPar:  Int_t  4 
 nChannelsRawPosPar:  Int_t  3 
 nSignalsRawPosPar:  Int_t  4 
@@ -7219,7 +7219,7 @@ nRawPosParsPerSignal:  Int_t  2
 [SofSciRawTofPar]
 //----------------------------------------------------------------------------
 RawTofPar:  Float_t \
-  0 0 -931.3 2938.8 857.2 890.4 
+  0 0 -10000. 10000. -10000. 10000.
 nDetsRawTofPar:  Int_t  4 
 nChannelsRawTofPar:  Int_t  3 
 idDetS2:  Int_t  2 
