@@ -33,13 +33,13 @@ typedef struct EXT_STR_h101_t
     EXT_STR_h101_FRS_t frs;
 } EXT_STR_h101;
 
-void filltree(int runnum);
+void tofwcalib(int runnum);
 
-void filltree(){
-  filltree(340);
+void tofwcalib(){
+  tofwcalib(340);
 }
 
-void filltree(int runnum)
+void tofwcalib(int runnum)
 {
     TStopwatch timer;
     timer.Start();
@@ -289,7 +289,7 @@ void filltree(int runnum)
     }
       if (fTofW)
     {
-        unpacktofw->SetOnline(NOTstoremappeddata);
+        unpacktofw->SetOnline(false);//NOTstoremappeddata);
         source->AddReader(unpacktofw);
     }
     if (fScalers)
@@ -445,17 +445,17 @@ void filltree(int runnum)
     {
         // --- Mapped 2 Tcal for SofTofW
         R3BSofTofWMapped2Tcal* SofTofWMap2Tcal = new R3BSofTofWMapped2Tcal();
-        SofTofWMap2Tcal->SetOnline(NOTstorecaldata);
+        SofTofWMap2Tcal->SetOnline(false);//NOTstorecaldata);
         run->AddTask(SofTofWMap2Tcal);
 
         // --- Tcal 2 SingleTcal for SofTofW
         R3BSofTofWTcal2SingleTcal* SofTofWTcal2STcal = new R3BSofTofWTcal2SingleTcal();
-        SofTofWTcal2STcal->SetOnline(NOTstorecaldata);
+        SofTofWTcal2STcal->SetOnline(false);//NOTstorecaldata);
         run->AddTask(SofTofWTcal2STcal);
 
         // --- Tcal 2 Hit for SofTofW : TO CHECK why not SingleTcal2Hit ?
         R3BSofTofWTCal2Hit* SofTofWTcal2Hit = new R3BSofTofWTCal2Hit();
-        SofTofWTcal2Hit->SetOnline(NOTstorehitdata);
+        SofTofWTcal2Hit->SetOnline(false);//NOTstorehitdata);
         run->AddTask(SofTofWTcal2Hit);
     }
     // Add sofana task ------------------------------------
@@ -482,25 +482,13 @@ void filltree(int runnum)
         R3BSofScalersOnlineSpectra* scalersonline = new R3BSofScalersOnlineSpectra();
         run->AddTask(scalersonline);
     }
-    /*
-    if (fSci&&fMusic&&fTwim){
-      R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFillTree();
-	/ *frsfilltree->SetNbDetectors(NumSofSci);
-	frsfilltree->SetNbChannels(3);
-	frsfilltree->SetIdS2(IdS2);
-	frsfilltree->SetIdS8(IdS8);* /
-        run->AddTask(frsfilltree);
-    }
-*/
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
-      R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree(); //(brho28, 0.0, -5.8);
-      //frsfragmenttree->SetNbDetectors(NumSofSci);
-      //frsfragmenttree->SetNbChannels(3);
+      R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree(); 
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
     }
-    //*/
+
     R3BSofOnlineSpectra* sofonline = new R3BSofOnlineSpectra();
     run->AddTask(sofonline);
 

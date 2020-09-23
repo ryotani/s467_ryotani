@@ -2,7 +2,8 @@
 
 
 function initialise () {
-    for runnum in {237..380..1}
+    #    for runnum in {237..380..1}
+    for runnum in 238 273 361 366
     do
 	list=$list' '$runnum
 #	echo $runnum
@@ -12,8 +13,8 @@ function initialise () {
     
 #eval parallel --gnu --ungroup -j20 "root -l -b -q 'rawsofsci_offline.C('"{}"')'" ::: ${SEQ}
 function myfunc () {
-    time nice root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
-    #time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
+    #time nice root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
+    time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
     echo 'Finished run:'$1
 }
 

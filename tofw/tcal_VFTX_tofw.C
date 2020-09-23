@@ -5,7 +5,7 @@ typedef struct EXT_STR_h101_t
   EXT_STR_h101_SOFTOFW_onion_t tofw;
 }EXT_STR_h101;
 
-void tcal_VFTX_offline(int runnum)
+void tcal_VFTX_tofw()
 {
   TStopwatch timer;
   timer.Start();
@@ -27,12 +27,11 @@ void tcal_VFTX_offline(int runnum)
   // Create input -----------------------------------------
   TString filename;
   if (expId==444)      filename = "/media/audrey/COURGE/SOFIA/ANALYSE/SOFIA3/data/202002_eng/main*.lmd";
-  else if (expId==467)   filename = "/u/taniuchi/s467/lmd_stitched/main0" + to_string(runnum) + "_*.lmd";
-  //filename = "/media/audrey/COURGE/SOFIA/ANALYSE/SOFIA3/data/202002_s467/main0341_0001.lmd";
+  else if (expId==467)   filename = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofw/lmd_ana/main0*.lmd";
   else                 filename = "--stream=lxlanddaq01:9000";
     
   // Output file ------------------------------------------
-  TString outputFileName = "rootfiles/calibVftx" + to_string(runnum) + ".root";
+  TString outputFileName = "rootfiles/calibVftx_tofw.root";
 
   // UCESB configuration ----------------------------------
   TString ntuple_options = "RAW";
@@ -118,7 +117,7 @@ void tcal_VFTX_offline(int runnum)
   
   // Ascii file with the Calibration Parameters
   FairParAsciiFileIo* parOut = new FairParAsciiFileIo();
-  TString outputFileNamePar = "parameters/tcal_VFTX" + to_string(runnum) + ".par";
+  TString outputFileNamePar = "tofw/tcal_VFTX_tofw.par";
   parOut->open(outputFileNamePar,"out");
   rtdb->setOutput(parOut);
   
