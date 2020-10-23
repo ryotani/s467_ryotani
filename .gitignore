@@ -6,3 +6,4 @@ log/*
 *.swp
 nohup.out
 calibration/parameters/*par
+all*.par
