@@ -59,7 +59,7 @@ void tofwcalib(int runnum)
     TString dir = gSystem->Getenv("VMCWORKDIR");
     TString ntuple_options = "RAW";
     TString ucesb_dir = getenv("UCESB_DIR");
-    TString filename, outputFilename, upexps_dir, ucesb_path, sofiacaldir,  sofiacalfilename;
+    TString filename, outputFilename, upexps_dir, ucesb_path, sofiacaldir,  sofiacalfilename, vftxcalfilename;
     Double_t brho28;
     
     if(runnum==0){
@@ -121,17 +121,19 @@ void tofwcalib(int runnum)
       filename = Form("/u/taniuchi/s467/lmd_stitched/main%04d_*.lmd", runnum);
       sofiacaldir = dir + "/sofia/macros/s467_ryotani/parameters/";
       if(FRSsetting[i] < 9){
-	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_Jun2020.par";
+	sofiacalfilename = sofiacaldir + "CalibParam_lowgain.par";
       } else if(musicgain[i] == 0){
 	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_FRS" + to_string(FRSsetting[i]) + ".par";
       } else {
 	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
       }
+      vftxcalfilename = sofiacaldir + "tcal_VFTX.par";
       //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_newUpexps_21Sep.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_ToFWVFTXpar.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
-      std::cout << "PARAM FILE: " << sofiacalfilename << std::endl;
+      std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
+      std::cout << "PARAM FILE (OTHERS): " << sofiacalfilename << std::endl;
       std::cout << "OUTPUT FILE: " << outputFilename << std::endl;
       std::cout << "Brho28: " << brho28 << std::endl;
       
@@ -148,7 +150,8 @@ void tofwcalib(int runnum)
     // Output file -----------------------------------------
     ucesb_path.ReplaceAll("//", "/");
     sofiacalfilename.ReplaceAll("//", "/");
-        
+    vftxcalfilename.ReplaceAll("//", "/");
+    
     // store data or not ------------------------------------
     Bool_t fCal_level_califa = true;  // set true if there exists a file with the calibration parameters
     Bool_t NOTstoremappeddata = true; // if true, don't store mapped data in the root file
@@ -309,7 +312,10 @@ void tofwcalib(int runnum)
     FairParAsciiFileIo* parIo1 = new FairParAsciiFileIo(); // Ascii
     if (!fCalifa)
     {
-        parIo1->open(sofiacalfilename, "in");
+        TList* parList1 = new TList();
+        parList1->Add(new TObjString(sofiacalfilename));
+	parList1->Add(new TObjString(vftxcalfilename));
+        parIo1->open(parList1, "in");
         rtdb->setFirstInput(parIo1);
         rtdb->print();
     }
@@ -319,6 +325,7 @@ void tofwcalib(int runnum)
         { // SOFIA and CALIFA mapping: Ascii files
             TList* parList1 = new TList();
             parList1->Add(new TObjString(sofiacalfilename));
+	    parList1->Add(new TObjString(vftxcalfilename));
             parList1->Add(new TObjString(califamapfilename));
             parIo1->open(parList1);
             rtdb->setFirstInput(parIo1);
@@ -326,8 +333,10 @@ void tofwcalib(int runnum)
         }
         else
         { // SOFIA, CALIFA mapping and CALIFA calibration parameters
-            parIo1->open(sofiacalfilename, "in"); // Ascii file
-            rtdb->setFirstInput(parIo1);
+            TList* parList1 = new TList();
+            parList1->Add(new TObjString(sofiacalfilename));
+            parList1->Add(new TObjString(vftxcalfilename));
+            parIo1->open(parList1, "in");
             rtdb->print();
             Bool_t kParameterMerged = kFALSE;
             FairParRootFileIo* parIo2 = new FairParRootFileIo(kParameterMerged); // Root file
@@ -482,13 +491,25 @@ void tofwcalib(int runnum)
         R3BSofScalersOnlineSpectra* scalersonline = new R3BSofScalersOnlineSpectra();
         run->AddTask(scalersonline);
     }
+    /*
+    if (fSci&&fMusic&&fTwim){
+      R3BSofFrsFillTree* frsfilltree = new R3BSofFrsTofwcalib();
+	/ *frsfilltree->SetNbDetectors(NumSofSci);
+	frsfilltree->SetNbChannels(3);
+	frsfilltree->SetIdS2(IdS2);
+	frsfilltree->SetIdS8(IdS8);* /
+        run->AddTask(frsfilltree);
+    }
+*/
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
-      R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree(); 
+      R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree(); //(brho28, 0.0, -5.8);
+      //frsfragmenttree->SetNbDetectors(NumSofSci);
+      //frsfragmenttree->SetNbChannels(3);
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
     }
-
+    //*/
     R3BSofOnlineSpectra* sofonline = new R3BSofOnlineSpectra();
     run->AddTask(sofonline);
 

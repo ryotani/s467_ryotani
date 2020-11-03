@@ -59,7 +59,7 @@ void filltree(int runnum)
     TString dir = gSystem->Getenv("VMCWORKDIR");
     TString ntuple_options = "RAW";
     TString ucesb_dir = getenv("UCESB_DIR");
-    TString filename, outputFilename, upexps_dir, ucesb_path, sofiacaldir,  sofiacalfilename, vftxcalfilename;
+    TString filename, outputFilename, upexps_dir, ucesb_path, sofiacaldir,  sofiacalfilename, vftxcalfilename, tofwhitfilename;
     Double_t brho28;
     
     if(runnum==0){
@@ -121,15 +121,17 @@ void filltree(int runnum)
       filename = Form("/u/taniuchi/s467/lmd_stitched/main%04d_*.lmd", runnum);
       sofiacaldir = dir + "/sofia/macros/s467_ryotani/parameters/";
       if(FRSsetting[i] < 9){
-	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_Jun2020.par";
+	sofiacalfilename = sofiacaldir + "CalibParam_lowgain.par";
       } else if(musicgain[i] == 0){
 	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_FRS" + to_string(FRSsetting[i]) + ".par";
       } else {
 	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
       }
       vftxcalfilename = sofiacaldir + "tcal_VFTX.par";
+      tofwhitfilename = sofiacaldir + "tofw_hit.par";
+      //
       //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_ToFWVFTXpar.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_ToFWhitpar.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
@@ -151,6 +153,7 @@ void filltree(int runnum)
     ucesb_path.ReplaceAll("//", "/");
     sofiacalfilename.ReplaceAll("//", "/");
     vftxcalfilename.ReplaceAll("//", "/");
+    tofwhitfilename.ReplaceAll("//", "/");
     
     // store data or not ------------------------------------
     Bool_t fCal_level_califa = true;  // set true if there exists a file with the calibration parameters
@@ -315,6 +318,7 @@ void filltree(int runnum)
         TList* parList1 = new TList();
         parList1->Add(new TObjString(sofiacalfilename));
 	parList1->Add(new TObjString(vftxcalfilename));
+	parList1->Add(new TObjString(tofwhitfilename));
         parIo1->open(parList1, "in");
         rtdb->setFirstInput(parIo1);
         rtdb->print();
@@ -326,6 +330,7 @@ void filltree(int runnum)
             TList* parList1 = new TList();
             parList1->Add(new TObjString(sofiacalfilename));
 	    parList1->Add(new TObjString(vftxcalfilename));
+	    parList1->Add(new TObjString(tofwhitfilename));
             parList1->Add(new TObjString(califamapfilename));
             parIo1->open(parList1);
             rtdb->setFirstInput(parIo1);
@@ -336,6 +341,7 @@ void filltree(int runnum)
             TList* parList1 = new TList();
             parList1->Add(new TObjString(sofiacalfilename));
             parList1->Add(new TObjString(vftxcalfilename));
+	    parList1->Add(new TObjString(tofwhitfilename));
             parIo1->open(parList1, "in");
             rtdb->print();
             Bool_t kParameterMerged = kFALSE;
@@ -464,6 +470,8 @@ void filltree(int runnum)
 
         // --- Tcal 2 Hit for SofTofW : TO CHECK why not SingleTcal2Hit ?
         R3BSofTofWTCal2Hit* SofTofWTcal2Hit = new R3BSofTofWTCal2Hit();
+	SofTofWTcal2Hit->SetTofLISE(0.);//43.);
+	SofTofWTcal2Hit->SetTofWPos(560.);
         SofTofWTcal2Hit->SetOnline(false);//NOTstorehitdata);
         run->AddTask(SofTofWTcal2Hit);
     }
