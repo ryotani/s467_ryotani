@@ -460,15 +460,15 @@ void filltree(int runnum)
     {
         // --- Mapped 2 Tcal for SofTofW
         R3BSofTofWMapped2Tcal* SofTofWMap2Tcal = new R3BSofTofWMapped2Tcal();
-        SofTofWMap2Tcal->SetOnline(false);//NOTstorecaldata);
+        SofTofWMap2Tcal->SetOnline(NOTstorecaldata);
         run->AddTask(SofTofWMap2Tcal);
 
         // --- Tcal 2 SingleTcal for SofTofW
         R3BSofTofWTcal2SingleTcal* SofTofWTcal2STcal = new R3BSofTofWTcal2SingleTcal();
-        SofTofWTcal2STcal->SetOnline(false);//NOTstorecaldata);
+        SofTofWTcal2STcal->SetOnline(NOTstorecaldata);
         run->AddTask(SofTofWTcal2STcal);
 
-        // --- Tcal 2 Hit for SofTofW : TO CHECK why not SingleTcal2Hit ?
+        // --- Tcal 2 Hit for SofTofW :
         R3BSofTofWTCal2Hit* SofTofWTcal2Hit = new R3BSofTofWTCal2Hit();
 	SofTofWTcal2Hit->SetTofLISE(0.);//43.);
 	SofTofWTcal2Hit->SetTofWPos(560.);
@@ -479,11 +479,13 @@ void filltree(int runnum)
     if (fSci&&fMusic)
     {
       R3BSofFrsAnalysis* frsana = new R3BSofFrsAnalysis();
+      frsana->SetOnline(false);
       run -> AddTask(frsana);
     }
 
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
       R3BSofFragmentAnalysis* fragmentana = new R3BSofFragmentAnalysis();
+      fragmentana->SetOnline(false);
       run -> AddTask(fragmentana);
     }
 
@@ -511,8 +513,6 @@ void filltree(int runnum)
 */
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
       R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree(); //(brho28, 0.0, -5.8);
-      //frsfragmenttree->SetNbDetectors(NumSofSci);
-      //frsfragmenttree->SetNbChannels(3);
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
