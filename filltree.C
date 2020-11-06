@@ -131,7 +131,7 @@ void filltree(int runnum)
       tofwhitfilename = sofiacaldir + "tofw_hit.par";
       //
       //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d_ToFWhitpar.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
@@ -470,22 +470,22 @@ void filltree(int runnum)
 
         // --- Tcal 2 Hit for SofTofW :
         R3BSofTofWTCal2Hit* SofTofWTcal2Hit = new R3BSofTofWTCal2Hit();
-	SofTofWTcal2Hit->SetTofLISE(0.);//43.);
+	SofTofWTcal2Hit->SetTofLISE(43.);
 	SofTofWTcal2Hit->SetTofWPos(560.);
-        SofTofWTcal2Hit->SetOnline(false);//NOTstorehitdata);
+        SofTofWTcal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(SofTofWTcal2Hit);
     }
     // Add sofana task ------------------------------------
     if (fSci&&fMusic)
     {
       R3BSofFrsAnalysis* frsana = new R3BSofFrsAnalysis();
-      frsana->SetOnline(false);
+      frsana->SetOnline(NOTstorehitdata);
       run -> AddTask(frsana);
     }
 
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
       R3BSofFragmentAnalysis* fragmentana = new R3BSofFragmentAnalysis();
-      fragmentana->SetOnline(false);
+      fragmentana->SetOnline(NOTstorehitdata);
       run -> AddTask(fragmentana);
     }
 
@@ -512,7 +512,7 @@ void filltree(int runnum)
     }
 */
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
-      R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree(); //(brho28, 0.0, -5.8);
+      R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree();
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);

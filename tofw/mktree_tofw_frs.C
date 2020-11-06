@@ -21,7 +21,7 @@ void mktree_tofw_frs(int runnum){
   gStyle->SetStatY(0.9);
   gStyle->SetOptStat();
   //TString pdfout;
-  ch = new TChain("evt");
+  ch = new TChain("Tree");
   Int_t firstrun = runnum>500?274:runnum;
   Int_t lastrun = (runnum>500?358+1:runnum);
 
@@ -50,10 +50,11 @@ void mktree_tofw_frs(int runnum){
     if(targetpos[i]<1325 || targetpos[i]>1424) continue;
     cout<<runnumcsv[i]<<" "<<dumchar<<" "<<FRSsetting[i]<<" "<<dumchar<<" "<<brhocsv[i]<<" "<<dumchar<<" "<<targetpos[i]<<" "<<dumchar<<" "<<musicgain[i]<<" "<<dumchar<<" "<<junk[i]<<endl;
 
-    filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_%04d_ToFWhitpar.root", runnumcsv[i]);
+    filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_%04d_FragmentTree.root", runnumcsv[i]);
     //ch -> Add(filename);
     ch -> AddFile(filename);
   }
+  ch->Merge("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofw/output/mktree_tofw_frs.root");
   /*
   for(int i = firstrun; i < lastrun+1; i++){
     filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_%04d_ToFWhitpar.root", i);
@@ -62,7 +63,8 @@ void mktree_tofw_frs(int runnum){
     //cout << "Filename: " << filename <<endl;
   }
   */
-  fout = new TFile("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofw/output/mktree_tofw_frs.root","recreate");
+  //fout = new TFile("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofw/output/mktree_tofw_frs.root","recreate");
+  /*
   ch -> SetProof();
   ch->SetBranchStatus("*",0);
   ch->SetBranchStatus("SofFrsData.fZ",1);
@@ -74,6 +76,7 @@ void mktree_tofw_frs(int runnum){
   Double_t fZ[3] = {0.};
   ch->SetBranchAddress("SofFrsData.fZ", fZ);
 
+  / *
   for(int i=0; i<NUMHIST; i++){
     hfrs[i] = new TH2F(Form("hfrs%i",i), Form("hfrs%i",i) , 500, 2.2, 2.8, 500, 10, 35);
     htofw[i] = new TH2F(Form("htofw%i",i), Form("htofw%i",i) , 30, -0.5, 29.5, 1000, -5, 5);
@@ -86,7 +89,7 @@ void mktree_tofw_frs(int runnum){
   ch->Draw("TofWHitData.fTime:TofWHitData.fPaddleId>>htofw2", "SofFrsData.fZ>0 && abs(SofFrsData.fZ-19)<0.5", "colz");
   ch->Draw("fZ:fAq>>hfrs3","SofFrsData.fZ>0 && abs(SofFrsData.fZ-21)<0.5", "colz");
   ch->Draw("TofWHitData.fTime:TofWHitData.fPaddleId>>htofw3", "SofFrsData.fZ>0 && abs(SofFrsData.fZ-21)<0.5", "colz");
-  
+  */
   /* /
   el = new TEventList("elist","elist");  
   ch -> Draw(">>elist","SofFrsData.fZ>0");
@@ -112,14 +115,16 @@ void mktree_tofw_frs(int runnum){
     //cout <<el->GetEntry(i) << " "<< fZ <<endl;
     cout <<fZ[0] <<endl;
   }
-  */
+  * /
   //tree->Write();
   for(int i =0; i<NUMHIST; i++){
     hfrs[i] ->Write();
     htofw[i] ->Write();
   }
-
-  fout->Close();
+  */
+  
+  //ch->CloneTree()->Write();
+  //fout->Close();
 
 
   
