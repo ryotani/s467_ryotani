@@ -7,3 +7,4 @@ log/*
 nohup.out
 calibration/parameters/*par
 all*.par
+*.DS_Store

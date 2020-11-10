@@ -62,7 +62,7 @@ void rootlogon() {
   //gStyle->SetPalette(0);
   gStyle->SetOptLogz(1);
   gStyle->SetOptTitle(1);
-  gStyle->SetOptFit(1);
+  gStyle->SetOptFit(0);
   gStyle->SetOptStat(0); //gStyle->SetOptStat(1111111);
   //gStyle->SetPadBorderMode(1);
   gStyle->SetOptDate(0);
