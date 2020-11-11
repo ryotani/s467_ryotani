@@ -1,5 +1,7 @@
 *~
 *.d
+*C.so
+*dict.pcm
 core*
 *.root
 log/*

@@ -1,5 +1,21 @@
 #define NUMPADDLE 28
-TProof *p =  TProof::Open("");
+#include "TCanvas.h"
+#include "TProof.h"
+#include "TString.h"
+#include "TChain.h"
+#include "TH2.h"
+#include "TH1.h"
+#include "TF1.h"
+#include "TProfile.h"
+#include "TStyle.h"
+#include <fstream>
+
+
+
+using namespace std;
+
+//TProof *p =  TProof::Open("");
+TProof *p =  TProof::Open("workers=10");
 
 TCanvas *c;
 TString infile = "./tofw/output/mktree_tofw_frs.root";
@@ -7,13 +23,16 @@ TString outpdf = "./tofw/output/fragment_calib.pdf";
 TString Zgate = "";
 TString fragbeta[NUMPADDLE] = {""};
 TString fragaoq[NUMPADDLE] = {""};
-TString brho = "Beta_S2_Cave / sqrt(1-Beta_S2_Cave*Beta_S2_Cave) * AoQ_S2_Cave";
+Double_t mc_e = 3.1071; // m_u * c_0 / e
+Double_t min_brho = 8.7, max_brho=9.3;
+TString brho = Form("Beta_S2_Cave / sqrt(1-Beta_S2_Cave*Beta_S2_Cave) * AoQ_S2_Cave * %f", mc_e);
+TString brhocave = "";
 TChain *ch;
 TH2D *h_beta_tof[NUMPADDLE], *h_beta_tof_cut[NUMPADDLE], *h_music_twim[2], *h_beta_beta[NUMPADDLE], *h_beta_beta_cut[NUMPADDLE];
 TH2D *h_mw_brho[NUMPADDLE+1], *h_fragaoq[NUMPADDLE+1], *h_fragpid[NUMPADDLE+1], *h_frspid;
 TProfile *prof_tof[NUMPADDLE], *prof_mw_brho;
 TH1D *h_tofw_paddle, *h_median_tof[NUMPADDLE];
-TF1 *f_tof[NUMPADDLE];
+TF1 *f_tof[NUMPADDLE], *f_mw3brho;
 ofstream fout("./tofw/output/fragment_fit_tof.csv", ofstream::out);
 
 void initialise();
@@ -64,7 +83,7 @@ int fragment_calib(){
     h_median_tof[i] ->Fit(f_tof[i], "RQ", "");
     //prof_tof[i] = h_beta_tof_cut[i]->ProfileX();
     //prof_tof[i] ->Draw("same");
-    fragbeta[i] += Form("(1./(FragTof-%f)*%f)", f_tof[i]->GetParameter(0), f_tof[i]->GetParameter(1));
+    fragbeta[i] += Form("(1./(FragTof-(%f))*(%f))", f_tof[i]->GetParameter(0), f_tof[i]->GetParameter(1));
     fout << i+1 << ", " << f_tof[i]->GetParameter(0) <<", " <<f_tof[i]->GetParameter(1) <<endl;
   }
   c->Print(outpdf);
@@ -86,14 +105,15 @@ int fragment_calib(){
   }
   c->Print(outpdf);
   //
-  h_mw_brho[NUMPADDLE] = new TH2D("hmwbrhototal", "Rigidity vs MWPC3-X; #beta#gamma AoQ; MWPC3-X (mm)", 200, 2.8, 3., 200, -500, 500);
+  h_mw_brho[NUMPADDLE] = new TH2D("hmwbrhototal", "Rigidity vs MWPC3-X; Brho-frs (#beta#gamma AoQ); MWPC3-X (mm)", 200, min_brho, max_brho, 200, -500, 500);
   for(int i = 0 ; i<NUMPADDLE; i++){
     c->cd(i+1+2);
-    h_mw_brho[i] = new TH2D(Form("hmwbrho%i", i+1), Form("Rigidity vs MWPC3-X, Paddle %i; #beta#gamma AoQ; MWPC3-X (mm)", i+1), 200, 2.8, 3., 200, -500, 500);
+    h_mw_brho[i] = new TH2D(Form("hmwbrho%i", i+1), Form("Rigidity vs MWPC3-X, Paddle %i; #beta#gamma AoQ; MWPC3-X (mm)", i+1), 200, min_brho, max_brho, 200, -500, 500);
     TString condition =  Form("Tofw_Paddle==%i && abs(%s - Beta_S2_Cave)<0.003 && %s && Beta_S2_Cave<1 && Beta_S2_Cave>0.5", i+1, fragbeta[i].Data(), Zgate.Data());
     cout << condition <<endl;
     ch->Draw(Form("Mw3_X:%s>>hmwbrho%i", brho.Data(), i+1), condition,"col");
     //ch->Draw(Form("Mw3_X:Beta_S2_Cave*TheGamma*TheAoQ>>hmwbrho%i", i+1, brho.Data()), condition,"col");
+    if(i<2) continue; // As there's many events
     h_mw_brho[NUMPADDLE] -> Add(h_mw_brho[i]);
   }
   c->cd(1);
@@ -101,15 +121,23 @@ int fragment_calib(){
   c->cd(2);
   prof_mw_brho = h_mw_brho[NUMPADDLE]->ProfileX();
   prof_mw_brho->Draw();
-      //prof_tof[i] = h_beta_tof_cut[i]->ProfileX();
-    //prof_tof[i] ->Draw("same");
+  f_mw3brho = new TF1("f_mw3brho","[0]+[1]*x",9.04,9.13); // MW3 = [0] + [1] * Brho --> Brho = (MW3-[0])/[1]
+  f_mw3brho->SetLineWidth(1);
+  prof_mw_brho->Fit(f_mw3brho, "R", "");
+  //cout<<"Fit brho: "<<f_mw3brho->GetParameter(0)<<" + x*"<<f_mw3brho->GetParameter(1)<<endl;
+  fout << 100 << ", " << f_mw3brho->GetParameter(0) <<", " <<f_mw3brho->GetParameter(1) <<endl;
+  brhocave += Form("((Mw3_X-(%f))/(%f))",f_mw3brho->GetParameter(0), f_mw3brho->GetParameter(1));
   c->Print(outpdf);
+  //
+  p->ClearCache();
+  cout<<"CLEARED PROOF CACHE"<<endl;
   //
   h_fragaoq[NUMPADDLE] = new TH2D("h_fragaoq", "AoQ of FRS and Fragment; AoQ in FRS; AoQ in CaveC", 500, 2.2,2.7, 500,2.2,2.7);
   for(int i=0; i<NUMPADDLE; i++){
     c->cd(i+3);
-    fragaoq[i] += Form("((%s)/%s*sqrt(1-%s*%s))", brho.Data(), fragbeta[i].Data(), fragbeta[i].Data(), fragbeta[i].Data());
-    cout<<fragaoq[i]<<endl;
+    fragaoq[i] += Form("((%s)/(%s*%f)*sqrt(1-%s*%s))", brhocave.Data(), fragbeta[i].Data(), mc_e, fragbeta[i].Data(), fragbeta[i].Data());
+    //Form("((%s)/%s*sqrt(1-%s*%s))", brho.Data(), fragbeta[i].Data(), fragbeta[i].Data(), fragbeta[i].Data());
+    cout<<"Paddle"<<i+1<<": "<<fragaoq[i]<<endl;
     //
     h_fragaoq[i] = new TH2D(Form("h_fragaoq%i",i), Form("AoQ of FRS and Fragment (Paddle %i); AoQ in FRS; AoQ in CaveC", i+1), 500, 2.2, 2.7, 500,2.2,2.7);
     ch->Draw(Form("%s:AoQ_S2_Cave>>h_fragaoq%i", fragaoq[i].Data(),i),Form("Tofw_Paddle==%i",i+1),"col");
@@ -126,7 +154,6 @@ int fragment_calib(){
     c->cd(i+3);
     h_fragpid[i] = new TH2D(Form("h_fragpid%i",i), Form("Fragment PID (Paddle %i); AoQ; Twim Z", i+1), 500, 2.2,2.7, 500,10,30);
     ch->Draw(Form("TwimZ:%s>>h_fragpid%i",fragaoq[i].Data(),i),Form("Tofw_Paddle==%i",i+1),"col");
-    //ch->Draw(Form("TwimZ:%s/%s*sqrt(1-%s*%s)>>h_fragpid%i",brho.Data(), fragbeta[i].Data(), fragbeta[i].Data(), fragbeta[i].Data(),i),"","col");
     h_fragpid[NUMPADDLE]->Add(h_fragpid[i]);
   }
   c->cd(2);

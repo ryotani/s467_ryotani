@@ -48,6 +48,7 @@ void rootlogon() {
   //gStyle->SetHistFillStyle(3002);
   gStyle->SetHistLineColor(kBlack);
   gStyle->SetFuncColor(kRed);
+  gStyle->SetNdivisions(210,"XY");
   //gStyle->SetFrameLineWidth(2);
   gStyle->SetPadGridX(0);
   gStyle->SetPadGridY(0);
