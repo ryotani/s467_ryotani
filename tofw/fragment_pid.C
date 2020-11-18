@@ -1,22 +1,9 @@
 #define NUMPADDLE 28
-TString target = "ch2-24mm";
+#include "fragmentana.h"
 
-TProof *p =  TProof::Open("");
-TCanvas *c;
+TString target = "ch2-24mm";
 TString infile = "./tofw/output/mktree_tofw_frs_"+ target +".root";
 TString outpdf = "./tofw/output/fragment_pid_" + target + ".pdf";
-TString Zgate = "abs(MusicZ-TwimZ)<0.5";
-TString fragbeta[NUMPADDLE] = {""};
-TString fragaoq[NUMPADDLE] = {""};
-TString brho = "Beta_S2_Cave / sqrt(1-Beta_S2_Cave*Beta_S2_Cave) * AoQ_S2_Cave";
-TChain *ch;
-Double_t par[NUMPADDLE][2] = {{0.}};
-
-TH2D *h_beta_tof[NUMPADDLE], *h_beta_tof_cut[NUMPADDLE], *h_music_twim[2], *h_beta_beta[NUMPADDLE], *h_beta_beta_cut[NUMPADDLE];
-TH2D *h_mw_brho[NUMPADDLE+1], *h_fragaoq[NUMPADDLE+1], *h_fragpid[NUMPADDLE+1], *h_frspid;
-TProfile *prof_tof[NUMPADDLE], *prof_mw_brho;
-TH1D *h_tofw_paddle, *h_median_tof[NUMPADDLE];
-//TF1 *f_tof[NUMPADDLE];
 
 ifstream fin("./tofw/output/fragment_fit_tof.csv", ofstream::in);
 
