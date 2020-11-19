@@ -33,10 +33,15 @@ TH1D *h_tofw_paddle, *h_median_tof[NUMPADDLE];
 TF1 *f_tof[NUMPADDLE], *f_mw3brho;
 
 //For MWPC ana
-#define NUMCOND 10
+#define NUMCOND 20
 int cond = 0;
 TString beamcondition = "abs(MusicZ-20.)<0.4 && abs(Beta_S2_Cave - 0.765)<0.005 &&";
+TString conditionwithbetacut = "";
 TString mwcondition = "";
+TString beta_tofw="";
+TString beta_tofw_mod="";
+TString fragbrhostring="";
+TString fragaoqstring="";
 //
 Double_t max_mw1[4][2]={{0.}}, range_mw = 60.;
 TLine *line_mw[4][2][2];
@@ -45,8 +50,13 @@ TString axis_mw_h[4] = {"Mw1_X", "Mw1_X", "Mw1_Y", "(Mw2_X-Mw1_X)"};
 TString axis_mw_v[4] = {"Mw1_Y", "(Mw2_X-Mw1_X)", "(Mw2_Y-Mw1_Y)", "(Mw2_Y-Mw1_Y)"};
 TString axis_mw3[4] = {"Mw1_X", "Mw1_Y", "(Mw2_X-Mw1_X)", "(Mw2_Y-Mw1_Y)"};
 TString Mw3_X_mod = "Mw3_X";
-TH2D *h_mw12[NUMCOND][4], *h_mw3[NUMCOND][4];
-TProfile *prof_mw3[4];
-TF1 *f_mw3[NUMCOND][4];
+TH2D *h_mw12[NUMCOND][4], *h_mw3[NUMCOND][4], *h_mwbeta[NUMCOND][4];
+TProfile *prof_mw3[4], *prof_mwbeta[NUMCOND][4];
+TF1 *f_mw3[NUMCOND][4], *f_mwbeta[NUMCOND][4];
 Double_t range_fit_mw3_low[4]={-15., -10., -8., -50.};
 Double_t range_fit_mw3_high[4]={5., 20., 0., -35.};
+
+//For Brho reconstruction
+TH2D *h_beta_mw3[NUMCOND][4], *h_brho_mw3[NUMCOND][4], *h_brhobrho, *h_aoqaoq, *h_pid;
+TProfile *prof_beta_mw3[NUMCOND][4], *prof_brho_mw3[NUMCOND][4];
+TF1 *f_beta_mw3[NUMCOND][4], *f_brho_mw3[NUMCOND][4];
