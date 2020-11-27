@@ -104,6 +104,7 @@ void filltree(int runnum)
 	//std::cout<<runnumcsv[i]<<dumchar<<FRSsetting[i]<<dumchar<<brhocsv[i]<<dumchar<<targetpos[i]<<dumchar<<musicgain[i]<<dumchar<<junk[i]<<std::endl;
 	if(runnumcsv[i] == runnum){
 	  if(junk[i] == 0){
+	    // if(targetpos[i]!=1424) return;
 	    brho28 = brhocsv[i];
 	    break;
 	  } else {
@@ -135,6 +136,7 @@ void filltree(int runnum)
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
+      std::cout << "PARAM FILE (TofW): " << tofwhitfilename << std::endl;
       std::cout << "PARAM FILE (OTHERS): " << sofiacalfilename << std::endl;
       std::cout << "OUTPUT FILE: " << outputFilename << std::endl;
       std::cout << "Brho28: " << brho28 << std::endl;
@@ -518,8 +520,8 @@ void filltree(int runnum)
       run->AddTask(frsfragmenttree);
     }
     //*/
-    R3BSofOnlineSpectra* sofonline = new R3BSofOnlineSpectra();
-    run->AddTask(sofonline);
+    //R3BSofOnlineSpectra* sofonline = new R3BSofOnlineSpectra();
+    //run->AddTask(sofonline);
 
     // Initialize -------------------------------------------
     run->Init();

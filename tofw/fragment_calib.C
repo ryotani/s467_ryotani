@@ -1,4 +1,4 @@
-#define NUMPADDLE 15
+#define NUMPADDLE 27
 
 #include "fragmentana.h"
 
@@ -6,6 +6,12 @@ TString infile = "./tofw/output/mktree_tofw_frs_empty.root";
 TString outpdf = "./tofw/output/fragment_calib.pdf";
 TString brho_outpdf = "./tofw/output/fragment_calib_brho.pdf";
 TString recobrho_outpdf = "./tofw/output/fragment_reco_brho.pdf";
+/*
+TString infile = "./tofw/output/mktree_tofw_frs_ch2-24mm.root";
+TString outpdf = "./tofw/output/fragment_calib_ch2_test.pdf";
+TString brho_outpdf = "./tofw/output/fragment_calib_brho_ch2_test.pdf";
+TString recobrho_outpdf = "./tofw/output/fragment_reco_brho_ch2_test.pdf";
+*/
 
 void initialise();
 int tofw_calib();
@@ -22,7 +28,7 @@ int fragment_calib(){
   //tofw_calib();
   loadtofpara();
   transfer_mat();
-  brho_corr();
+  //brho_corr();
   //
   p->Close();
   delete ch;
@@ -84,7 +90,7 @@ int brho_corr(){
   }
   //
   c->cd(4);
-  conditions = "";
+  conditions = "abs(MusicZ-20.)<0.4 && abs(AoQ_S2_Cave-2.45)<0.02"; // 49Ca
   h_brhobrho = new TH2D("hbrhobrho", "Brho correlation in FRS and Cave; Brho FRS /Tm; Brho Cave /Tm", 500, 8.7, 9.3, 500, 8.7, 9.3);
   fragbrhostring = Form("(%s-(%f))/(%f)", Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(0), f_brho_mw3[cond][2]->GetParameter(1));
   ch->Draw(Form("(%s):%s>>hbrhobrho", fragbrhostring.Data(), brho.Data()), conditions, "col");
@@ -106,6 +112,8 @@ int brho_corr(){
 }
 
 int transfer_mat(){
+  ofstream fout("./tofw/output/fragment_fit_brho.txt", ofstream::out);
+  //
   c = new TCanvas("c","c",1200,1000);
   c -> Divide(4,4);
   c -> Print(brho_outpdf + "[");
@@ -129,6 +137,7 @@ int transfer_mat(){
   conditions += mwcondition;
   conditions += ")";
   draw_transfer_corr(conditions);
+  //fout << f_mw3[cond-1][2]->GetParameter(0) <<", " <<f_mw3[cond-1][2]->GetParameter(1) <<", "<<axis_mw3[2]<<endl;
   //
   // Reset the mwcondition with y and b only
   mwcondition = Form("&& abs(%s-(%f))<2", axis_mw_h[2].Data(), max_mw1[2][0]);
@@ -173,6 +182,8 @@ int transfer_mat(){
   Mw3_X_mod += Form("+ (- %f - %s *(%f))", f_mw3[cond-1][1]->GetParameter(0), axis_mw3[1].Data(), f_mw3[cond-1][1]->GetParameter(1));
   cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   draw_transfer_corr(conditions);
+  ///
+  fout << "Mw3_X_mod: "<<endl <<Mw3_X_mod <<endl<<endl;
   ////
   // Correction of ToF length
   // Gate on 49Ca
@@ -229,8 +240,11 @@ int transfer_mat(){
   conditions += ")";
   draw_toflength_corr(conditions);
   ////
+  fout << "beta_tofw_mod: "<<endl <<beta_tofw_mod <<endl<<endl;
+  //
   c -> Print(brho_outpdf + "]");
   delete c;
+  fout.close();
   return 0;
 }
 
@@ -497,6 +511,7 @@ int loadtofpara(){
   for(int i = 0 ; i<NUMPADDLE; i++){
     beta_tofw += Form("(1.0*(Tofw_Paddle==%i))* %s", i+1, fragbeta[i].Data());
     if(i==NUMPADDLE-1){
+      beta_tofw += Form("+(1.0*(Tofw_Paddle>%i))* (1./(FragTof-(2.773780))*(31.234900))", NUMPADDLE); 
       beta_tofw += ")";
     }else{
       beta_tofw += "+";
