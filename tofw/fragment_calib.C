@@ -26,7 +26,11 @@ int fragment_calib(){
   if (NUMPADDLE>28) return 1;
   initialise();
   //tofw_calib();
-  loadtofpara();
+  //loadtofpara();
+  beta_tofw = "FragBeta";
+  cut_mw = Form("(Mw1_X>%f)&&(Mw1_X<%f)&&", -30.,25.);
+  for(int i=0;i<4;i++) cut_mw += Form("(%s>%f)&&(%s<%f)&&",axis_mw3[i].Data(),range_cut_mw3_low[i],axis_mw3[i].Data(),range_cut_mw3_high[i]);
+  //cut_mw += Form("(Mw2_X>%f)&&(Mw2_X<%f)&&", -40, 40);
   transfer_mat();
   //brho_corr();
   //
@@ -121,7 +125,7 @@ int transfer_mat(){
   TString conditions = "1";
   draw_transfer_corr(conditions);
   //
-  beamcondition += Zgate;
+  beamcondition += cut_mw + Zgate;
   conditions = "(";
   conditions += beamcondition;
   conditions += ")";
@@ -130,7 +134,7 @@ int transfer_mat(){
   mwcondition = Form("&& abs(%s-(%f))<2.", axis_mw_h[0].Data(), max_mw1[0][0]);
   mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_h[2].Data(), max_mw1[2][0]);
   mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_v[3].Data(), max_mw1[3][1]);
-  mwcondition += "&& Mw3_X < 300.";
+  //mwcondition += "&& Mw3_X < 300.";
   
   conditions = "(";
   conditions += beamcondition;
@@ -142,57 +146,71 @@ int transfer_mat(){
   // Reset the mwcondition with y and b only
   mwcondition = Form("&& abs(%s-(%f))<2", axis_mw_h[2].Data(), max_mw1[2][0]);
   mwcondition += Form("&& abs(%s-(%f))<2", axis_mw_v[3].Data(), max_mw1[3][1]);
-  mwcondition += "&& Mw3_X < 300.";
+  //mwcondition += "&& Mw3_X < 300.";
   conditions = "(";
   conditions += beamcondition;
   conditions += mwcondition;
   conditions += ")";
-  Mw3_X_mod = Form("(Mw3_X - %f - %s *(%f))", f_mw3[cond-1][2]->GetParameter(0), axis_mw3[2].Data(), f_mw3[cond-1][2]->GetParameter(1));
+  Mw3_X_mod = Form("(Mw3_X - (%f) - %s *(%f))", f_mw3[cond-1][2]->GetParameter(0), axis_mw3[2].Data(), f_mw3[cond-1][2]->GetParameter(1));
   cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   draw_transfer_corr(conditions);
   //
   // Reset the mwcondition with y  only
   mwcondition = Form("&& abs(%s-(%f))<2", axis_mw_h[2].Data(), max_mw1[2][0]);
   //mwcondition += Form("&& abs(%s-(%f))<2", axis_mw_v[3].Data(), max_mw1[3][1]);
-  mwcondition += "&& Mw3_X < 300.";
+  //mwcondition += "&& Mw3_X < 300.";
   conditions = "(";
   conditions += beamcondition;
   conditions += mwcondition;
   conditions += ")";
-  Mw3_X_mod += Form("+ (- %f - %s *(%f))", f_mw3[cond-1][0]->GetParameter(0), axis_mw3[0].Data(), f_mw3[cond-1][0]->GetParameter(1));
+  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][0]->GetParameter(0), axis_mw3[0].Data(), f_mw3[cond-1][0]->GetParameter(1));
   cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   draw_transfer_corr(conditions);
   //
   // Reset the mwcondition
-  mwcondition = "&& Mw3_X < 300.";
+  //mwcondition = "&& Mw3_X < 300.";
   conditions = "(";
   conditions += beamcondition;
   conditions += mwcondition;
   conditions += ")";
-  Mw3_X_mod += Form("+ (- %f - %s *(%f))", f_mw3[cond-1][3]->GetParameter(0), axis_mw3[3].Data(), f_mw3[cond-1][3]->GetParameter(1));
+  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][3]->GetParameter(0), axis_mw3[3].Data(), f_mw3[cond-1][3]->GetParameter(1));
   cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   draw_transfer_corr(conditions);
   //
   //mwcondition = "&& Mw3_X < 300.";
   conditions = "(";
   //conditions += beamcondition; // remove beta condition
+  conditions += cut_mw;
   conditions += "abs(MusicZ-20.)<0.4";
   conditions += mwcondition;
   conditions += ")";
-  Mw3_X_mod += Form("+ (- %f - %s *(%f))", f_mw3[cond-1][1]->GetParameter(0), axis_mw3[1].Data(), f_mw3[cond-1][1]->GetParameter(1));
+  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][1]->GetParameter(0), axis_mw3[1].Data(), f_mw3[cond-1][1]->GetParameter(1));
   cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
+  draw_transfer_corr(conditions);
+  //
+  // Final figures
+  conditions = "(";
+  //conditions += beamcondition; // remove beta condition
+  conditions += cut_mw;
+  conditions += Zgate;
+  //conditions += "abs(MusicZ-20.)<0.4";
+  //conditions += mwcondition;
+  conditions += ")";
   draw_transfer_corr(conditions);
   ///
   fout << "Mw3_X_mod: "<<endl <<Mw3_X_mod <<endl<<endl;
   ////
+  /////////////////////////////////////////////////////////////
   // Correction of ToF length
+  conditions = "1";
+  draw_toflength_corr(conditions);
   // Gate on 49Ca
-  beamcondition += "&& abs(AoQ_S2_Cave-2.45)<0.02";
+  //beamcondition += "&& abs(AoQ_S2_Cave-2.45)<0.02";
   mwcondition = Form("&& abs(%s-(%f))<2.", axis_mw_h[0].Data(), max_mw1[0][0]);
   mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_h[2].Data(), max_mw1[2][0]);
   mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_v[3].Data(), max_mw1[3][1]);
-  mwcondition += "&& Mw3_X < 300.";
-  range_fit_mw3_high[0] = 0.;
+  //mwcondition += "&& Mw3_X < 300.";
+  //range_fit_mw3_high[0] = 0.;
   beta_tofw_mod = beta_tofw;
   //
   conditions = "(";
@@ -203,7 +221,7 @@ int transfer_mat(){
   ////
   mwcondition = Form("&& abs(%s-(%f))<2.", axis_mw_h[2].Data(), max_mw1[2][0]); //y
   mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_v[3].Data(), max_mw1[3][1]); //b
-  mwcondition += "&& Mw3_X < 300.";
+  //mwcondition += "&& Mw3_X < 300.";
   beta_tofw_mod = Form("(%s-(%f+(%f)*%s))", beta_tofw_mod.Data(), f_mwbeta[cond-1][2]->GetParameter(0), f_mwbeta[cond-1][2]->GetParameter(1), axis_mw3[2].Data()); // Subtract a dependence
   //
   conditions = "(";
@@ -213,7 +231,7 @@ int transfer_mat(){
   draw_toflength_corr(conditions);
   ////
   mwcondition = Form("&& abs(%s-(%f))<2.", axis_mw_h[2].Data(), max_mw1[2][0]); //y
-  mwcondition += "&& Mw3_X < 300.";
+  //mwcondition += "&& Mw3_X < 300.";
   beta_tofw_mod = Form("(%s-(%f+(%f)*%s))", beta_tofw_mod.Data(), f_mwbeta[cond-1][0]->GetParameter(0), f_mwbeta[cond-1][0]->GetParameter(1), axis_mw3[0].Data()); // Subtract x dependence
   //
   conditions = "(";
@@ -222,7 +240,7 @@ int transfer_mat(){
   conditions += ")";
   draw_toflength_corr(conditions);
   ////
-  mwcondition = "&& Mw3_X < 300.";
+  //mwcondition = "&& Mw3_X < 300.";
   beta_tofw_mod = Form("(%s-(%f+(%f)*%s))", beta_tofw_mod.Data(), f_mwbeta[cond-1][3]->GetParameter(0), f_mwbeta[cond-1][3]->GetParameter(1), axis_mw3[3].Data()); // Subtract b dependence
   //
   conditions = "(";
@@ -231,11 +249,11 @@ int transfer_mat(){
   conditions += ")";
   draw_toflength_corr(conditions);
   ////
-  mwcondition = "&& Mw3_X < 300.";
+  //mwcondition = "&& Mw3_X < 300.";
   beta_tofw_mod = Form("(%s-(%f+(%f)*%s))", beta_tofw_mod.Data(), f_mwbeta[cond-1][1]->GetParameter(0), f_mwbeta[cond-1][1]->GetParameter(1), axis_mw3[1].Data()); // Subtract y dependence
   //
-  conditions = "(";
-  conditions += beamcondition;
+  conditions = "(1";
+  //conditions += beamcondition;
   conditions += mwcondition;
   conditions += ")";
   draw_toflength_corr(conditions);
@@ -258,7 +276,7 @@ int draw_toflength_corr(TString conditions){
   for(int i = 0; i < 4 ; i++){
       c->cd(5+i);
       h_mw12[cond][i] = new TH2D(Form("h_mw12_%i%i",cond,i), Form("Phase space before GLAD;%s / mm;%s / mm",axis_mw_h[i].Data(),axis_mw_v[i].Data()), 500, -1.*range_mw, range_mw, 500, -1.*range_mw, range_mw);
-      ch->Draw(Form("%s:%s>>h_mw12_%i%i",axis_mw_v[i].Data(),axis_mw_h[i].Data(),cond,i),conditions,"colz");
+      ch->Draw(Form("%s:%s>>h_mw12_%i%i",axis_mw_v[i].Data(),axis_mw_h[i].Data(),cond,i),conditionwithbetacut,"colz");
       if(cond==0){
 	cerr<<"Get maximum of the MWPC distribution first"<<endl;
 	return -1;
@@ -266,14 +284,19 @@ int draw_toflength_corr(TString conditions){
       //
       c->cd(9+i);
       h_mwbeta[cond][i] = new TH2D(Form("h_mwbeta_%i%i",cond,i), Form("Flight length correction;%s / mm;#beta_{cave}-#beta_{frs}", axis_mw3[i].Data()), 500, -1.*range_mw, range_mw, 500, -0.01, 0.01);
-      ch->Draw(Form("%s-Beta_S2_Cave:%s>>h_mwbeta_%i%i", beta_tofw_mod.Data(), axis_mw3[i].Data(), cond, i), conditions,"colz");
+      ch->Draw(Form("%s-Beta_S2_Cave:%s>>h_mwbeta_%i%i", beta_tofw_mod.Data(), axis_mw3[i].Data(), cond, i), conditionwithbetacut,"colz");
       //
-      c->cd(13+i);
-      prof_mwbeta[cond][i] = h_mwbeta[cond][i]->ProfileX();
-      prof_mwbeta[cond][i] ->Draw();
+      c->cd(9+i);
+      //prof_mwbeta[cond][i] = h_mwbeta[cond][i]->ProfileX();
+      //prof_mwbeta[cond][i] ->Draw("same");
+      h_median_mwbeta[cond][i] = h_mwbeta[cond][i]->QuantilesX();
+      h_median_mwbeta[cond][i] ->GetYaxis() ->SetRangeUser(-0.01,0.01);
+      h_median_mwbeta[cond][i] ->Draw("same");
+
       f_mwbeta[cond][i] = new TF1(Form("func_mwbeta_%i_%i",cond,i),"[0]+[1]*x", range_fit_mw3_low[i], range_fit_mw3_high[i]);
       f_mwbeta[cond][i]->SetLineWidth(1);
-      prof_mwbeta[cond][i] -> Fit(f_mwbeta[cond][i], "R","");
+      //prof_mwbeta[cond][i] -> Fit(f_mwbeta[cond][i], "R","");
+      h_median_mwbeta[cond][i] -> Fit(f_mwbeta[cond][i], "R","");
       //
   }
   //  
@@ -313,9 +336,10 @@ int draw_transfer_corr(TString conditions){
       h_mw3[cond][i] = new TH2D(Form("h_mw3_%i%i",cond,i), Form("Ion transfer through GLAD;%s / mm;Mw3_X_mod / mm", axis_mw3[i].Data()), 500, -1.*range_mw, range_mw, 500, -500, 500);
       ch->Draw(Form("%s:%s>>h_mw3_%i%i", Mw3_X_mod.Data(), axis_mw3[i].Data(), cond, i), conditionwithbetacut,"colz");
       //
-      c->cd(13+i);
+      //c->cd(13+i);
+      c->cd(9+i);
       prof_mw3[i] = h_mw3[cond][i]->ProfileX();
-      prof_mw3[i] ->Draw();
+      prof_mw3[i] ->Draw("same");
       //if(mwcondition.Sizeof()>1){	      }
       f_mw3[cond][i] = new TF1(Form("func_mw3_%i_%i",cond,i),"[0]+[1]*x", range_fit_mw3_low[i], range_fit_mw3_high[i]);
       f_mw3[cond][i]->SetLineWidth(1);
@@ -337,11 +361,13 @@ int draw_pidgate(TString conditions){
   ch->Draw(Form("MusicZ:TwimZ>>hmusictwim_mw%i",cond),conditions,"col");
   //
   c->cd(3);
-  conditionwithbetacut = conditions + "&&(";
 
   h_beta_beta_mw[cond][NUMPADDLE] = new TH2D(Form("hbetabeta_mw%i",cond), "#beta correlation: Frs vs CaveC; #beta in FRS; #beta in Cave (ns)", 500, 0.7, 0.8, 500, 0.7, 0.8);
   //
-  for(int i = 0 ; i<NUMPADDLE; i++){
+  conditionwithbetacut = conditions + "&& (abs(FragBeta - Beta_S2_Cave)<0.004)";
+  /*
+  conditionwithbetacut = conditions + "&&(";
+    for(int i = 0 ; i<NUMPADDLE; i++){
     TString condition_temp=Form("(Tofw_Paddle==%i && abs(%s - Beta_S2_Cave)<0.004)",i+1, fragbeta[i].Data());
     conditionwithbetacut += condition_temp;
     condition_temp += "&&";
@@ -351,7 +377,7 @@ int draw_pidgate(TString conditions){
     }else{
       conditionwithbetacut += "||";
     }
-  }
+  }*/
   cout << "Beta Tofw: "<<beta_tofw<<endl<<" conditionwithbetacut: "<< conditionwithbetacut << endl;
   ch->Draw(Form("%s:Beta_S2_Cave>>hbetabeta_mw%i", beta_tofw.Data(), cond), conditionwithbetacut, "col");
   //
