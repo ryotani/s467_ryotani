@@ -67,5 +67,9 @@ TString cut_mw = "";
 
 //For Brho reconstruction
 TH2D *h_beta_mw3[NUMCOND][4], *h_brho_mw3[NUMCOND][4], *h_brhobrho, *h_aoqaoq, *h_pid;
+TH1D *h_fragaoq_proj;//[50];
 TProfile *prof_beta_mw3[NUMCOND][4], *prof_brho_mw3[NUMCOND][4];
 TF1 *f_beta_mw3[NUMCOND][4], *f_brho_mw3[NUMCOND][4];
+
+
+// For FragReco
