@@ -74,8 +74,8 @@ void rootlogon() {
   //gStyle->SetTextFont(43);
   //gStyle->SetStatFont(43);
 
-  gStyle->SetLabelSize(25,"XYZ");
-  gStyle->SetTitleSize(25,"XYZ");
+  gStyle->SetLabelSize(15,"XYZ");
+  gStyle->SetTitleSize(15,"XYZ");
   gStyle->SetTitleOffset(1,"X");
   gStyle->SetTitleOffset(1.5,"Y");
   //gStyle->SetTitleOffset(0,"T");
