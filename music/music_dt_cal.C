@@ -45,7 +45,7 @@ void music_dt_cal(int runnum)
     timer.Start();
 
     //const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
-    const Int_t nev = 1000000; // Only nev events to read
+    const Int_t nev = 100000; // Only nev events to read
     const Int_t fRunId = 1;
 
     // *********************************** //
@@ -133,7 +133,7 @@ void music_dt_cal(int runnum)
       vftxcalfilename = sofiacaldir + "tcal_VFTX.par";
       tofwhitfilename = sofiacaldir + "tofw_hit.par";
       //
-      outputFilename = Form("./rootfiles/s467_MusicDTCal_Setting%i_%04d.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/s467_MusicDTCal_Setting%i_%04d_2Sep.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
@@ -160,9 +160,9 @@ void music_dt_cal(int runnum)
     
     // store data or not ------------------------------------
     Bool_t fCal_level_califa = true;  // set true if there exists a file with the calibration parameters
-    Bool_t NOTstoremappeddata = false; // if true, don't store mapped data in the root file
-    Bool_t NOTstorecaldata = false;    // if true, don't store cal data in the root file
-    Bool_t NOTstorehitdata = false;    // if true, don't store hit data in the root file
+    Bool_t NOTstoremappeddata = true; // if true, don't store mapped data in the root file
+    Bool_t NOTstorecaldata = true;    // if true, don't store cal data in the root file
+    Bool_t NOTstorehitdata = true;    // if true, don't store hit data in the root file
     
     // Online server configuration --------------------------
     Int_t refresh = 100; // Refresh rate for online histograms
@@ -180,7 +180,7 @@ void music_dt_cal(int runnum)
     Bool_t fCalifa = false;  // Califa calorimeter
     Bool_t fMwpc1 = true;    // MWPC1 for tracking of fragments in front of target
     Bool_t fMwpc2 = true;    // MWPC2 for tracking of fragments before GLAD
-     Bool_t fTwim = true;     // Twim: Ionization chamber for charge-Z of fragments
+     Bool_t fTwim = false;     // Twim: Ionization chamber for charge-Z of fragments
     Bool_t fMwpc3 = false;    // MWPC3 for tracking of fragments behind GLAD
     Bool_t fTofW = false;     // ToF-Wall for time-of-flight of fragments behind GLAD
     Bool_t fScalers = false;  // SIS3820 scalers at Cave C
@@ -320,8 +320,8 @@ void music_dt_cal(int runnum)
     {
         TList* parList1 = new TList();
         parList1->Add(new TObjString(sofiacalfilename));
-	parList1->Add(new TObjString(vftxcalfilename));
-	parList1->Add(new TObjString(tofwhitfilename));
+	//parList1->Add(new TObjString(vftxcalfilename));
+	//parList1->Add(new TObjString(tofwhitfilename));
         parIo1->open(parList1, "in");
         rtdb->setFirstInput(parIo1);
         rtdb->print();
@@ -482,6 +482,14 @@ void music_dt_cal(int runnum)
     if (fMusic)
       {
 	R3BMusicMapped2CalPar* MusicMapped2CalPar = new R3BMusicMapped2CalPar();
+	//Elog entry #666 (#575)
+	//Vertical offset #973, Horizontal offset #1130
+	MusicMapped2CalPar->SetPosMwpcA(-1.*(49.5+500+336.5+141.25+360+444.5)); // MW0
+	MusicMapped2CalPar->SetPosMwpcB(1408.-444.5 +81.+550.+26.); // MW2
+	MusicMapped2CalPar->SetPosMusic(-1.*(500./2.+336.5+141.25+360+444.5));//R3BMusic
+	//MusicMapped2CalPar->SetPosMusic(1408.-444.5 +81.+550.+26.+50.);//Twim???
+	MusicMapped2CalPar->SetFitLimits(10000,24000);
+	
 	run->AddTask(MusicMapped2CalPar);
       }
 
@@ -504,7 +512,7 @@ void music_dt_cal(int runnum)
     
     // Run --------------------------------------------------
     run->Run((nev < 0) ? nev : 0, (nev < 0) ? 0 : nev);
-
+    rtdb->saveOutput();
     // Finish -----------------------------------------------
     timer.Stop();
     Double_t rtime = timer.RealTime();
