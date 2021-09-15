@@ -1,10 +1,10 @@
-auto runnum = 340, settings=13;
-//auto runnum = 238, settings=6;
-auto *f = new TFile(Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree_june2021_updater3broot.root",settings,runnum));
+//auto runnum = 340, settings=13;
+auto runnum = 238, settings=6;
+auto *f = new TFile(Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree_sep2021_MWfix.root",settings,runnum));
 //auto *f = new TFile("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_0353_FragmentTree_june2021.root"); // Empty target run
 auto Tree = (TTree*)( f->Get("Tree"))->Clone();
 auto c = new TCanvas();
-TString outfile = Form("./fragment/Twim_theta%04d_fullstat.pdf",runnum);
+TString outfile = Form("./fragment/Twim_theta%04d_14Sep2021.pdf",runnum);
 TH1F* hmw[4][2];
 TH2F* hmwcor[4][4][2], *hmwcorres[4][4][2], *hmwmusic[4][2][1], *hmwmusicres[4][2][1];
 //TProfile *pmwcor[4][4][2];
@@ -167,10 +167,28 @@ void Twim_theta(void) {
   
   // Old histograms
   //
-  Tree->Draw("Mw2_X-Mw1_X:Mw2_X-Mw0_X>>(500,-20,20,500,-20,20)","","colz");
+  Tree->Draw("Mw0_Y:Mw0_X>>(500,-200,200,500,-200,200)","","colz");
   c->Print(outfile);
   //
-  Tree->Draw("Mw2_X-Mw1_X:Mw2_X+Mw0_X>>(500,-40,40,500,-20,20)","","colz");
+  Tree->Draw("Mw1_Y:Mw1_X>>(500,-200,200,500,-200,200)","","colz");
+  c->Print(outfile);
+  //
+  Tree->Draw("Mw2_Y:Mw2_X>>(500,-200,200,500,-200,200)","","colz");
+  c->Print(outfile);
+  //
+  Tree->Draw("Mw3_Y:Mw3_X>>(500,-200,200,500,-200,200)","","colz");
+  c->Print(outfile);
+  //
+  Tree->Draw("Mw2_X-Mw1_X:Mw2_X-Mw0_X>>(500,-50,50,500,-50,50)","","colz");
+  c->Print(outfile);
+  //
+  Tree->Draw("Mw2_X-Mw1_X:Mw2_X+Mw0_X>>(500,-40,40,500,-50,50)","","colz");
+  c->Print(outfile);
+  //
+  Tree->Draw("Mw2_X+Mw1_X:Mw2_X-Mw0_X>>(500,-50,50,500,-50,50)","","colz");
+  c->Print(outfile);
+  //
+  Tree->Draw("Mw2_X+Mw1_X:Mw2_X+Mw0_X>>(500,-40,40,500,-50,50)","","colz");
   c->Print(outfile);
   //
   //  c->cd(2);

@@ -132,7 +132,7 @@ void filltree(int runnum)
       tofwhitfilename = sofiacaldir + "tofw_hit.par";
       //
       //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree_june2021_updater3broot.root", FRSsetting[i], runnum);
+      outputFilename = Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree_sep2021_MWfix.root", FRSsetting[i], runnum);
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
@@ -417,9 +417,11 @@ void filltree(int runnum)
         MW1Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW1Map2Cal);
 
+	/*
         R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
         MW1Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW1Cal2Hit);
+	*/
     }
 
     // TWIM
@@ -445,6 +447,10 @@ void filltree(int runnum)
         MW2Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW2Cal2Hit);
     }
+
+    R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
+        MW1Cal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(MW1Cal2Hit);
 
     // MWPC3
     if (fMwpc3)

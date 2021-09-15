@@ -133,7 +133,10 @@ void music_dt_cal(int runnum)
       vftxcalfilename = sofiacaldir + "tcal_VFTX.par";
       tofwhitfilename = sofiacaldir + "tofw_hit.par";
       //
-      outputFilename = Form("./rootfiles/s467_MusicDTCal_Setting%i_%04d_2Sep.root", FRSsetting[i], runnum);
+      auto datime = new TDatime();
+      TString str_datime = datime->AsString();
+      string month = str_datime(4,3);
+      outputFilename = Form("./rootfiles/s467_MusicDTCal_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str());
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
@@ -180,7 +183,7 @@ void music_dt_cal(int runnum)
     Bool_t fCalifa = false;  // Califa calorimeter
     Bool_t fMwpc1 = true;    // MWPC1 for tracking of fragments in front of target
     Bool_t fMwpc2 = true;    // MWPC2 for tracking of fragments before GLAD
-     Bool_t fTwim = false;     // Twim: Ionization chamber for charge-Z of fragments
+     Bool_t fTwim = true;     // Twim: Ionization chamber for charge-Z of fragments
     Bool_t fMwpc3 = false;    // MWPC3 for tracking of fragments behind GLAD
     Bool_t fTofW = false;     // ToF-Wall for time-of-flight of fragments behind GLAD
     Bool_t fScalers = false;  // SIS3820 scalers at Cave C
@@ -417,10 +420,6 @@ void music_dt_cal(int runnum)
         R3BSofMwpc1Mapped2Cal* MW1Map2Cal = new R3BSofMwpc1Mapped2Cal();
         MW1Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW1Map2Cal);
-
-        R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
-        MW1Cal2Hit->SetOnline(NOTstorehitdata);
-        run->AddTask(MW1Cal2Hit);
     }
 
     // TWIM
@@ -442,6 +441,9 @@ void music_dt_cal(int runnum)
         MW2Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW2Map2Cal);
 
+        R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
+        MW1Cal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(MW1Cal2Hit);
         R3BSofMwpc2Cal2Hit* MW2Cal2Hit = new R3BSofMwpc2Cal2Hit();
         MW2Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW2Cal2Hit);
@@ -495,7 +497,13 @@ void music_dt_cal(int runnum)
 
     if (fTwim)
       {
-	R3BSofTwimMapped2CalPar* SofTwimMapped2CalPar = new R3BSofTwimMapped2CalPar();
+	R3BSofTwimMapped2CalPar* SofTwimMapped2CalPar = new R3BSofTwimMapped2CalPar("R3B Twim Angle Calibrator", 1, "Mwpc0", "Mwpc2");
+	SofTwimMapped2CalPar->SetPosMwpcA(-1.*(49.5+500+336.5+141.25+360+444.5)); // MW0
+	SofTwimMapped2CalPar->SetPosMwpcB(1408.-444.5 +81.+550.+26.); // MW2
+	//SofTwimMapped2CalPar->SetPosTwim(-1.*(500./2.+336.5+141.25+360+444.5));//R3BSofTwim
+	SofTwimMapped2CalPar->SetPosTwim(1408.-444.5 +81.+550.+26.+50.);//Twim
+	SofTwimMapped2CalPar->SetFitLimits(1000,20000);
+	
 	run->AddTask(SofTwimMapped2CalPar);
       }
     
