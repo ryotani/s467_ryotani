@@ -1,18 +1,24 @@
-//auto runnum = 340, settings=13;
-auto runnum = 238, settings=6;
-auto *f = new TFile(Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree_sep2021_MWfix.root",settings,runnum));
+auto runnum = 340, settings=13;
+//auto date = "17Sep_withEcoef";
+auto date = "17Sep_Ecoef0";
+//auto date = "17Sep_2parm";
+//auto runnum = 238, settings=6;
+//auto *f = new TFile(Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree_sep2021_MWfix.root",settings,runnum));
+auto *f = new TFile(Form("./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting%i_%04d_%s.root",settings,runnum,date));
 //auto *f = new TFile("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_0353_FragmentTree_june2021.root"); // Empty target run
 auto Tree = (TTree*)( f->Get("Tree"))->Clone();
 auto c = new TCanvas();
-TString outfile = Form("./fragment/Twim_theta%04d_14Sep2021.pdf",runnum);
+TString outfile = Form("./music_mwpc/Twim_theta%04d_%s.pdf",runnum,date);
+auto outcsv = Form("./music_mwpc/Twim_theta%04d_%s.csv",runnum,date);
+ofstream ofs(outcsv);
 TH1F* hmw[4][2];
-TH2F* hmwcor[4][4][2], *hmwcorres[4][4][2], *hmwmusic[4][2][1], *hmwmusicres[4][2][1];
+TH2F* hmwcor[4][4][2], *hmwcorres[4][4][2], *hmwmusic[2][4][1], *hmwmusicres[2][4][1];
 //TProfile *pmwcor[4][4][2];
 TF1* fmw[4][2], *fmwcor[4][4][2], *fmwmusic[4][2][1];
 TString axis[3] = {'X','Y','Z'}, smw[4][2];
 double mean[4][2]={NAN}, deviation[4][2]={NAN};
 double zpos[4] = {-1.*(49.5+500+336.5+141.25+360+444.5), 1408.-444.5 , 1408.-444.5 +81.+550.+26., 1408.-444.5 -278. + 5925+1050-900.};
-double res[4][4][2]={NAN};
+double res[4][6][2]={NAN};
 // https://elog.gsi.de/land/s444_s467/666
 // https://elog.gsi.de/land/s444_s467/1130
 // https://elog.gsi.de/land/s444_s467/35
@@ -123,9 +129,19 @@ void Twim_theta(void) {
 	res[i][k][j] = hmwcorres[i][k][j]->GetStdDev(2) / ((i==1)?1.:fmwcor[i][1][j]->GetParameter(1));
 	//double err = (i==1)?0.:(hmwcorres[i][k][j]->GetStdDev(2) / pow(fmwcor[i][1][j]->GetParameter(1),2) *fmwcor[i][1][j]->GetParError(1));
 	cout<<"Resolution in Mw"<<k<<"-Mw0 and Mw"<<i<<"-Mw0 in "<<axis[j]<<"std: "<< hmwcorres[i][k][j]->GetStdDev(2)<<" axis:" << res[i][k][j] << endl;
+	ofs<<"Resolution in Mw"<<k<<"-Mw0 and Mw"<<i<<"-Mw0 in "<<axis[j]<<"std: "<< hmwcorres[i][k][j]->GetStdDev(2)<<" axis:" << res[i][k][j] << endl;
       }
     }
   }
+  // MUSIC
+  for(int k=0; k<2; k++){   
+    for(int i=1; i<4; i++){
+      res[k][i+4][0] = hmwmusicres[k][i][0]->GetStdDev(2) / fmwmusic[1][i][0]->GetParameter(1);
+      cout<<"Resolution in "<<(k==0?"R3BMusic":"Twim")<<" and Mw"<<i<<"-Mw0 in X. std:"<< hmwmusicres[k][i][0]->GetStdDev(2) <<" res:"<<res[k][i+4][0] <<endl;
+      ofs<<"Resolution in "<<(k==0?"R3BMusic":"Twim")<<" and Mw"<<i<<"-Mw0 in X. std:"<< hmwmusicres[k][i][0]->GetStdDev(2) <<" res:"<<res[k][i+4][0] <<endl;
+    }
+  }
+
   //
   TString str_angle[2];
   for(int i_axis=0; i_axis<2; i_axis++){
@@ -273,4 +289,5 @@ void Twim_theta(void) {
   */
 
   c->Print(outfile+"]");
+  ofs.close();
 }

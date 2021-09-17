@@ -505,6 +505,17 @@ void music_dt_cal(int runnum)
 	SofTwimMapped2CalPar->SetFitLimits(1000,20000);
 	
 	run->AddTask(SofTwimMapped2CalPar);
+	/*
+	R3BSofTwimOnlineSpectra* twonline = new R3BSofTwimOnlineSpectra();
+        run->AddTask(twonline);
+        // Twim-Music correlations
+        if (fMusic)
+        {
+	  R3BSofTwimvsMusicOnlineSpectra* twmusonline = new R3BSofTwimvsMusicOnlineSpectra();
+            run->AddTask(twmusonline);
+        }
+	*/
+
       }
     
     // Initialize -------------------------------------------

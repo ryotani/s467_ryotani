@@ -44,8 +44,8 @@ void filltree(int runnum)
     TStopwatch timer;
     timer.Start();
 
-    const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
-    //const Int_t nev = 1000000; // Only nev events to read
+    //const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
+    const Int_t nev = 1000000; // Only nev events to read
     const Int_t fRunId = 1;
 
     // *********************************** //
@@ -59,7 +59,7 @@ void filltree(int runnum)
     TString dir = gSystem->Getenv("VMCWORKDIR");
     TString ntuple_options = "RAW";
     TString ucesb_dir = getenv("UCESB_DIR");
-    TString filename, outputFilename, upexps_dir, ucesb_path, sofiacaldir,  sofiacalfilename, vftxcalfilename, tofwhitfilename;
+    TString filename, outputFilename, upexps_dir, ucesb_path, sofiacaldir,  sofiacalfilename, vftxcalfilename, tofwhitfilename, musiccalfilename;
     Double_t brho28;
     
     if(runnum==0){
@@ -130,13 +130,17 @@ void filltree(int runnum)
       }
       vftxcalfilename = sofiacaldir + "tcal_VFTX.par";
       tofwhitfilename = sofiacaldir + "tofw_hit.par";
+      musiccalfilename = sofiacaldir + "music_cal.par";
       //
-      //outputFilename = Form("./rootfiles/rootfiletmp/s467_FRSTree_Setting%i_%04d.root", FRSsetting[i], runnum);
-      outputFilename = Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree_sep2021_MWfix.root", FRSsetting[i], runnum);
+      auto datime = new TDatime();
+      TString str_datime = datime->AsString();
+      string month = str_datime(4,3);
+      outputFilename = Form("./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str());
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
       std::cout << "PARAM FILE (TofW): " << tofwhitfilename << std::endl;
+      std::cout << "PARAM FILE (MUSIC CAL): " << musiccalfilename << std::endl;
       std::cout << "PARAM FILE (OTHERS): " << sofiacalfilename << std::endl;
       std::cout << "OUTPUT FILE: " << outputFilename << std::endl;
       std::cout << "Brho28: " << brho28 << std::endl;
@@ -156,6 +160,7 @@ void filltree(int runnum)
     sofiacalfilename.ReplaceAll("//", "/");
     vftxcalfilename.ReplaceAll("//", "/");
     tofwhitfilename.ReplaceAll("//", "/");
+    musiccalfilename.ReplaceAll("//", "/");
     
     // store data or not ------------------------------------
     Bool_t fCal_level_califa = true;  // set true if there exists a file with the calibration parameters
@@ -318,6 +323,7 @@ void filltree(int runnum)
     if (!fCalifa)
     {
         TList* parList1 = new TList();
+	parList1->Add(new TObjString(musiccalfilename));
         parList1->Add(new TObjString(sofiacalfilename));
 	parList1->Add(new TObjString(vftxcalfilename));
 	parList1->Add(new TObjString(tofwhitfilename));
@@ -330,6 +336,7 @@ void filltree(int runnum)
         if (!fCal_level_califa)
         { // SOFIA and CALIFA mapping: Ascii files
             TList* parList1 = new TList();
+	    parList1->Add(new TObjString(musiccalfilename));
             parList1->Add(new TObjString(sofiacalfilename));
 	    parList1->Add(new TObjString(vftxcalfilename));
 	    parList1->Add(new TObjString(tofwhitfilename));
@@ -341,6 +348,7 @@ void filltree(int runnum)
         else
         { // SOFIA, CALIFA mapping and CALIFA calibration parameters
             TList* parList1 = new TList();
+	    parList1->Add(new TObjString(musiccalfilename));
             parList1->Add(new TObjString(sofiacalfilename));
             parList1->Add(new TObjString(vftxcalfilename));
 	    parList1->Add(new TObjString(tofwhitfilename));
