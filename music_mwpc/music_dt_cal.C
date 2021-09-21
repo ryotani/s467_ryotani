@@ -525,7 +525,7 @@ void music_dt_cal(int runnum)
 
     // Ascii file with the Calibration Parameters
     FairParAsciiFileIo* parOut = new FairParAsciiFileIo();
-    TString outputFileNamePar = "music/music.par";
+    TString outputFileNamePar = "music_mwpc/par/music_fixEcoef.par";
     parOut->open(outputFileNamePar,"out");
     rtdb->setOutput(parOut);
     

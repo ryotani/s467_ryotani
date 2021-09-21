@@ -1,15 +1,16 @@
 auto runnum = 340, settings=13;
 //auto date = "17Sep_withEcoef";
-auto date = "17Sep_Ecoef0";
+//auto date = "20Sep_fixEcoef";
 //auto date = "17Sep_2parm";
 //auto runnum = 238, settings=6;
+auto date = "21Sep_fixEcoef238";
 //auto *f = new TFile(Form("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting%i_%04d_FragmentTree_sep2021_MWfix.root",settings,runnum));
 auto *f = new TFile(Form("./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting%i_%04d_%s.root",settings,runnum,date));
 //auto *f = new TFile("./rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_0353_FragmentTree_june2021.root"); // Empty target run
 auto Tree = (TTree*)( f->Get("Tree"))->Clone();
 auto c = new TCanvas();
-TString outfile = Form("./music_mwpc/Twim_theta%04d_%s.pdf",runnum,date);
-auto outcsv = Form("./music_mwpc/Twim_theta%04d_%s.csv",runnum,date);
+TString outfile = Form("./music_mwpc/output/Twim_theta%04d_%s.pdf",runnum,date);
+auto outcsv = Form("./music_mwpc/output/Twim_theta%04d_%s.csv",runnum,date);
 ofstream ofs(outcsv);
 TH1F* hmw[4][2];
 TH2F* hmwcor[4][4][2], *hmwcorres[4][4][2], *hmwmusic[2][4][1], *hmwmusicres[2][4][1];
