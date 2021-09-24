@@ -44,8 +44,8 @@ void filltree(int runnum)
     TStopwatch timer;
     timer.Start();
 
-    //const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
-    const Int_t nev = 1000000; // Only nev events to read
+    const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
+    //const Int_t nev = 1000000; // Only nev events to read
     const Int_t fRunId = 1;
 
     // *********************************** //
@@ -135,7 +135,7 @@ void filltree(int runnum)
       auto datime = new TDatime();
       TString str_datime = datime->AsString();
       string month = str_datime(4,3);
-      outputFilename = Form("./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str());
+      outputFilename = Form("./rootfiles/rootfiletmp/fragment_Sep2021/s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str());
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
@@ -149,7 +149,7 @@ void filltree(int runnum)
       // upexps_dir = "/u/land/fake_cvmfs/upexps";                 // for lxlandana computers
       // upexps_dir = "/u/land/lynx.landexp/202002_s467/upexps/";  // for lxg computers
       ucesb_path = upexps_dir + "/202002_s467/202002_s467 --allow-errors --input-buffer=100Mi";
-      // ucesb_path = upexps_dir + "/202002_s467_Aug20/202002_s467 --allow-errors --input-buffer=100Mi";
+      //ucesb_path = upexps_dir + "/202002_s467_jentob/202002_s467 --allow-errors --input-buffer=100Mi";
     }
     else{
       std::cout << "Experiment was not selected" << std::endl;
