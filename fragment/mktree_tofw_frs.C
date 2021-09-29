@@ -52,11 +52,11 @@ void mktree_tofw_frs(int runnum){
     if(targetpos[i]<posmin || targetpos[i]>posmax) continue;
     cout<<runnumcsv[i]<<" "<<dumchar<<" "<<FRSsetting[i]<<" "<<dumchar<<" "<<brhocsv[i]<<" "<<dumchar<<" "<<targetpos[i]<<" "<<dumchar<<" "<<musicgain[i]<<" "<<dumchar<<" "<<junk[i]<<endl;
 
-    filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_%04d_FragmentTree.root", runnumcsv[i]);
+    filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/fragment_Sep2021/s467_filltree_Setting13_%04d_28Sep.root", runnumcsv[i]);
     //ch -> Add(filename);
     ch -> AddFile(filename);
   }
-  ch->Merge(Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofw/output/mktree_tofw_frs_%s.root",targetname.Data()));
+  ch->Merge(Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/fragment/output/mktree_fragment_%s.root",targetname.Data()));
   /*
   for(int i = firstrun; i < lastrun+1; i++){
     filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_%04d_ToFWhitpar.root", i);

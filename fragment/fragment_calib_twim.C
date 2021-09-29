@@ -1,15 +1,16 @@
 #define NUMPADDLE 28
 
-#include "fragmentana.h"
+#include "fragmentana_twim.h"
 
-TString infile = "./fragment/output/mktree_tofw_frs_empty.root";
-TString outpdf = "./fragment/output/fragment_calib.pdf";
-TString brho_outpdf = "./fragment/output/fragment_calib_brho.pdf";
-TString recobrho_outpdf = "./fragment/output/fragment_reco_brho.pdf";
+//TString infile = "./fragment/output/mktree_tofw_frs_empty.root";
+TString infile = "./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting13_0340_22Sep.root";
+TString outpdf = "./fragment/output/fragment_calib_twim.pdf";
+TString brho_outpdf = "./fragment/output/fragment_calib_twim_brho.pdf";
+TString recobrho_outpdf = "./fragment/output/fragment_reco_twim_brho.pdf";
 /*
 TString infile = "./fragment/output/mktree_tofw_frs_ch2-24mm.root";
-TString outpdf = "./fragment/output/fragment_calib_ch2_test.pdf";
-TString brho_outpdf = "./fragment/output/fragment_calib_brho_ch2_test.pdf";
+TString outpdf = "./fragment/output/fragment_calib_twim_ch2_test.pdf";
+TString brho_outpdf = "./fragment/output/fragment_calib_twim_brho_ch2_test.pdf";
 TString recobrho_outpdf = "./fragment/output/fragment_reco_brho_ch2_test.pdf";
 */
 
@@ -22,7 +23,7 @@ int draw_transfer_corr(TString conditions);
 int draw_toflength_corr(TString conditions);
 int brho_corr();
 
-int fragment_calib(){
+int fragment_calib_twim(){
   if (NUMPADDLE>28) return 1;
   initialise();
   //tofw_calib();
@@ -283,7 +284,7 @@ int draw_toflength_corr(TString conditions){
       }
       //
       c->cd(9+i);
-      h_mwbeta[cond][i] = new TH2D(Form("h_mwbeta_%i%i",cond,i), Form("Flight length correction;%s / mm;#beta_{cave}-#beta_{frs}", axis_mw3[i].Data()), 500, -1.*range_mw, range_mw, 500, -0.01, 0.01);
+      h_mwbeta[cond][i] = new TH2D(Form("h_mwbeta_%i%i",cond,i), Form("Flight length correction;%s / mm;#beta_{cave}-#beta_{frs}", axis_mw3[i].Data()), 500, i==2?-0.04:-1.*range_mw, i==2?0.04:range_mw, 500, -0.01, 0.01);
       ch->Draw(Form("%s-Beta_S2_Cave:%s>>h_mwbeta_%i%i", beta_tofw_mod.Data(), axis_mw3[i].Data(), cond, i), conditionwithbetacut,"colz");
       //
       c->cd(9+i);
@@ -333,7 +334,7 @@ int draw_transfer_corr(TString conditions){
       }
       //
       c->cd(9+i);
-      h_mw3[cond][i] = new TH2D(Form("h_mw3_%i%i",cond,i), Form("Ion transfer through GLAD;%s / mm;Mw3_X_mod / mm", axis_mw3[i].Data()), 500, -1.*range_mw, range_mw, 500, -500, 500);
+      h_mw3[cond][i] = new TH2D(Form("h_mw3_%i%i",cond,i), Form("Ion transfer through GLAD;%s / mm;Mw3_X_mod / mm", axis_mw3[i].Data()), 500, i==2?-0.04:-1.*range_mw, i==2?0.04:range_mw, 500, -500, 500);
       ch->Draw(Form("%s:%s>>h_mw3_%i%i", Mw3_X_mod.Data(), axis_mw3[i].Data(), cond, i), conditionwithbetacut,"colz");
       //
       //c->cd(13+i);
