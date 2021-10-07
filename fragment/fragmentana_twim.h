@@ -40,7 +40,8 @@ TString conditionwithbetacut = "";
 TString mwcondition = "";
 TString beta_tofw="";
 TString beta_tofw_mod="";
-TString fragbrhostring="";
+TString fragbrhostring = "((Mw3_X - (120.342308) - TwimTheta *(5685.146295))+ (- (4.625269) - (Mw1_X+Mw2_X)/2. *(0.571696))+ (- (1.241102) - (Mw3_Y-Mw1_Y) *(-0.056444))+ (- (10.569345) - (Mw1_Y+Mw2_Y)/2. *(0.764638))-(-1282.411556))/(141.549357)";
+//TString fragbrhostring="";
 TString fragaoqstring="";
 //
 Double_t max_mw1[4][2]={{0.}}, range_mw = 60.;

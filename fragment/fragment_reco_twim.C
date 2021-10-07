@@ -1,19 +1,27 @@
 #define NUMPADDLE 28
 
 #include "fragmentana_twim.h"
-// *
-//TString infile = "./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting13_0340_22Sep.root";
+/*
 TString infile = "./fragment/output/mktree_fragment_empty.root";
-TString outpdf = "./fragment/output/fragment_reco_twim.pdf";
+TString outpdf = "./fragment/output/fragment_reco_twim_empty.pdf";
 TString brho_outpdf = "./fragment/output/fragment_reco_twim_brho.pdf";
 TString recobrho_outpdf = "./fragment/output/fragment_reco_twim_brho_draw.pdf";
-/* /
-TString infile = "./fragment/output/mktree_tofw_frs_ch2-24mm.root";
+bool IsEmpty=true;
+*/ //* /
+TString infile = "./rootfiles/rootfiletmp/fragment_Sep2021/s467_filltree_Setting13_0354_28Sep.root";//1hr CH2 run
+TString outpdf = "./fragment/output/fragment_reco_twim_ch2_348.pdf";
+TString brho_outpdf = "./fragment/output/fragment_reco_twim_brho_ch2_348.pdf";
+TString recobrho_outpdf = "./fragment/output/fragment_reco_twim_brho_ch2_348.pdf";
+bool IsEmpty=false;
+/*
+TString infile = "./fragment/output/mktree_fragment_ch2-24mm.root";
 TString outpdf = "./fragment/output/fragment_reco_twim_ch2.pdf";
+//TString outpdf2= "./fragment/output/fragment_reco_twim_ch2_summary.pdf";
 TString brho_outpdf = "./fragment/output/fragment_reco_twim_brho_ch2.pdf";
 TString recobrho_outpdf = "./fragment/output/fragment_reco_twim_brho_ch2.pdf";
+bool IsEmpty=false;
 //TString recobrho_outpdf = "./fragment/output/fragment_reco_twim_brho_ch2_49Ca.pdf";
-*/
+/ */
 
 void initialise();
 //int tofw_calib();
@@ -43,7 +51,7 @@ int fragment_reco_twim(){
   h_pid->Draw("colz");
   c->cd(4);
   h_fragaoq_proj->Draw();
-  c -> Print("./fragment/output/fragment_reco_twim.pdf");
+  c -> Print(outpdf);
   delete c;
   //
   p->Close();
@@ -57,7 +65,7 @@ int brho_corr(){
   //Mw3_X_mod = "(Mw3_X - (120.606710) - TwimTheta *(5753.779516))+ (- (4.469672) - Mw2_X *(0.433325))+ (- (4.917787) - (Mw2_Y-Mw1_Y) *(-0.131103))+ (- (18.555400) - Mw1_Y *(0.542263))";
   Mw3_X_mod = "(Mw3_X - (120.342308) - TwimTheta *(5685.146295))+ (- (4.625269) - (Mw1_X+Mw2_X)/2. *(0.571696))+ (- (1.241102) - (Mw3_Y-Mw1_Y) *(-0.056444))+ (- (10.569345) - (Mw1_Y+Mw2_Y)/2. *(0.764638))";
   cut_mw = Form("(Mw1_X>%f)&&(Mw1_X<%f)&&", -30.,25.);
-  for(int i=0;i<4;i++) cut_mw += Form("(%s>%f)&&(%s<%f)&&",axis_mw3[i].Data(),range_cut_mw3_low[i],axis_mw3[i].Data(),range_cut_mw3_high[i]);
+  for(int i=0;i<(IsEmpty?4:3);i++) cut_mw += Form("(%s>%f)&&(%s<%f)&&",axis_mw3[i].Data(),range_cut_mw3_low[i],axis_mw3[i].Data(),range_cut_mw3_high[i]);
   
   TString conditions ="";
   TString dummystring ="";
@@ -68,7 +76,7 @@ int brho_corr(){
     c->cd(1+i);
     conditions = cut_mw;
     conditions += Zgate;
-    conditions += "&& (abs(FragBeta - Beta_S2_Cave)<0.004)";
+    if(IsEmpty) conditions += "&& (abs(FragBeta - Beta_S2_Cave)<0.004)";
     if(i<2){
       h_brho_mw3[cond][i] = new TH2D(Form("h_brho_mw3%i%i",cond,i),Form("Brho MW3 correlation;%s /mm; Brho in FRS /Tm",mw3_dummy[i].Data()), 500, 8.7, 9.3, 500, -500, 500);
     }else{
@@ -116,7 +124,8 @@ int brho_corr(){
 
   c->cd(11);
   TH2F* h_brho_corr = new TH2F("h_brho_corr", "h_brho_old_new", 500, 8.7, 9.3,500, 8.7, 9.3);
-  fragbrhostring = Form("(%s-(%f))/(%f)", Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(0), f_brho_mw3[cond][2]->GetParameter(1));
+  if(IsEmpty)
+    fragbrhostring = Form("(%s-(%f))/(%f)", Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(0), f_brho_mw3[cond][2]->GetParameter(1));
   //fragbrhostring = Form("(%f)*pow(%s,2.0)+(%f)*%s+(%f)", f_brho_mw3[cond][2]->GetParameter(0), Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(1), Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(2));
   //fragbrhostring = Form("(sqrt(pow(%f,2.0)-4.*%f*(%f-%s)-(%f))/(%f*2.0))", f_brho_mw3[cond][2]->GetParameter(1), f_brho_mw3[cond][2]->GetParameter(0),f_brho_mw3[cond][2]->GetParameter(2), Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(1),f_brho_mw3[cond][2]->GetParameter(0));
   cout << "fragbrhostring: "<< fragbrhostring <<endl;
