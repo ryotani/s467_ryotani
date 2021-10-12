@@ -1,7 +1,9 @@
 #define NUMPADDLE 28
 #define NUMHIST 5
 //int posmin=1325, posmax=1424; TString targetname = "empty";
-int posmin=539, posmax=539; TString targetname = "ch2-24mm";
+//int posmin=539, posmax=539; TString targetname = "ch2-24mm";
+//int posmin=362, posmax=362; TString targetname = "carbon";
+int posmin=893, posmax=893; TString targetname = "PP";
 TProof *p =  TProof::Open("");
 
 TCanvas *c;
