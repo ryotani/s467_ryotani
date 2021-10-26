@@ -13,7 +13,7 @@
 using namespace std;
 
 //TProof *p =  TProof::Open("");
-TProof *p =  TProof::Open("workers=10");
+TProof *p =  TProof::Open("workers=3");
 
 TCanvas *c;
 TString Zgate = "abs(MusicZ-TwimZ)<0.5";
@@ -35,6 +35,7 @@ TF1 *f_tof[NUMPADDLE], *f_mw3brho;
 //For MWPC ana
 #define NUMCOND 20
 int cond = 0;
+TString frspidgate = "";
 TString beamcondition = "";//"abs(MusicZ-20.)<0.4 && abs(Beta_S2_Cave - 0.765)<0.005 &&";
 TString conditionwithbetacut = "";
 TString mwcondition = "";
@@ -76,4 +77,8 @@ TProfile *prof_beta_mw3[NUMCOND][4], *prof_brho_mw3[NUMCOND][4];
 TF1 *f_beta_mw3[NUMCOND][4], *f_brho_mw3[NUMCOND][4];
 
 
-// For FragReco
+// For FragReco with TofW
+TH2D *h_paddleaoq, *h_paddleaoq_gated, *h_zaoq_paddle[NUMPADDLE], *h_zaoq_paddle_mod[NUMPADDLE], *h_aoqaoq_paddle[NUMPADDLE], *h_mw3x_paddle, *h_mw3x_paddle_gated, *h_mw3y_paddle, *h_mw3y_aoq[NUMPADDLE], *h_beta_paddle[2], *h_zaoq_mod[2];
+TH1D *h_proj_deltaaoq[NUMPADDLE], *h_beta_proj[NUMPADDLE];
+TF1 *f_beta_proj[NUMPADDLE], *f_aoq_paddle[NUMPADDLE];
+Double_t aoq0[NUMPADDLE]={0.}, ave_beta_org[NUMPADDLE]={0.};

@@ -1,28 +1,30 @@
+#define MINPADDLE 0
 #define NUMPADDLE 28
 
 #include "fragmentana_twim.h"
 int zet = 18, mass = 44;
 double min_aoq = 1.8, max_aoq = 2.7;
 //
-
+/*
 TString targ = "empty";
 TString infile = "./fragment/output/mktree_fragment_empty.root";
 //TString infile = "./rootfiles/rootfiletmp/fragment_Sep2021/s467_filltree_Setting13_0354_28Sep.root";//All empty run
 double beta_offset = 0.0;
-
+*/
 //
 /*
 TString targ = "ch2";
 TString infile = "./fragment/output/mktree_fragment_ch2-24mm.root";
 //TString infile = "./rootfiles/rootfiletmp/fragment_Sep2021/s467_filltree_Setting13_0354_28Sep.root";//1hr CH2 run
-double beta_offset = 0.006;
+//double beta_offset = 0.006;
+double beta_offset = 0.000;
 */
 //
-/*
+
 TString targ = "carbon";
 TString infile = "./fragment/output/mktree_fragment_carbon.root";
-double beta_offset = 0.003;
-*/
+double beta_offset = 0.000;
+
 //
 /*
 TString targ = "PP";
@@ -30,22 +32,15 @@ TString infile = "./fragment/output/mktree_fragment_PP.root";
 double beta_offset = 0.000;
 */
 //
-TString outpdf = "./fragment/output/fragment_reco_frsgate_" + targ + Form("_z%i_a%i",zet,mass) + "_348.pdf";
-//TString brho_outpdf     = "./fragment/output/fragment_reco_frsgate_brho_" + targ + Form("z%i_a%i",zet,mass) + "_348.pdf";
-TString outroot = "./fragment/output/fragment_reco_frsgate_" + targ + Form("_z%i_a%i",zet,mass) + "_348.root";
-TString recobrho_outpdf = "./fragment/output/fragment_reco_frsgate_brho_" + targ + Form("_z%i_a%i",zet,mass) + "_348.pdf";
+TString outpdf = "./fragment/output/fragment_reco_frsgate_" + targ + Form("_z%i_a%i",zet,mass) + "_beta_offset_paddle.pdf";
+TString outcsv = "./fragment/output/fragment_reco_frsgate_" + targ + Form("_z%i_a%i",zet,mass) + "_beta_offset_paddle.csv";
+TString outroot = "./fragment/output/fragment_reco_frsgate_" + targ + Form("_z%i_a%i",zet,mass) + "_beta_offset_paddle.root";
+TString recobrho_outpdf = "./fragment/output/fragment_reco_frsgate_brho_" + targ + Form("_z%i_a%i",zet,mass) + "_beta_offset_paddle.pdf";
 bool IsEmpty=false;
-/*
-TString infile = "./fragment/output/mktree_fragment_ch2-24mm.root";
-TString outpdf = "./fragment/output/fragment_reco_frsgate_ch2.pdf";
-//TString outpdf2= "./fragment/output/fragment_reco_frsgate_ch2_summary.pdf";
-TString brho_outpdf = "./fragment/output/fragment_reco_frsgate_brho_ch2.pdf";
-TString recobrho_outpdf = "./fragment/output/fragment_reco_frsgate_brho_ch2.pdf";
-bool IsEmpty=false;
-//TString recobrho_outpdf = "./fragment/output/fragment_reco_frsgate_brho_ch2_49Ca.pdf";
-/ */
-
+ofstream fcsv(outcsv, ofstream::out);
 TFile *fout = new TFile(outroot,"RECREATE");
+
+//////////
 void initialise();
 //int tofw_calib();
 int loadtofpara();
@@ -54,6 +49,7 @@ int draw_pidgate(TString conditions);
 //int draw_transfer_corr(TString conditions);
 //int draw_toflength_corr(TString conditions);
 int brho_corr();
+int draw_tofw();
 
 int fragment_reco_frsgate(){
   if (NUMPADDLE>28) return 1;
@@ -62,11 +58,12 @@ int fragment_reco_frsgate(){
   //tofw_calib();
   //loadtofpara();
   //transfer_mat();
-  c = new TCanvas("c","c",1200,1000);
+  c = new TCanvas("c","c",3000,2500);
   c->Print(outpdf + "[");
-
+  
   brho_corr();
-  c = new TCanvas("c","c",1200,1000);
+  /*
+  c = new TCanvas("c","c",3000,2500);
   c -> Divide(2,2);
   c->cd(1);
   h_brho_mw3[cond][2]->Draw("colz");
@@ -78,13 +75,20 @@ int fragment_reco_frsgate(){
   c->cd(4)->SetLogy();
   h_fragaoq_proj->Draw();
   c -> Print(outpdf);
-  c->Print(outpdf + "]");
   delete c;
+  / */
+  draw_tofw();
   //
+  c->Print(outpdf + "]");
+  //
+  /*
   h_brho_mw3[cond][2]->Write();
   h_aoqaoq->Write();
   h_pid->Write();
   h_fragaoq_proj->Write();
+  */
+  h_zaoq_mod[0]->Write();
+  h_zaoq_mod[1]->Write();
   fout->Close();
   //
   p->Close();
@@ -92,29 +96,151 @@ int fragment_reco_frsgate(){
   return 0;
 }
 
+int draw_tofw(){
+  TString dummystring = "";
+  c = new TCanvas("c","c",3000,2500);
+  c -> Divide(6,5);
+  //
+  if(NUMPADDLE>28) return 1;
+  c->cd(NUMPADDLE+1);
+  h_paddleaoq = new TH2D("h_paddleaoq","Paddle ID vs AoQ; AoQ; PaddleID", 100, min_aoq, max_aoq, NUMPADDLE+1, -0.5, NUMPADDLE + 0.5);
+  ch->Draw(Form("Tofw_Paddle:%s>>h_paddleaoq",fragaoqstring.Data()), "", "colz");
+  c->cd(NUMPADDLE+2);
+  h_paddleaoq_gated = new TH2D("h_paddleaoq_gated","Paddle ID vs AoQ (gated in FRS); AoQ; PaddleID", 100, min_aoq, max_aoq, NUMPADDLE+1, -0.5, (double)NUMPADDLE + 0.5);
+  ch->Draw(Form("Tofw_Paddle:%s>>h_paddleaoq_gated",fragaoqstring.Data()), frspidgate, "colz");
+  //
+  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+    c -> cd(i+1);
+    h_zaoq_paddle[i] = new TH2D(Form("h_zaoq_paddle%i",i), Form("Z vs AoQ difference (CaveC - AoQ in gate) in Paddle%i (FRS gated); #Delta AoQ ; TwimZ",i+1), 500, -0.5, 0.5, 500, 10., 30.);
+    dummystring = Form("Tofw_Paddle==%i&&",i+1);
+    dummystring += frspidgate;
+    ch -> Draw(Form("FragZ:%s-%f>>h_zaoq_paddle%i",fragaoqstring.Data(),(double)mass/(double)zet,i),dummystring, "colz");
+  }
+  c->Print(outpdf);
+  //
+  fcsv<<"Diff in AoQ";
+  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+    c -> cd(i+1);
+    h_proj_deltaaoq[i] = h_zaoq_paddle[i]->ProjectionX(Form("_px%i",i),187,212);//Z=18
+    TSpectrum *tspec = new TSpectrum(10);
+    Int_t npeaks = tspec->Search(h_proj_deltaaoq[i]);
+    Double_t *peakX = tspec->GetPositionX();
+    Double_t x_tmp=-100;
+    //for(int j=0; j<npeaks; j++){
+    for(int j=0; j<min(4,npeaks); j++){
+      cout<<j<<" "<<peakX[j]<<endl;
+      if(abs(x_tmp) > abs(peakX[j])) x_tmp = peakX[j];
+    }
+    cout<<x_tmp<<" is selected"<<endl<<endl;
+    /*
+    f_aoq_paddle[i] = new TF1(Form("f_aoq_paddle%i",i), "gaus");
+    f_aoq_paddle[i] -> SetParameter(1,x_tmp);
+    f_aoq_paddle[i] -> SetLineColor(kBlue);
+    h_proj_deltaaoq[i]->Fit(Form("f_aoq_paddle%i",i),"L","",x_tmp-0.05,x_tmp+0.05);
+    aoq0[i] = f_aoq_paddle[i] -> GetParameter(1);*/
+    aoq0[i] = x_tmp;
+    fcsv<<", "<<aoq0[i];
+    h_proj_deltaaoq[i]->Draw();
+  }
+  fcsv<<endl;
+  c->cd(NUMPADDLE+1);
+  h_beta_paddle[0] = new TH2D("h_beta_paddle0","Beta (before correction) in each paddle", 500, 0.5, 0.8, NUMPADDLE+1, -0.5, NUMPADDLE + 0.5);
+  ch->Draw(Form("Tofw_Paddle:%s>>h_beta_paddle0",beta_tofw_mod.Data()), frspidgate, "colz");
+  //
+  c->Print(outpdf);
+  //
+  fcsv<<"Beta offset";
+  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+    c -> cd(i+1);
+    h_beta_proj[i] = h_beta_paddle[0]->ProjectionX(Form("_px%i",i),i+2,i+2);
+    /*
+    f_beta_proj[i] = new TF1(Form("f_beta_proj%i",i),"gaus");
+    h_beta_proj[i]->Fit(Form("f_beta_proj%i",i),"L","",0.7,0.8);
+    ave_beta_org[i] = f_beta_proj[i]->GetParameter(1);
+    */
+    TSpectrum *tspec = new TSpectrum(5);
+    Int_t npeaks = tspec->Search(h_beta_proj[i]);
+    Double_t *peakX = tspec->GetPositionX();
+    ave_beta_org[i] = peakX[0];
+    double beta_offset_tmp = ((double)zet/(double)mass)/(1./ave_beta_org[i]+ave_beta_org[i]/sqrt(1.-pow(ave_beta_org[i],2.))) * aoq0[i];
+    beta_tofw_mod +=  Form("+(Tofw_Paddle==%i)*(%f)",i+1,beta_offset_tmp);
+    fcsv<<", "<<beta_offset_tmp;
+  }
+  fcsv<<endl;
+  c->cd(NUMPADDLE+1);
+  h_beta_paddle[1] = new TH2D("h_beta_paddle1","Beta (after correction) in each paddle", 500, 0.5, 0.8, NUMPADDLE+1, -0.5, NUMPADDLE + 0.5);
+  ch->Draw(Form("Tofw_Paddle:%s>>h_beta_paddle1",beta_tofw_mod.Data()), frspidgate, "colz");
+  //
+  c->cd(NUMPADDLE+2);
+  fragaoqstring = Form("(%s)*sqrt(1-(%s)*(%s))/((%s)*(%f))", fragbrhostring.Data(), beta_tofw_mod.Data(),beta_tofw_mod.Data(),beta_tofw_mod.Data(), mc_e);
+  h_paddleaoq_gated->SetTitle("Paddle ID vs AoQ after correction (gated in FRS); AoQ; PaddleID");
+  ch->Draw(Form("Tofw_Paddle:%s>>h_paddleaoq_gated",fragaoqstring.Data()), frspidgate, "colz");
+  c->Print(outpdf);
+  //
+  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+    c -> cd(i+1);
+    h_aoqaoq_paddle[i] = new TH2D(Form("h_aoqaoq_paddle%i",i), Form("Reconstructed AoQ vs AoQ difference (CaveC - FRS), gated incoming in Paddle%i; #Delta AoQ; AoQ in Cave",i+1), 500, -1, 1, 500, min_aoq, max_aoq);
+    dummystring = Form("Tofw_Paddle==%i",i+1);
+    ch -> Draw(Form("%s:%s-AoQ_S2_Cave>>h_aoqaoq_paddle%i",fragaoqstring.Data(),fragaoqstring.Data(),i),dummystring, "colz");
+  }
+  c->Print(outpdf);
+  //
+  /* / y pos MW3 vs TofW tdiff
+  c->cd(NUMPADDLE+1);
+  h_mw3y_paddle = new TH2D("h_mw3y_paddle", "MW3_Y vs tdiff in paddles", NUMPADDLE+1, -0.5, NUMPADDLE +0.5, 500, -300, 300);
+  ch->Draw("Mw3_Y:....");
+  / */  //
+  // x pos MW3 vs TofW tdiff
+  c->cd(NUMPADDLE+1)->SetLogz();
+  h_mw3x_paddle = new TH2D("h_mw3x_paddle", "MW3_X vs paddle id", NUMPADDLE+1, -0.5, NUMPADDLE +0.5, 500, -300, 300);
+  ch->Draw("Mw3_X:Tofw_Paddle>>h_mw3x_paddle","","colz");
+  //
+  c->cd(NUMPADDLE+2)->SetLogz();
+  h_mw3x_paddle_gated = new TH2D("h_mw3x_paddle_gated", "MW3_X vs paddle_gated id", NUMPADDLE+1, -0.5, NUMPADDLE +0.5, 500, -300, 300);
+  ch->Draw("Mw3_X:Tofw_Paddle>>h_mw3x_paddle_gated",frspidgate,"colz");
+  //
+  // y pos MW3 vs AoQ (gated)
+  for(int i = 0; i<NUMPADDLE; i++){
+    c -> cd(i+1);
+    h_mw3y_aoq[i] = new TH2D(Form("h_mw3y_aoq%i",i), Form("MW3_Y vs AoQ gated incoming and Z in Padle%i; AoQ in Cave; Y in Mwpc3",i+1), 500, min_aoq, max_aoq, 500, -200, 200);
+    TString dummystring = Form("(Tofw_Paddle == %i)&& abs(FragZ-18)<0.5&&", i+1);
+    dummystring += frspidgate;
+    ch->Draw(Form("Mw3_Y:%s>>h_mw3y_aoq%i",fragaoqstring.Data(),i),dummystring,"colz");
+  }
+  //
+  c->Print(outpdf);
+  ////
+  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+    c -> cd(i+1);
+    h_zaoq_paddle_mod[i] = new TH2D(Form("h_zaoq_paddle_mod%i",i), Form("Z vs AoQ in Paddle%i (FRS gated); #Delta AoQ ; TwimZ",i+1), 500, min_aoq, max_aoq, 500, 10., 30.);
+    dummystring = Form("Tofw_Paddle==%i&&",i+1);
+    dummystring += frspidgate;
+    //ch -> Draw(Form("FragZ:%s-AoQ_S2_Cave>>h_zaoq_paddle_mod%i",fragaoqstring.Data(),i),dummystring, "colz");
+    ch -> Draw(Form("FragZ:%s>>h_zaoq_paddle_mod%i",fragaoqstring.Data(),i),dummystring, "colz");
+  }
+  //
+  c->cd(NUMPADDLE+1);
+  h_zaoq_mod[0] = new TH2D("h_zaoq_mod0","PID after beta correction",500,min_aoq,max_aoq,500,10.,30.);
+  ch->Draw(Form("FragZ:%s>>h_zaoq_mod0",fragaoqstring.Data()),"","colz");
+  //
+  c->cd(NUMPADDLE+2);
+  h_zaoq_mod[1] = new TH2D("h_zaoq_mod1","PID after beta correction (FRS gated)",500,min_aoq,max_aoq,500,10.,30.);
+  ch->Draw(Form("FragZ:%s>>h_zaoq_mod1",fragaoqstring.Data()),frspidgate,"colz");
+  //
+  c->Print(outpdf);
+  return 1;
+}
+
 int brho_corr(){
-  //  c = new TCanvas("c","c",1200,1000);
+  //  c = new TCanvas("c","c",3000,2500);
   c -> Divide(4,4);
-  //Mw3_X_mod = "(Mw3_X - (120.606710) - TwimTheta *(5753.779516))+ (- (4.469672) - Mw2_X *(0.433325))+ (- (4.917787) - (Mw2_Y-Mw1_Y) *(-0.131103))+ (- (18.555400) - Mw1_Y *(0.542263))";
-  //Sep2021 fit
-  //Mw3_X_mod = "(Mw3_X - (120.342308) - TwimTheta *(5685.146295))+ (- (4.625269) - (Mw1_X+Mw2_X)/2. *(0.571696))+ (- (1.241102) - (Mw3_Y-Mw1_Y) *(-0.056444))+ (- (10.569345) - (Mw1_Y+Mw2_Y)/2. *(0.764638))";
-  // Test 2021
-  Mw3_X_mod = "(Mw3_X - (120.342308) - TwimTheta *(5685.146295))+ (- (4.625269) - (Mw1_X+Mw2_X)/2. *(0.571696))+ (- (1.241102))";// - (Mw3_Y-Mw1_Y) *(-0.056444))+ (- (10.569345) - (Mw1_Y+Mw2_Y)/2. *(0.764638))";
-  fragbrhostring = "((" + Mw3_X_mod + "+1282.411556)/141.549357)"; 
-    //Form"((%s-(%f))/%f)",Mw3_X_mod.Data(),-1282.411556,141.549357);
-    //  "((Mw3_X - (120.342308) - TwimTheta *(5685.146295))+ (- (4.625269) - (Mw1_X+Mw2_X)/2. *(0.571696))+ (- (1.241102) - (Mw3_Y-Mw1_Y) *(-0.056444))+ (- (10.569345) - (Mw1_Y+Mw2_Y)/2. *(0.764638))-(-1282.411556))/(141.549357)";
-  ///
-  cut_mw = Form("(Mw1_X>%f)&&(Mw1_X<%f)&&", -30.,25.);
-  for(int i=0;i<(IsEmpty?4:3);i++) cut_mw += Form("(%s>%f)&&(%s<%f)&&",axis_mw3[i].Data(),range_cut_mw3_low[i],axis_mw3[i].Data(),range_cut_mw3_high[i]);
   
   TString conditions ="";
   TString dummystring ="";
   TString mw3_dummy[3] = {"Mw3_X", "Mw3_Y", "Corrected Mw3_X"};
-  brho = "Brho_S2_Cave";
-  beta_tofw_mod = Form("(FragBeta - %f)",beta_offset);
   for(int cond =0; cond<2; cond++){
     if(cond==1)
-      conditions = Form("abs(MusicZ-%i)<0.4 && abs(AoQ_S2_Cave -%f)<%f",zet, (double)mass/(double)zet, 0.22/(double)zet);
+      conditions += frspidgate;
     c->cd(1+cond*8);
     h_frspid_mw[cond] = new TH2D(Form("h_frspid%i",cond), "PID in FRS (S2-CaveC); AoQ; MusicZ", 500, min_aoq,max_aoq, 500,10,30);
     ch->Draw(Form("MusicZ:AoQ_S2_Cave>>h_frspid%i",cond),conditions,"col");
@@ -157,7 +283,7 @@ int brho_corr(){
   //
   c->Clear();
   //delete c;
-  //c = new TCanvas("c","c",1200,1000);
+  //c = new TCanvas("c","c",3000,2500);
   c -> Divide(4,4);
   
   conditions += "&&";
@@ -178,8 +304,6 @@ int brho_corr(){
     }else if(i==1){
       dummystring = Form("Mw3_Y:%s>>h_brho_mw3%i%i",brho.Data(),cond,i);
     }else{
-      //dummystring = Form(":>>h_brho_mw3%i%i", Mw3_X_mod.Data(),brho.Data(), cond, i);
-      //dummystring = Form("Brho_S2_Cave:FragBrho>>h_brho_brho%i%i",cond, i);
       dummystring = Form("%s:Brho_S2_Cave>>h_brho_brho%i%i",Mw3_X_mod.Data(), cond, i);
       //continue;
     }
@@ -229,27 +353,24 @@ int brho_corr(){
   //conditions = "";
   //conditions = "abs(MusicZ-20.)<0.4 && abs(AoQ_S2_Cave-2.45)<0.02"; // 49Ca
   h_brhobrho = new TH2D("hbrhobrho", "Brho correlation in FRS and Cave; Brho FRS /Tm; Brho Cave /Tm", 500, 8.7, 9.3, 500, 8.7, 9.3);
-  //fragbrhostring = "FragBrho";//Form("(%s-(%f))/(%f)", Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(0), f_brho_mw3[cond][2]->GetParameter(1));
   ch->Draw(Form("(%s):%s>>hbrhobrho", fragbrhostring.Data(), brho.Data()), conditions, "col");
   //
   c->cd(8);
   h_aoqaoq = new TH2D("haoqaoq", "Brho correlation in FRS and Cave; AoQ FRS ; AoQ Cave", 500, min_aoq, max_aoq, 500, min_aoq, max_aoq);
-  //fragaoqstring = "FragAoQ";
-  fragaoqstring = Form("(%s)*sqrt(1-%s*%s)/((%s)*(%f))", fragbrhostring.Data(), beta_tofw_mod.Data(),beta_tofw_mod.Data(),beta_tofw_mod.Data(), mc_e);
   dummystring = Form("%s:AoQ_S2_Cave>>haoqaoq",fragaoqstring.Data());
   cout << dummystring <<endl;
   ch->Draw(dummystring, conditions, "col");
   //
   c->cd(12);
   h_pid = new TH2D("hpid", "PID of fragment; AoQ Cave; TwimZ", 500, min_aoq, max_aoq, 500, 10, 30);
-  //h_pid = new TH2D("hpid", "PID of fragment; AoQ Cave; TwimZ", 500, -10, 10, 500, 10, 30);
-  ch->Draw(Form("TwimZ:%s>>hpid",fragaoqstring.Data()), conditions, "colz");
+  ch->Draw(Form("FragZ:%s>>hpid",fragaoqstring.Data()), conditions, "colz");
   //
   c->cd(16);
   //h_fragaoq_proj = new TH1D(Form("h_fragaoq_proj%i",20), Form("AoQ projected with Z=%i",20), 500, min_aoq, max_aoq);
   h_fragaoq_proj = new TH1D("h_fragaoq_proj", "AoQ projected with Z=18", 500, min_aoq, max_aoq);
   //conditions += Form("&& abs(TwimZ-%f)<0.4",(Double_t)atom);
-  conditions += Form("&& abs(TwimZ-%f)<0.4",(Double_t)18);
+  // conditions += Form("&& abs(TwimZ-%f)<0.4",(Double_t)18);
+  conditions += Form("&& abs(FragZ-%f)<0.4",(Double_t)18);
   //conditions + "&& abs(TwimZ-20.)<0.4"
   ch->Draw(Form("%s>>h_fragaoq_proj",fragaoqstring.Data()), conditions, "");
   /*
@@ -321,5 +442,25 @@ void initialise(){
 
   ch = new TChain("Tree");
   ch -> Add(infile);
-  ch -> SetProof();
+  //ch -> SetProof();
+  //
+  frspidgate = Form("abs(MusicZ-%i)<0.4 && abs(AoQ_S2_Cave -%f)<%f",zet, (double)mass/(double)zet, 0.22/(double)zet);
+  //
+  //Mw3_X_mod = "(Mw3_X - (120.606710) - TwimTheta *(5753.779516))+ (- (4.469672) - Mw2_X *(0.433325))+ (- (4.917787) - (Mw2_Y-Mw1_Y) *(-0.131103))+ (- (18.555400) - Mw1_Y *(0.542263))";
+  //Sep2021 fit
+  //Mw3_X_mod = "(Mw3_X - (120.342308) - TwimTheta *(5685.146295))+ (- (4.625269) - (Mw1_X+Mw2_X)/2. *(0.571696))+ (- (1.241102) - (Mw3_Y-Mw1_Y) *(-0.056444))+ (- (10.569345) - (Mw1_Y+Mw2_Y)/2. *(0.764638))";
+  // Test 2021
+  Mw3_X_mod = "(Mw3_X - (120.342308) - TwimTheta *(5685.146295))+ (- (4.625269) - (Mw1_X+Mw2_X)/2. *(0.571696))+ (- (1.241102))";// - (Mw3_Y-Mw1_Y) *(-0.056444))+ (- (10.569345) - (Mw1_Y+Mw2_Y)/2. *(0.764638))";
+  fragbrhostring = "((" + Mw3_X_mod + "+1282.411556)/141.549357)"; 
+    //Form"((%s-(%f))/%f)",Mw3_X_mod.Data(),-1282.411556,141.549357);
+    //  "((Mw3_X - (120.342308) - TwimTheta *(5685.146295))+ (- (4.625269) - (Mw1_X+Mw2_X)/2. *(0.571696))+ (- (1.241102) - (Mw3_Y-Mw1_Y) *(-0.056444))+ (- (10.569345) - (Mw1_Y+Mw2_Y)/2. *(0.764638))-(-1282.411556))/(141.549357)";
+  ///
+  brho = "Brho_S2_Cave";
+  beta_tofw_mod = Form("(FragBeta - %f)",beta_offset);
+  //fragaoqstring = "FragAoQ";
+  fragaoqstring = Form("(%s)*sqrt(1-%s*%s)/((%s)*(%f))", fragbrhostring.Data(), beta_tofw_mod.Data(),beta_tofw_mod.Data(),beta_tofw_mod.Data(), mc_e);
+  //
+  cut_mw = Form("(Mw1_X>%f)&&(Mw1_X<%f)&&", -30.,25.);
+  for(int i=0;i<(IsEmpty?4:3);i++) cut_mw += Form("(%s>%f)&&(%s<%f)&&",axis_mw3[i].Data(),range_cut_mw3_low[i],axis_mw3[i].Data(),range_cut_mw3_high[i]);
+
 }
