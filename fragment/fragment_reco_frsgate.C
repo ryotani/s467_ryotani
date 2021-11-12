@@ -20,17 +20,17 @@ TString infile = "./fragment/output/mktree_fragment_ch2-24mm.root";
 double beta_offset = 0.000;
 */
 //
-
+/*
 TString targ = "carbon";
 TString infile = "./fragment/output/mktree_fragment_carbon.root";
 double beta_offset = 0.000;
-
+*/
 //
-/*
+
 TString targ = "PP";
 TString infile = "./fragment/output/mktree_fragment_PP.root";
 double beta_offset = 0.000;
-*/
+
 //
 TString outpdf = "./fragment/output/fragment_reco_frsgate_" + targ + Form("_z%i_a%i",zet,mass) + "_beta_offset_paddle.pdf";
 TString outcsv = "./fragment/output/fragment_reco_frsgate_" + targ + Form("_z%i_a%i",zet,mass) + "_beta_offset_paddle.csv";

@@ -57,7 +57,7 @@ void filltree(int runnum)
     // NumSofSci, file names and paths -----------------------------
     Int_t sofiaWR, NumSofSci, IdS2, IdS8;
     TString dir = gSystem->Getenv("VMCWORKDIR");
-    TString ntuple_options = "RAW";
+    TString ntuple_options = "RAW";//"RAW,time-stitch=1000" // For no stitched data
     TString ucesb_dir = getenv("UCESB_DIR");
     TString filename, outputFilename, upexps_dir, ucesb_path, sofiacaldir,  sofiacalfilename, vftxcalfilename, tofwhitfilename, musiccalfilename;
     Double_t brho28;

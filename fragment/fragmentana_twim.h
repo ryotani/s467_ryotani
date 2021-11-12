@@ -13,7 +13,7 @@
 using namespace std;
 
 //TProof *p =  TProof::Open("");
-TProof *p =  TProof::Open("workers=3");
+//TProof *p =  TProof::Open("workers=3");
 
 TCanvas *c;
 TString Zgate = "abs(MusicZ-TwimZ)<0.5";
