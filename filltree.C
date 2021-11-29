@@ -135,7 +135,7 @@ void filltree(int runnum)
       auto datime = new TDatime();
       TString str_datime = datime->AsString();
       string month = str_datime(4,3);
-      outputFilename = Form("./rootfiles/rootfiletmp/fragment_Sep2021/s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str());
+      outputFilename = Form("./rootfiles/rootfiletmp/fragment_Nov2021/s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str());
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
