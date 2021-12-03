@@ -376,6 +376,9 @@ UseS2x:	     Int_t \
  1 1 0
 S2PosCoef:   Float_t -5.8
 S2PosOffset: Float_t 0.
+NumBrhoCorrPar: Int_t 4
+BrhoCorrPar: Float_t \
+  -0.000421866 -0.00206898 -6.34297e-06 1.34329e-05
 //New update by RT in R3BSofFrsPar.h
 //SciId starting from 1. 1: FRS-S2, 2: SofSci-S2, 3: FRS-S8, 4: SofSci-Cave
 ##############################################################################
