@@ -8,6 +8,8 @@
 #include "TProfile.h"
 #include "TStyle.h"
 #include "TLine.h"
+#include "TMath.h"
+#include <cmath>
 #include <fstream>
 
 using namespace std;
@@ -21,7 +23,7 @@ TString fragbeta[NUMPADDLE] = {""};
 TString fragaoq[NUMPADDLE] = {""};
 Double_t mc_e = 3.1071; // m_u * c_0 / e
 Double_t min_brho = 8.7, max_brho=9.3;
-TString brho = Form("Beta_S2_Cave / sqrt(1-Beta_S2_Cave*Beta_S2_Cave) * AoQ_S2_Cave * %f", mc_e);
+TString brho = "FRSBrho"; //Form("Beta_S2_Cave / sqrt(1-Beta_S2_Cave*Beta_S2_Cave) * AoQ_S2_Cave * %f", mc_e);
 TString brhocave = "";
 TChain *ch;
 Double_t par[NUMPADDLE][2] = {{0.}};

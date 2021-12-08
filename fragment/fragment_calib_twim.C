@@ -2,11 +2,11 @@
 
 #include "fragmentana_twim.h"
 
-//TString infile = "./fragment/output/mktree_tofw_frs_empty.root";
-TString infile = "./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting13_0340_22Sep.root";
-TString outpdf = "./fragment/output/fragment_calib_twim.pdf";
-TString brho_outpdf = "./fragment/output/fragment_calib_twim_brho.pdf";
-TString recobrho_outpdf = "./fragment/output/fragment_reco_twim_brho.pdf";
+TString infile = "./fragment/output/mktree_fragment_Dec_empty.root";
+//TString infile = "./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting13_0340_22Sep.root";
+TString outpdf = "./fragment/output/fragment_calib_twim_Dec.pdf";
+TString brho_outpdf = "./fragment/output/fragment_calib_twim_brho_Dec.pdf";
+TString recobrho_outpdf = "./fragment/output/fragment_reco_twim_brho_Dec.pdf";
 /*
 TString infile = "./fragment/output/mktree_tofw_frs_ch2-24mm.root";
 TString outpdf = "./fragment/output/fragment_calib_twim_ch2_test.pdf";
@@ -33,9 +33,9 @@ int fragment_calib_twim(){
   for(int i=0;i<4;i++) cut_mw += Form("(%s>%f)&&(%s<%f)&&",axis_mw3[i].Data(),range_cut_mw3_low[i],axis_mw3[i].Data(),range_cut_mw3_high[i]);
   //cut_mw += Form("(Mw2_X>%f)&&(Mw2_X<%f)&&", -40, 40);
   transfer_mat();
-  //brho_corr();
+  //brho_corr(); // To be done fragment_reco...
   //
-  p->Close();
+  //p->Close();
   delete ch;
   return 0;
 }
@@ -95,7 +95,7 @@ int brho_corr(){
   }
   //
   c->cd(4);
-  conditions = "abs(MusicZ-20.)<0.4 && abs(AoQ_S2_Cave-2.45)<0.02"; // 49Ca
+  conditions = "abs(MusicZ-20.)<0.4 && abs(FRSAoQ-2.45)<0.02"; // 49Ca
   h_brhobrho = new TH2D("hbrhobrho", "Brho correlation in FRS and Cave; Brho FRS /Tm; Brho Cave /Tm", 500, 8.7, 9.3, 500, 8.7, 9.3);
   fragbrhostring = Form("(%s-(%f))/(%f)", Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(0), f_brho_mw3[cond][2]->GetParameter(1));
   ch->Draw(Form("(%s):%s>>hbrhobrho", fragbrhostring.Data(), brho.Data()), conditions, "col");
@@ -103,7 +103,7 @@ int brho_corr(){
   c->cd(8);
   h_aoqaoq = new TH2D("haoqaoq", "Brho correlation in FRS and Cave; AoQ FRS ; AoQ Cave", 500, 2.2, 2.7, 500, 2.2, 2.7);
   fragaoqstring = Form("(%s)*sqrt(1-%s*%s)/((%s)*(%f))", fragbrhostring.Data(), beta_tofw_mod.Data(),beta_tofw_mod.Data(),beta_tofw_mod.Data(), mc_e);
-  dummystring = Form("%s:AoQ_S2_Cave>>haoqaoq",fragaoqstring.Data());
+  dummystring = Form("%s:FRSAoQ>>haoqaoq",fragaoqstring.Data());
   cout << dummystring <<endl;
   ch->Draw(dummystring, conditions, "col");
   //
@@ -202,11 +202,12 @@ int transfer_mat(){
   fout << "Mw3_X_mod: "<<endl <<Mw3_X_mod <<endl<<endl;
   ////
   /////////////////////////////////////////////////////////////
+  /*
   // Correction of ToF length
   conditions = "1";
   draw_toflength_corr(conditions);
   // Gate on 49Ca
-  //beamcondition += "&& abs(AoQ_S2_Cave-2.45)<0.02";
+  //beamcondition += "&& abs(FRSAoQ-2.45)<0.02";
   mwcondition = Form("&& abs(%s-(%f))<2.", axis_mw_h[0].Data(), max_mw1[0][0]);
   mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_h[2].Data(), max_mw1[2][0]);
   mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_v[3].Data(), max_mw1[3][1]);
@@ -260,7 +261,7 @@ int transfer_mat(){
   draw_toflength_corr(conditions);
   ////
   fout << "beta_tofw_mod: "<<endl <<beta_tofw_mod <<endl<<endl;
-  //
+  / */
   c -> Print(brho_outpdf + "]");
   delete c;
   fout.close();
@@ -355,7 +356,7 @@ int draw_pidgate(TString conditions){
   cout<<"\033[1;31m Index: "<<cond<<", Draw: "<<conditions<<"\033[m"<<endl;
   c->cd(1);
   h_frspid_mw[cond] = new TH2D(Form("h_frspid%i",cond), "PID in FRS (S2-CaveC); AoQ; MusicZ", 500, 2.2,2.7, 500,10,30);
-  ch->Draw(Form("MusicZ:AoQ_S2_Cave>>h_frspid%i",cond),conditions,"col");
+  ch->Draw(Form("MusicZ:FRSAoQ>>h_frspid%i",cond),conditions,"col");
   //
   c->cd(2);
   h_music_twim_mw[cond] = new TH2D(Form("hmusictwim_mw%i",cond),"R3BMusic and Twim with #beta in FRS;TwimZ;MusicZ",200,10,30,200,10,30);
@@ -389,13 +390,13 @@ int draw_pidgate(TString conditions){
 }
 
 int tofw_calib(){
-  ofstream fout("./fragment/output/fragment_fit_tof.csv", ofstream::out);
+  ofstream fout("./fragment/output/fragment_fit_tof_Nov.csv", ofstream::out);
   c = new TCanvas("c","c",1200,1000);
   c -> Divide(6,5);
   c->Print(outpdf + "[");
   c->cd(1);
   h_frspid = new TH2D("h_frspid", "PID in FRS (S2-CaveC); AoQ; MusicZ", 500, 2.2,2.7, 500,10,30);
-  ch->Draw("MusicZ:AoQ_S2_Cave>>h_frspid","","col");
+  ch->Draw("MusicZ:FRSAoQ>>h_frspid","","col");
   c->cd(2);
   h_tofw_paddle = new TH1D("h_tofw_paddle", "Counts in TofW paddles; Paddle ID; Counts", NUMPADDLE+1, -0.5, NUMPADDLE + 0.5);
   ch->Draw("Tofw_Paddle>>h_tofw_paddle","","");
@@ -480,7 +481,7 @@ int tofw_calib(){
   brhocave += Form("((Mw3_X-(%f))/(%f))",f_mw3brho->GetParameter(0), f_mw3brho->GetParameter(1));
   c->Print(outpdf);
   //
-  p->ClearCache();
+  //p->ClearCache();
   cout<<"CLEARED PROOF CACHE"<<endl;
   //
   h_fragaoq[NUMPADDLE] = new TH2D("h_fragaoq", "AoQ of FRS and Fragment; AoQ in FRS; AoQ in CaveC", 500, 2.2,2.7, 500,2.2,2.7);
@@ -491,7 +492,7 @@ int tofw_calib(){
     cout<<"Paddle"<<i+1<<": "<<fragaoq[i]<<endl;
     //
     h_fragaoq[i] = new TH2D(Form("h_fragaoq%i",i), Form("AoQ of FRS and Fragment (Paddle %i); AoQ in FRS; AoQ in CaveC", i+1), 500, 2.2, 2.7, 500,2.2,2.7);
-    ch->Draw(Form("%s:AoQ_S2_Cave>>h_fragaoq%i", fragaoq[i].Data(),i),Form("Tofw_Paddle==%i",i+1),"col");
+    ch->Draw(Form("%s:FRSAoQ>>h_fragaoq%i", fragaoq[i].Data(),i),Form("Tofw_Paddle==%i",i+1),"col");
     h_fragaoq[NUMPADDLE]->Add(h_fragaoq[i]);
   }
   c->cd(1);
@@ -518,7 +519,7 @@ int tofw_calib(){
 }
 
 int loadtofpara(){
-  ifstream fin("./fragment/output/fragment_fit_tof.csv", ofstream::in);  if(!fin.is_open()||!fin.good()){
+  ifstream fin("./fragment/output/fragment_fit_tof_Nov.csv", ofstream::in);  if(!fin.is_open()||!fin.good()){
     cerr<<"No CSV file found: "<<endl;
     return 1;
   }
@@ -568,5 +569,5 @@ void initialise(){
 
   ch = new TChain("Tree");
   ch -> Add(infile);
-  ch -> SetProof();
+  //ch -> SetProof();
 }

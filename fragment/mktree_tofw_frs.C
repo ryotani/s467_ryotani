@@ -1,10 +1,9 @@
 #define NUMPADDLE 28
 #define NUMHIST 5
 //int posmin=1325, posmax=1424; TString targetname = "empty";
-//int posmin=539, posmax=539; TString targetname = "ch2-24mm";
+int posmin=539, posmax=539; TString targetname = "ch2-24mm";
 //int posmin=362, posmax=362; TString targetname = "carbon";
-int posmin=893, posmax=893; TString targetname = "PP";
-TProof *p =  TProof::Open("");
+//int posmin=893, posmax=893; TString targetname = "PP";
 
 TCanvas *c;
 TH1F *htime[NUMPADDLE], *hpos[NUMPADDLE];
@@ -54,11 +53,11 @@ void mktree_tofw_frs(int runnum){
     if(targetpos[i]<posmin || targetpos[i]>posmax) continue;
     cout<<runnumcsv[i]<<" "<<dumchar<<" "<<FRSsetting[i]<<" "<<dumchar<<" "<<brhocsv[i]<<" "<<dumchar<<" "<<targetpos[i]<<" "<<dumchar<<" "<<musicgain[i]<<" "<<dumchar<<" "<<junk[i]<<endl;
 
-    filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/fragment_Nov2021/s467_filltree_Setting13_%04d_7Nov.root", runnumcsv[i]);
+    filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/fragment_Nov2021/s467_filltree_Setting13_%04d_3Dec.root", runnumcsv[i]);
     //ch -> Add(filename);
     ch -> AddFile(filename);
   }
-  ch->Merge(Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/fragment/output/mktree_fragment_Nov_%s.root",targetname.Data()));
+  ch->Merge(Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/fragment/output/mktree_fragment_Dec_%s.root",targetname.Data()));
   /*
   for(int i = firstrun; i < lastrun+1; i++){
     filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_%04d_ToFWhitpar.root", i);
@@ -69,7 +68,6 @@ void mktree_tofw_frs(int runnum){
   */
   //fout = new TFile("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofw/output/mktree_tofw_frs.root","recreate");
   /*
-  ch -> SetProof();
   ch->SetBranchStatus("*",0);
   ch->SetBranchStatus("SofFrsData.fZ",1);
   ch->SetBranchStatus("SofFrsData.fAq",1);
