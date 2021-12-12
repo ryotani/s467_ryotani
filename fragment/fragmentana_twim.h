@@ -5,6 +5,8 @@
 #include "TH2.h"
 #include "TH1.h"
 #include "TF1.h"
+#include "TF2.h"
+#include "TEllipse.h"
 #include "TProfile.h"
 #include "TStyle.h"
 #include "TLine.h"

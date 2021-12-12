@@ -39,6 +39,10 @@ ofstream fcsv(outcsv, ofstream::out);
 TFile *fout = new TFile(outroot,"RECREATE");
 TF1 *fit_prof[NUMPADDLE];
 TH2F *h_frsbeta_betacalc[NUMPADDLE], *h_deltabeta_tof[NUMPADDLE], *h_deltabeta_theta[NUMPADDLE], *h_deltabeta_pid[NUMPADDLE];
+TH2F *h_gatedpid[NUMPADDLE][100][50];
+TH1F *h_counts_paddle[100][50][3][3];
+Int_t NumGated[NUMPADDLE][100][50][100][50] = {0};
+TF2 *f_fragfit[NUMPADDLE][100][50];
 TF1 *f_aoq[NUMPADDLE], *f_betatof[NUMPADDLE], *f_betatheta[NUMPADDLE];
 TTree *tree;
 
@@ -48,7 +52,7 @@ void delta_aoq_method(); // obsolete
 void delta_beta_method();
 void initialise();
 void filltree();
-Int_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false);
+Int_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i=0);
 Int_t initbranch();
 void writecsv();
 
@@ -69,7 +73,7 @@ void tofw_beta_offset_nofrsgate(){
   c->Print(outpdf + "]");
   //
   //filltree();
-  //writecsv();
+  writecsv();
 }
 
 void define_conditions(){
@@ -224,6 +228,37 @@ void delta_beta_method(){
     //f_betatheta[i] = new TF1(Form("f_betatheta%i",i+1), "[0]*x", -14, 14);
     f_betatheta[i] = new TF1(Form("f_betatheta%i",i+1), "pol1", -0.5, 0.5);
     h_deltabeta_pid[i] = new TH2F(Form("h_deltabeta_pid%i",i+1), Form("PID of Paddle  %i", i+1), 500,min_aoq,max_aoq,500,10,25);
+    for (int A = 42; A < 55; A++){
+      for (int Z = 16; Z < 22; Z++){
+	h_gatedpid[i][A][Z] = new TH2F(Form("h_gatedpid%i_%i_%i",i,A,Z),Form("PID of Paddle%i gated in FRS, A=%i, Z=%i",i+1,A,Z),
+				       500, min_aoq, max_aoq, 500, 10, 25);
+	double tmpaoq = (double)A/(double)Z;
+	f_fragfit[i][A][Z] = new TF2(Form("f_fragfit%i_%i_%i",i,A,Z),"[0]*TMath::Gaus(x,[1],[2])*TMath::Gaus(y,[3],[4])",
+				     tmpaoq-0.01,tmpaoq+0.01,(double)Z-0.4,(double)Z+0.4);
+	f_fragfit[i][A][Z] -> SetParameter(0,0);
+	f_fragfit[i][A][Z] -> SetParameter(1,tmpaoq);
+      	f_fragfit[i][A][Z] -> SetParameter(2,1./200.);
+      	f_fragfit[i][A][Z] -> SetParameter(3,(double)Z);
+      	f_fragfit[i][A][Z] -> SetParameter(4,0.2);
+	//
+      	f_fragfit[i][A][Z] -> SetParLimits(0,0,1e7);
+      	f_fragfit[i][A][Z] -> SetParLimits(1,tmpaoq-0.005,tmpaoq+0.005);
+      	f_fragfit[i][A][Z] -> SetParLimits(2,0.002,0.015);
+      	f_fragfit[i][A][Z] -> SetParLimits(3,(double)Z-0.1,(double)Z+0.1);
+	f_fragfit[i][A][Z] -> SetParLimits(4,0.03,0.15);
+	//
+	for(int DN=0; DN<3; DN++){ // Delta N
+	  for(int DZ=0; DZ<3; DZ++){ // Delta Z
+	    h_counts_paddle[A][Z][DN][DZ] = new TH1F(Form("h_counts_paddle_%i_%i_%i_%i",A,Z,DN,DZ),
+						     Form("Counts for each paddle from A=%i Z=%i with #DeltaN=%i #DeltaZ=%i reaction",A,Z,DN,DZ),
+						     NUMPADDLE, 0.5, NUMPADDLE+0.5);
+	  }
+	}
+	h_counts_paddle[A][Z][0][0]->SetLineColor(1);
+      	h_counts_paddle[A][Z][1][0]->SetLineColor(2);
+      	h_counts_paddle[A][Z][0][1]->SetLineColor(3);
+      }
+    }
   }
   //
   nentry = ch->GetEntries();
@@ -342,27 +377,110 @@ void delta_beta_method(){
   cout<<endl;
   //Draw
   for(int i = MINPADDLE; i<NUMPADDLE; i++){
-    c -> cd((i%(NUMPADDLE/2))+1);
+    //c -> cd((i%(NUMPADDLE/2))+1);
+    c->cd(0);
+    for (int A = 42; A < 55; A++){
+      for (int Z = 16; Z < 22; Z++){
+	h_deltabeta_pid[i]->Fit(Form("f_fragfit%i_%i_%i",i,A,Z),"R N 0","");
+      }
+    }
     h_deltabeta_pid[i]->Draw("colz");
-    if(i==NUMPADDLE/2-1) c->Print(outpdf);
+    for (int A = 42; A < 55; A++){
+      for (int Z = 16; Z < 22; Z++){
+	if(f_fragfit[i][A][Z]->GetParameter(0)<=0.001*h_deltabeta_pid[i]->GetMaximum()) continue;
+	TEllipse *el = new TEllipse(f_fragfit[i][A][Z]->GetParameter(1),
+				    f_fragfit[i][A][Z]->GetParameter(3),
+				    3.*f_fragfit[i][A][Z]->GetParameter(2),
+				    3.*f_fragfit[i][A][Z]->GetParameter(4));
+	el->SetLineColor(2);
+	el->SetLineWidth(1);
+	el->SetFillColor(0);
+	el->SetFillStyle(0);
+	//el->Draw("same");
+	el->Draw();
+      }
+    }
+    c->Print(outpdf);
+    //if(i==NUMPADDLE/2-1) c->Print(outpdf);
   }
-  c->Print(outpdf);
+  // c->Print(outpdf);
+
+  // Draw gated pid
+  for(Long64_t n=0; n<nentry; n++){
+    //for(Long64_t n=0; n<100; n++){
+    ch->GetEntry(n);
+    Int_t i = Tofw_Paddle - 1;
+    if(i < MINPADDLE || i >= NUMPADDLE) continue;
+    Double_t beta_fit = f_betatof[i]->GetParameter(0)*(1. + 1000.*TwimTheta*f_betatheta[i]->GetParameter(1))/(FragTof + f_betatof[i]->GetParameter(1)) + f_betatof[i]->GetParameter(2);
+    Double_t aoq_fit = (FragBrho * TMath::Sqrt(1.-beta_fit*beta_fit))/(beta_fit * mc_e);
+    Double_t tmpzet = MusicZ, tmpaoq = FRSAoQ;
+    if(pid(tmpzet, tmpaoq, false)==1) continue;
+    Int_t tmpA = tmpaoq*tmpzet;
+    Int_t tmpZ = tmpzet;
+    if(tmpA<42||tmpA>=55||tmpZ<16||tmpZ>=22) continue;
+    h_gatedpid[i][tmpA][tmpZ]->Fill(aoq_fit,FragZ);
+    //
+    NumGated[i][tmpA][tmpZ][0][0]++; // Incoming particles within acceptance
+    //
+    Double_t tmpfragzet = FragZ, tmpfragaoq = aoq_fit;
+    if(pid(tmpfragzet, tmpfragaoq, true, i)==0){
+      Int_t tmpfragA = tmpfragaoq*tmpfragzet;
+      Int_t tmpfragZ = tmpfragzet;
+      NumGated[i][tmpA][tmpZ][tmpfragA][tmpfragZ]++;
+    }
+    /*
+    else{
+      NumGated[i][tmpA][tmpZ][0][0]++; // outside of the gate
+      }*/
+    //
+    if(++neve%100000==0)
+      cout<<n<<" enrties done in "<<nentry<<flush;//endl;//
+  }
+  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+    for (int A = 42; A < 55; A++){
+      for (int Z = 16; Z < 22; Z++){
+	//h_gatedpid[i]->Draw("colz");
+	h_gatedpid[i][A][Z]->Write();
+	//cout<<"paddle:"<<i+1<<", A:"<<A<<", Z:"<<Z<<" counts:"<<NumGated[i][A][Z][A][Z]<<endl;
+      }
+    }
+  }
+  //
+  c->Clear();
+  c->cd(0);
+  c->Divide(3,3);
+  for (int Z = 16; Z < 22; Z++){
+    for (int A = 42; A < 55; A++){
+      for(int D = 0; D<9; D++){
+	c->cd(D+1);
+	for(int i = MINPADDLE; i<NUMPADDLE; i++){
+	  int DN=D%3, DZ=D/3;
+	  h_counts_paddle[A][Z][D%3][D/3]->SetBinContent(i, NumGated[i][A][Z][A-DN-DZ][Z-DZ]);
+	}
+	h_counts_paddle[A][Z][D%3][D/3]->Draw();
+      }
+      c->Print(outpdf);
+    }
+  }
 }
 
-Int_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false){
+Int_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i){
+  Int_t tmpzet = (Int_t) (zet + 0.5);
+  Int_t tmpmass = (Int_t) ((Double_t)tmpzet * aoq + 0.5);
+  Double_t tmpaoq = (Double_t)tmpmass/((Double_t)tmpzet);
+  //
   Double_t rangezet = 0.;
   Double_t rangeaoq = 0.;
   if(!isfrag){
     rangezet = 4.* 1.11e-1;
     rangeaoq = 4.* 1.34e-3;
+  }else if(MINPADDLE <= i && i < NUMPADDLE){
+    if(tmpmass<42||tmpmass>=55||tmpzet<16||tmpzet>=22) return 1;
+    rangezet = 3.* f_fragfit[i][tmpmass][tmpzet]->GetParameter(4);
+    rangeaoq = 3.* f_fragfit[i][tmpmass][tmpzet]->GetParameter(2);
   }else{
-    rangezet = 0.4;
-    rangeaoq = 7e-3;
+    return 1;
   }
-  Int_t tmpzet = (Int_t) (zet + 0.5);
-  Int_t tmpmass = (Int_t) ((Double_t)tmpzet * aoq + 0.5);
-  Double_t tmpaoq = (Double_t)tmpmass/((Double_t)tmpzet);
-  //
   Double_t value = pow(((Double_t)tmpzet - zet)/rangezet, 2) + pow((tmpaoq - aoq)/rangeaoq, 2);
   if(value < 1){
     zet = (Double_t) tmpzet;
@@ -401,8 +519,33 @@ void filltree(){
 }
 ///
 void writecsv(){
-  fcsv<<"test"<<endl;
-  
+  //  fcsv<<"test"<<endl;
+  fcsv << "FRS Z, FRS A, Frag Z, Frag A";
+  for(int i = MINPADDLE; i<NUMPADDLE; i++) fcsv<<", Paddle "<<i+1;
+  fcsv << ", total"<<endl;
+  for(int FZ = 16; FZ<22; FZ++){
+    for(int FA=42; FA<55; FA++){
+      int total=0;
+      fcsv<<FZ<<", "<<FA<<", "<<"0"<<", 0";
+      for(int i = MINPADDLE; i<NUMPADDLE; i++){
+	fcsv<<", "<<NumGated[i][FA][FZ][0][0];
+	total +=NumGated[i][FA][FZ][0][0];
+      }
+      fcsv<<", "<<total<<endl;
+      //
+      for(int CZ = 16; CZ<=FZ; CZ++){
+	for(int CA=42; CA<=FA; CA++){
+	  total = 0;
+	  fcsv<<FZ<<", "<<FA<<", "<<CZ<<", "<<CA;
+	  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+	    fcsv<<", "<<NumGated[i][FA][FZ][CA][CZ];
+	    total +=NumGated[i][FA][FZ][CA][CZ];
+	  }
+	  fcsv<<", "<<total<<endl;
+	}
+      }
+    }
+  }
 }
 ///
 Int_t initbranch(){
