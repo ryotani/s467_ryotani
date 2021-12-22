@@ -35,6 +35,9 @@ TString outcsv = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_no
 TString outroot = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Dec") + ".root";
 //TString recobrho_outpdf = "./fragment/output/tofw_beta_offset_paddlebrho_" + targ + Form("_nofrsgate_zdiff%i",zetdiff) + ".pdf";
 bool IsEmpty=false;
+const Double_t sigma = 2.;
+const Int_t MINA=36, MAXA=55, MINZ=16, MAXZ=22;
+//
 ofstream fcsv(outcsv, ofstream::out);
 TFile *fout = new TFile(outroot,"RECREATE");
 TF1 *fit_prof[NUMPADDLE];
@@ -228,25 +231,26 @@ void delta_beta_method(){
     //f_betatheta[i] = new TF1(Form("f_betatheta%i",i+1), "[0]*x", -14, 14);
     f_betatheta[i] = new TF1(Form("f_betatheta%i",i+1), "pol1", -0.5, 0.5);
     h_deltabeta_pid[i] = new TH2F(Form("h_deltabeta_pid%i",i+1), Form("PID of Paddle  %i", i+1), 500,min_aoq,max_aoq,500,10,25);
-    for (int A = 42; A < 55; A++){
-      for (int Z = 16; Z < 22; Z++){
+    for (int A = MINA; A < MAXA; A++){
+      for (int Z = MINZ; Z < MAXZ; Z++){
 	h_gatedpid[i][A][Z] = new TH2F(Form("h_gatedpid%i_%i_%i",i,A,Z),Form("PID of Paddle%i gated in FRS, A=%i, Z=%i",i+1,A,Z),
 				       500, min_aoq, max_aoq, 500, 10, 25);
 	double tmpaoq = (double)A/(double)Z;
 	f_fragfit[i][A][Z] = new TF2(Form("f_fragfit%i_%i_%i",i,A,Z),"[0]*TMath::Gaus(x,[1],[2])*TMath::Gaus(y,[3],[4])",
-				     tmpaoq-0.01,tmpaoq+0.01,(double)Z-0.4,(double)Z+0.4);
+				     tmpaoq-0.025,tmpaoq+0.025,(double)Z-0.4,(double)Z+0.4);
 	f_fragfit[i][A][Z] -> SetParameter(0,0);
 	f_fragfit[i][A][Z] -> SetParameter(1,tmpaoq);
       	f_fragfit[i][A][Z] -> SetParameter(2,1./200.);
       	f_fragfit[i][A][Z] -> SetParameter(3,(double)Z);
       	f_fragfit[i][A][Z] -> SetParameter(4,0.2);
 	//
-      	f_fragfit[i][A][Z] -> SetParLimits(0,0,1e7);
-      	f_fragfit[i][A][Z] -> SetParLimits(1,tmpaoq-0.005,tmpaoq+0.005);
-      	f_fragfit[i][A][Z] -> SetParLimits(2,0.002,0.015);
+      	f_fragfit[i][A][Z] -> SetParLimits(0,0,1e8);
+      	f_fragfit[i][A][Z] -> SetParLimits(1,tmpaoq-0.08,tmpaoq+0.008);
+      	f_fragfit[i][A][Z] -> SetParLimits(2,0.002,0.01);
       	f_fragfit[i][A][Z] -> SetParLimits(3,(double)Z-0.1,(double)Z+0.1);
 	f_fragfit[i][A][Z] -> SetParLimits(4,0.03,0.15);
 	//
+	if(i>0) continue;
 	for(int DN=0; DN<3; DN++){ // Delta N
 	  for(int DZ=0; DZ<3; DZ++){ // Delta Z
 	    h_counts_paddle[A][Z][DN][DZ] = new TH1F(Form("h_counts_paddle_%i_%i_%i_%i",A,Z,DN,DZ),
@@ -379,19 +383,20 @@ void delta_beta_method(){
   for(int i = MINPADDLE; i<NUMPADDLE; i++){
     //c -> cd((i%(NUMPADDLE/2))+1);
     c->cd(0);
-    for (int A = 42; A < 55; A++){
-      for (int Z = 16; Z < 22; Z++){
+    for (int A = MINA; A < MAXA; A++){
+      for (int Z = MINZ; Z < MAXZ; Z++){
 	h_deltabeta_pid[i]->Fit(Form("f_fragfit%i_%i_%i",i,A,Z),"R N 0","");
       }
     }
     h_deltabeta_pid[i]->Draw("colz");
-    for (int A = 42; A < 55; A++){
-      for (int Z = 16; Z < 22; Z++){
+    c->Print(outpdf);
+    for (int A = MINA; A < MAXA; A++){
+      for (int Z = MINZ; Z < MAXZ; Z++){
 	if(f_fragfit[i][A][Z]->GetParameter(0)<=0.001*h_deltabeta_pid[i]->GetMaximum()) continue;
 	TEllipse *el = new TEllipse(f_fragfit[i][A][Z]->GetParameter(1),
 				    f_fragfit[i][A][Z]->GetParameter(3),
-				    3.*f_fragfit[i][A][Z]->GetParameter(2),
-				    3.*f_fragfit[i][A][Z]->GetParameter(4));
+				    sigma*f_fragfit[i][A][Z]->GetParameter(2),
+				    sigma*f_fragfit[i][A][Z]->GetParameter(4));
 	el->SetLineColor(2);
 	el->SetLineWidth(1);
 	el->SetFillColor(0);
@@ -417,7 +422,7 @@ void delta_beta_method(){
     if(pid(tmpzet, tmpaoq, false)==1) continue;
     Int_t tmpA = tmpaoq*tmpzet;
     Int_t tmpZ = tmpzet;
-    if(tmpA<42||tmpA>=55||tmpZ<16||tmpZ>=22) continue;
+    if(tmpA<MINA||tmpA>=MAXA||tmpZ<MINZ||tmpZ>=MAXZ) continue;
     h_gatedpid[i][tmpA][tmpZ]->Fill(aoq_fit,FragZ);
     //
     NumGated[i][tmpA][tmpZ][0][0]++; // Incoming particles within acceptance
@@ -437,8 +442,8 @@ void delta_beta_method(){
       cout<<n<<" enrties done in "<<nentry<<flush;//endl;//
   }
   for(int i = MINPADDLE; i<NUMPADDLE; i++){
-    for (int A = 42; A < 55; A++){
-      for (int Z = 16; Z < 22; Z++){
+    for (int A = MINA; A < MAXA; A++){
+      for (int Z = MINZ; Z < MAXZ; Z++){
 	//h_gatedpid[i]->Draw("colz");
 	h_gatedpid[i][A][Z]->Write();
 	//cout<<"paddle:"<<i+1<<", A:"<<A<<", Z:"<<Z<<" counts:"<<NumGated[i][A][Z][A][Z]<<endl;
@@ -449,8 +454,8 @@ void delta_beta_method(){
   c->Clear();
   c->cd(0);
   c->Divide(3,3);
-  for (int Z = 16; Z < 22; Z++){
-    for (int A = 42; A < 55; A++){
+  for (int Z = MINZ; Z < MAXZ; Z++){
+    for (int A = MINA; A < MAXA; A++){
       for(int D = 0; D<9; D++){
 	c->cd(D+1);
 	for(int i = MINPADDLE; i<NUMPADDLE; i++){
@@ -471,17 +476,20 @@ Int_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i){
   //
   Double_t rangezet = 0.;
   Double_t rangeaoq = 0.;
+  Double_t value = 0.;
   if(!isfrag){
     rangezet = 4.* 1.11e-1;
     rangeaoq = 4.* 1.34e-3;
+    value = pow(((Double_t)tmpzet - zet)/rangezet, 2) + pow((tmpaoq - aoq)/rangeaoq, 2);
   }else if(MINPADDLE <= i && i < NUMPADDLE){
-    if(tmpmass<42||tmpmass>=55||tmpzet<16||tmpzet>=22) return 1;
-    rangezet = 3.* f_fragfit[i][tmpmass][tmpzet]->GetParameter(4);
-    rangeaoq = 3.* f_fragfit[i][tmpmass][tmpzet]->GetParameter(2);
+    if(tmpmass<MINA||tmpmass>=MAXA||tmpzet<MINZ||tmpzet>=MAXZ) return 1;
+    rangezet = sigma* f_fragfit[i][tmpmass][tmpzet]->GetParameter(4);
+    rangeaoq = sigma* f_fragfit[i][tmpmass][tmpzet]->GetParameter(2);
+    value = pow((f_fragfit[i][tmpmass][tmpzet]->GetParameter(3) - zet)/rangezet, 2) + pow((f_fragfit[i][tmpmass][tmpzet]->GetParameter(1) - aoq)/rangeaoq, 2);
   }else{
     return 1;
   }
-  Double_t value = pow(((Double_t)tmpzet - zet)/rangezet, 2) + pow((tmpaoq - aoq)/rangeaoq, 2);
+  //
   if(value < 1){
     zet = (Double_t) tmpzet;
     aoq = (Double_t) tmpaoq;
@@ -523,8 +531,8 @@ void writecsv(){
   fcsv << "FRS Z, FRS A, Frag Z, Frag A";
   for(int i = MINPADDLE; i<NUMPADDLE; i++) fcsv<<", Paddle "<<i+1;
   fcsv << ", total"<<endl;
-  for(int FZ = 16; FZ<22; FZ++){
-    for(int FA=42; FA<55; FA++){
+  for(int FZ = MINZ; FZ< MAXZ; FZ++){
+    for(int FA= MINA; FA< MAXA; FA++){
       int total=0;
       fcsv<<FZ<<", "<<FA<<", "<<"0"<<", 0";
       for(int i = MINPADDLE; i<NUMPADDLE; i++){
@@ -533,8 +541,8 @@ void writecsv(){
       }
       fcsv<<", "<<total<<endl;
       //
-      for(int CZ = 16; CZ<=FZ; CZ++){
-	for(int CA=42; CA<=FA; CA++){
+      for(int CZ = MINZ; CZ<=FZ; CZ++){
+	for(int CA= MINA; CA<=FA; CA++){
 	  total = 0;
 	  fcsv<<FZ<<", "<<FA<<", "<<CZ<<", "<<CA;
 	  for(int i = MINPADDLE; i<NUMPADDLE; i++){
