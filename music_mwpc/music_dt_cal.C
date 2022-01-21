@@ -501,7 +501,7 @@ void music_dt_cal(int runnum)
 	SofTwimMapped2CalPar->SetPosMwpcA(-1.*(49.5+500+336.5+141.25+360+444.5)); // MW0
 	SofTwimMapped2CalPar->SetPosMwpcB(1408.-444.5 +81.+550.+26.); // MW2
 	//SofTwimMapped2CalPar->SetPosTwim(-1.*(500./2.+336.5+141.25+360+444.5));//R3BSofTwim
-	SofTwimMapped2CalPar->SetPosTwim(1408.-444.5 +81.+550.+26.+50.);//Twim
+	SofTwimMapped2CalPar->SetPosTwim(1408.-444.5 +81.+550./2.);//Twim
 	SofTwimMapped2CalPar->SetFitLimits(1000,20000);
 	
 	run->AddTask(SofTwimMapped2CalPar);

@@ -11,8 +11,6 @@
  *
  */
 
-#include "profile.h"
-
 typedef struct EXT_STR_h101_t
 {
     EXT_STR_h101_unpack_t unpack;
@@ -35,21 +33,33 @@ typedef struct EXT_STR_h101_t
     EXT_STR_h101_FRS_t frs;
 } EXT_STR_h101;
 
-void filltree(int runnum);
+void music_filltree(int runnum);
 
-void filltree(){
-  filltree(340);
+void music_filltree(){
+  music_filltree(340);
 }
 
-void filltree(int runnum)
+void music_filltree(int runnum)
 {
     TStopwatch timer;
     timer.Start();
     
+    const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
+    //const Int_t nev = 10000000; // Only nev events to read
+    const Int_t fRunId = 1;
+
+    // *********************************** //
+    // PLEASE CHANGE THE EXPERIMENT NUMBER //
+    // *********************************** //
+    const Int_t expId = 467;               // select experiment: 444 or 467
+    // *********************************** //
+    
     // NumSofSci, file names and paths -----------------------------
     Int_t sofiaWR, NumSofSci, IdS2, IdS8;
+    TString dir = gSystem->Getenv("VMCWORKDIR");
     TString ntuple_options = "RAW";//"RAW,time-stitch=1000" // For no stitched data
-    TString filename, outputFilename, sofiacalfilename, vftxcalfilename, tofwhitfilename, musiccalfilename;
+    TString ucesb_dir = getenv("UCESB_DIR");
+    TString filename, outputFilename, upexps_dir, ucesb_path, sofiacaldir,  sofiacalfilename, vftxcalfilename, tofwhitfilename, musiccalfilename;
     Double_t brho28;
     
     if(runnum==0){
@@ -78,6 +88,7 @@ void filltree(int runnum)
       IdS8 = 3;
       sofiaWR = 0xe00;
 
+      std::ifstream RunList("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/RunSummary.csv", std::ios::in);
       if(!RunList.is_open()) std::cerr <<"No run summary found\n";
       int runnumcsv[500], targetpos[500], musicgain[500], junk[500];
       int FRSsetting[500]; // calib:0, ToFCalib:6-8, 40Ca:9, 39Ca:10, 38Ca:11,12, 50Ca:13, ToFWcalib:14
@@ -85,6 +96,7 @@ void filltree(int runnum)
       char dumchar;
       double brhocsv[500];
       std::getline (RunList, dummyline);
+      //std::cout << dummyline << std::endl;
       Int_t i=0;
       
       while(true){
@@ -107,9 +119,8 @@ void filltree(int runnum)
 	i++;
       }
       
-      filename = dir_rawfile;
-      filename.Append(Form("main%04d_*.lmd", runnum));
-      //
+      filename = Form("/u/taniuchi/s467/lmd_stitched/main%04d_*.lmd", runnum);
+      sofiacaldir = dir + "/sofia/macros/s467_ryotani/parameters/";
       if(FRSsetting[i] < 9){
 	sofiacalfilename = sofiacaldir + "CalibParam_lowgain.par";
       } else if(musicgain[i] == 0){
@@ -124,8 +135,7 @@ void filltree(int runnum)
       auto datime = new TDatime();
       TString str_datime = datime->AsString();
       string month = str_datime(4,3);
-      outputFilename = dir_output;
-      outputFilename.Append(Form("s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str()));
+      outputFilename = Form("./rootfiles/rootfiletmp/music/s467_music_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str());
 
       std::cout << "LMD FILE: " << filename << std::endl;
       std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
@@ -135,6 +145,11 @@ void filltree(int runnum)
       std::cout << "OUTPUT FILE: " << outputFilename << std::endl;
       std::cout << "Brho28: " << brho28 << std::endl;
       
+      upexps_dir = ucesb_dir + "/../upexps/";                      // for local computers // copied from fake and recompiled
+      // upexps_dir = "/u/land/fake_cvmfs/upexps";                 // for lxlandana computers
+      // upexps_dir = "/u/land/lynx.landexp/202002_s467/upexps/";  // for lxg computers
+      ucesb_path = upexps_dir + "/202002_s467/202002_s467 --allow-errors --input-buffer=100Mi";
+      //ucesb_path = upexps_dir + "/202002_s467_jentob/202002_s467 --allow-errors --input-buffer=100Mi";
     }
     else{
       std::cout << "Experiment was not selected" << std::endl;
@@ -146,13 +161,45 @@ void filltree(int runnum)
     vftxcalfilename.ReplaceAll("//", "/");
     tofwhitfilename.ReplaceAll("//", "/");
     musiccalfilename.ReplaceAll("//", "/");
-    califamapfilename.ReplaceAll("//", "/");
-    califacalfilename.ReplaceAll("//", "/");
-
+    
+    // store data or not ------------------------------------
+    Bool_t fCal_level_califa = true;  // set true if there exists a file with the calibration parameters
+    Bool_t NOTstoremappeddata = true; // if true, don't store mapped data in the root file
+    Bool_t NOTstorecaldata = true;    // if true, don't store cal data in the root file
+    Bool_t NOTstorehitdata = false;    // if true, don't store hit data in the root file
+    
     // Online server configuration --------------------------
     Int_t refresh = 100; // Refresh rate for online histograms
     Int_t port = 10000 + runnum; // Port number for the online visualization, example lxgXXXX:8888
 
+    // Setup: Selection of detectors ------------------------
+    Bool_t fFrs = false;      // FRS for production of exotic beams (just scintillators)
+    Bool_t fFrsTpcs = false; // Tpcs at FRS (S2) for scintillator calibration in position
+    Bool_t fFrsMws = false;  // MWs at FRS (S8) for beam position
+    Bool_t fFrsSci = false;   // Start: Plastic scintillators at FRS
+    Bool_t fMwpc0 = true;    // MWPC0 for tracking at entrance of Cave-C
+    Bool_t fMusic = true;    // R3B-Music: Ionization chamber for charge-Z
+    Bool_t fSci = false;      // Start: Plastic scintillator for ToF
+    //Bool_t fAms = false;     // AMS tracking detectors
+    Bool_t fCalifa = false;  // Califa calorimeter
+    Bool_t fMwpc1 = true;    // MWPC1 for tracking of fragments in front of target
+    Bool_t fMwpc2 = true;    // MWPC2 for tracking of fragments before GLAD
+    Bool_t fTwim = true;     // Twim: Ionization chamber for charge-Z of fragments
+    Bool_t fMwpc3 = false;    // MWPC3 for tracking of fragments behind GLAD
+    Bool_t fTofW = false;     // ToF-Wall for time-of-flight of fragments behind GLAD
+    Bool_t fScalers = false;  // SIS3820 scalers at Cave C
+    //Bool_t fNeuland = true;  // NeuLAND for neutrons behind GLAD
+    //Bool_t fTracking = true; // Tracking of fragments inside GLAD
+
+    // Calibration files ------------------------------------
+    // Parameters for CALIFA mapping
+    TString califamapdir = dir + "/macros/r3b/unpack/s467/califa/parameters/";
+    TString califamapfilename = califamapdir + "CALIFA_mapping.par";
+    califamapfilename.ReplaceAll("//", "/");
+    // Parameters for CALIFA calibration in keV
+    TString califadir = dir + "/macros/r3b/unpack/s467/califa/parameters/";
+    TString califacalfilename = califadir + "Califa_Cal8Feb2020.root";
+    califacalfilename.ReplaceAll("//", "/");
 
     // Create source using ucesb for input ------------------
     EXT_STR_h101 ucesb_struct;
@@ -160,7 +207,7 @@ void filltree(int runnum)
     R3BUcesbSource* source =
         new R3BUcesbSource(filename, ntuple_options, ucesb_path, &ucesb_struct, sizeof(ucesb_struct));
     source->SetMaxEvents(nev);
-    source->SetSkipEvents(fSkip_tpat0);//skip tpat=0 events.
+    source->SetSkipEvents(true);//skip tpat=0 events.
 
     // Definition of reader ---------------------------------
     source->AddReader(new R3BUnpackReader(&ucesb_struct.unpack,offsetof(EXT_STR_h101, unpack)));
@@ -214,6 +261,8 @@ void filltree(int runnum)
         unpackscalers =
             new R3BSofScalersReader((EXT_STR_h101_SOFSCALERS_t*)&ucesb_struct.scalers, offsetof(EXT_STR_h101, scalers));
     // Add readers ------------------------------------------
+    //source->AddReader(unpackreader);
+    //source->AddReader(unpacktpat);
 
     if (fFrs)
     {
@@ -223,7 +272,8 @@ void filltree(int runnum)
 
     if (fMusic)
     {
-        unpackmusic->SetOnline(NOTstoremappeddata);
+      //unpackmusic->SetOnline(NOTstoremappeddata);
+	unpackmusic->SetOnline(false);
         source->AddReader(unpackmusic);
     }
     if (fSci)
@@ -249,7 +299,8 @@ void filltree(int runnum)
     }
     if (fTwim)
     {
-        unpacktwim->SetOnline(NOTstoremappeddata);
+      //unpacktwim->SetOnline(NOTstoremappeddata);
+	unpacktwim->SetOnline(false);
         source->AddReader(unpacktwim);
     }
       if (fTofW)
@@ -343,7 +394,8 @@ void filltree(int runnum)
     if (fMusic)
     {
         R3BMusicMapped2Cal* MusMap2Cal = new R3BMusicMapped2Cal();
-        MusMap2Cal->SetOnline(NOTstorecaldata);
+        //MusMap2Cal->SetOnline(NOTstorecaldata);
+	MusMap2Cal->SetOnline(false);
         run->AddTask(MusMap2Cal);
 
         R3BMusicCal2Hit* MusCal2Hit = new R3BMusicCal2Hit();
@@ -376,13 +428,20 @@ void filltree(int runnum)
         R3BSofMwpc1Mapped2Cal* MW1Map2Cal = new R3BSofMwpc1Mapped2Cal();
         MW1Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW1Map2Cal);
+
+	/*
+        R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
+        MW1Cal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(MW1Cal2Hit);
+	*/
     }
 
     // TWIM
     if (fTwim)
     {
         R3BSofTwimMapped2Cal* TwimMap2Cal = new R3BSofTwimMapped2Cal();
-        TwimMap2Cal->SetOnline(NOTstorecaldata);
+        //TwimMap2Cal->SetOnline(NOTstorecaldata);
+	TwimMap2Cal->SetOnline(false);
         run->AddTask(TwimMap2Cal);
 
         R3BSofTwimCal2Hit* TwimCal2Hit = new R3BSofTwimCal2Hit();
@@ -402,12 +461,9 @@ void filltree(int runnum)
         run->AddTask(MW2Cal2Hit);
     }
 
-    if (fMwpc1 && fMwpc2)
-    {
-        R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
+    R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
         MW1Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW1Cal2Hit);
-    }
 
     // MWPC3
     if (fMwpc3)
@@ -469,7 +525,7 @@ void filltree(int runnum)
     }
     /*
     if (fSci&&fMusic&&fTwim){
-      R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFillTree();
+      R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFilltree();
 	/ *frsfilltree->SetNbDetectors(NumSofSci);
 	frsfilltree->SetNbChannels(3);
 	frsfilltree->SetIdS2(IdS2);
@@ -483,6 +539,9 @@ void filltree(int runnum)
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
     }
+    //*/
+    //R3BSofOnlineSpectra* sofonline = new R3BSofOnlineSpectra();
+    //run->AddTask(sofonline);
 
     // Initialize -------------------------------------------
     run->Init();
