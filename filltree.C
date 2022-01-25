@@ -26,7 +26,7 @@ typedef struct EXT_STR_h101_t
     EXT_STR_h101_WRS2_t wrs2;
     EXT_STR_h101_WRS8_t wrs8;
     EXT_STR_h101_CALIFA_t califa;
-    EXT_STR_h101_WRCALIFA_t wrcalifa;
+    //EXT_STR_h101_WRCALIFA_t wrcalifa;
     EXT_STR_h101_SOFTWIM_onion_t twim;
     EXT_STR_h101_SOFTOFW_onion_t tofw;
     EXT_STR_h101_SOFSCALERS_onion_t scalers;
@@ -175,14 +175,13 @@ void filltree(int runnum)
     R3BSofWhiterabbitReader* unpackWRSofia;
     R3BAmsReader* unpackams;
     R3BCalifaFebexReader* unpackcalifa;
-    R3BWhiterabbitCalifaReader* unpackWRCalifa;
+    //R3BWhiterabbitCalifaReader* unpackWRCalifa;
     R3BSofMwpcReader* unpackmwpc;
     R3BSofTwimReader* unpacktwim;
     R3BSofTofWReader* unpacktofw;
     R3BSofScalersReader* unpackscalers;
     R3BNeulandTamexReader* unpackneuland;
     R3BWhiterabbitNeulandReader* unpackWRNeuland;
-    
 
     if (fFrs)
       unpackfrs= new R3BFrsReaderNov19((EXT_STR_h101_FRS*)&ucesb_struct.frs,
@@ -204,6 +203,15 @@ void filltree(int runnum)
       unpackWRMaster = new R3BWhiterabbitMasterReader((EXT_STR_h101_WRMASTER*)&ucesb_struct.wrmaster, offsetof(EXT_STR_h101, wrmaster), 0x300);
       unpackWRSofia = new R3BSofWhiterabbitReader((EXT_STR_h101_WRSOFIA*)&ucesb_struct.wrsofia, offsetof(EXT_STR_h101, wrsofia), sofiaWR);
     }
+
+    if (fCalifa)
+    {
+        unpackcalifa =
+	  new R3BCalifaFebexReader((EXT_STR_h101_CALIFA*)&ucesb_struct.califa, offsetof(EXT_STR_h101, califa));
+        //unpackWRCalifa = new R3BWhiterabbitCalifaReader(
+        //    (EXT_STR_h101_WRCALIFA*)&ucesb_struct.wrcalifa, offsetof(EXT_STR_h101, wrcalifa), 0xa00, 0xb00);
+    }
+
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
         unpackmwpc = new R3BSofMwpcReader((EXT_STR_h101_SOFMWPC_t*)&ucesb_struct.mwpc, offsetof(EXT_STR_h101, mwpc));
     if (fTwim)
@@ -241,6 +249,13 @@ void filltree(int runnum)
         source->AddReader(unpackWRS2);
         unpackWRS8->SetOnline(NOTstoremappeddata);
         source->AddReader(unpackWRS8);
+    }
+    if (fCalifa)
+    {
+        unpackcalifa->SetOnline(NOTstoremappeddata);
+        source->AddReader(unpackcalifa);
+        //unpackWRCalifa->SetOnline(NOTstoremappeddata);
+        //source->AddReader(unpackWRCalifa);
     }
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
     {
@@ -370,6 +385,25 @@ void filltree(int runnum)
         run->AddTask(SofSciSTcal2Hit);
     }
 
+    // CALIFA
+    if (fCalifa && fCal_level_califa)
+    {
+        // R3BCalifaMapped2CrystalCal ---
+        R3BCalifaMapped2CrystalCal* CalifaMap2Cal = new R3BCalifaMapped2CrystalCal();
+        CalifaMap2Cal->SetOnline(NOTstorecaldata);
+        run->AddTask(CalifaMap2Cal);
+        // R3BCalifaCrystalCal2Hit ---
+        R3BCalifaCrystalCal2Hit* CalifaCal2Hit = new R3BCalifaCrystalCal2Hit();
+        CalifaCal2Hit->SetCrystalThreshold(100.); // 100keV
+        CalifaCal2Hit->SetDRThreshold(10000.);    // 10MeV
+        CalifaCal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(CalifaCal2Hit);
+
+        //R3BCalifaHitp2p* califaP2p = new R3BCalifaHitp2p();
+        //califaP2p->SetOnline(NOTstorecaldata);
+        //run->AddTask(califaP2p);
+    }
+
     // MWPC1
     if (fMwpc1)
     {
@@ -476,14 +510,14 @@ void filltree(int runnum)
 	frsfilltree->SetIdS8(IdS8);* /
         run->AddTask(frsfilltree);
     }
-*/
+* /
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
       R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree();
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
     }
-
+    */
     // Initialize -------------------------------------------
     run->Init();
     FairLogger::GetLogger()->SetLogScreenLevel("INFO");

@@ -6,33 +6,33 @@ int zetdiff = 0;
 double min_aoq = 1.8, max_aoq = 2.7;
 //
 //for trees
-Float_t FRSAoQ, FRSBeta, FRSBrho, MusicZ, FragZ, TwimTheta, Mw1_X, Mw2_X, Mw3_X, Mw1_Y, Mw2_Y, Mw3_Y, Tofw_Y, FragTof, FragAoQ, FragAoQ_corr, FragBrho;
+Float_t FRSAoQ, FRSBeta, FRSBrho, MusicE, TwimE, MusicZ, FragZ, TwimTheta, Mw1_X, Mw2_X, Mw3_X, Mw1_Y, Mw2_Y, Mw3_Y, Tofw_Y, FragTof, FragAoQ, FragAoQ_corr, FragBrho;
 UChar_t Tofw_Paddle;
 Long64_t nentry=0;
 //
-/*
+
 TString targ = "empty";
-TString infile = "./fragment/output/mktree_fragment_Dec_empty.root";
-*/
+TString infile = "./fragment/output/mktree_fragment_Jan_empty.root";
+//TString infile = "./rootfiles/rootfiletmp/fragment_Nov2021/s467_filltree_Setting13_0289_24Jan.root";
 //
 /*
 TString targ = "ch2";
 TString infile = "./fragment/output/mktree_fragment_Dec_ch2-24mm.root";
 */
 //
-
+/*
 TString targ = "carbon";
 TString infile = "./fragment/output/mktree_fragment_Dec_carbon.root";
-
+*/
 //
 /*
 TString targ = "PP";
 TString infile = "./fragment/output/mktree_fragment_Dec_PP.root";
 */
 //
-TString outpdf = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Dec") + ".pdf";
-TString outcsv = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Dec") + ".csv";
-TString outroot = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Dec") + ".root";
+TString outpdf = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Jan") + ".pdf";
+TString outcsv = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Jan") + ".csv";
+TString outroot = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Jan") + ".root";
 //TString recobrho_outpdf = "./fragment/output/tofw_beta_offset_paddlebrho_" + targ + Form("_nofrsgate_zdiff%i",zetdiff) + ".pdf";
 bool IsEmpty=false;
 const Double_t sigma = 2.;
@@ -41,7 +41,7 @@ const Int_t MINA=36, MAXA=55, MINZ=16, MAXZ=22;
 ofstream fcsv(outcsv, ofstream::out);
 TFile *fout = new TFile(outroot,"RECREATE");
 TF1 *fit_prof[NUMPADDLE];
-TH2F *h_frsbeta_betacalc[NUMPADDLE], *h_deltabeta_tof[NUMPADDLE], *h_deltabeta_theta[NUMPADDLE], *h_deltabeta_pid[NUMPADDLE];
+TH2F *h_frsbeta_betacalc[NUMPADDLE], *h_deltabeta_tof[NUMPADDLE], *h_deltabeta_twime[NUMPADDLE], *h_deltabeta_theta[NUMPADDLE], *h_deltabeta_pid[NUMPADDLE];
 TH2F *h_gatedpid[NUMPADDLE][100][50];
 TH1F *h_counts_paddle[100][50][3][3];
 Int_t NumGated[NUMPADDLE][100][50][100][50] = {0};
@@ -227,6 +227,7 @@ void delta_beta_method(){
     h_frsbeta_betacalc[i] = new TH2F(Form("h_frsbeta_betacalc%i",i+1), Form("h_frsbeta_betacalc%i",i+1), 500, 0.60, 0.85,500, 0.60, 0.85);
     h_deltabeta_tof[i] = new TH2F(Form("h_deltabeta_tof%i",i+1), Form("#beta vs raw ToF with limieted theta of Paddle %i", i+1), 1000, 40, 60, 500, 0.60, 0.85);
     f_betatof[i] = new TF1(Form("f_betatof%i",i+1), "[0]/(x + [1])+[2]",40,600);
+    h_deltabeta_twime[i] = new TH2F(Form("h_deltabeta_twime%i;Twim E / ch; #beta deviation in percent",i+1), Form("#Energy_{Twim} vs #beta * ToF of Paddle %i", i+1), 500, 0, 10000, 500, -2, 2);
     h_deltabeta_theta[i] = new TH2F(Form("h_deltabeta_theta%i",i+1), Form("#Theta_{Twim} vs #beta * ToF of Paddle %i", i+1), 500, -22, 22, 500, -0.02, 0.02);
     //f_betatheta[i] = new TF1(Form("f_betatheta%i",i+1), "[0]*x", -14, 14);
     f_betatheta[i] = new TF1(Form("f_betatheta%i",i+1), "pol1", -0.5, 0.5);
@@ -311,8 +312,50 @@ void delta_beta_method(){
     if(i==NUMPADDLE/2-1) c->Print(outpdf);
   }
   c->Print(outpdf);
-  //
-  //deltabeta_theta
+  //////////////////////////////
+  ////deltabeta_TwimE  ////////////////////////////
+  //////////////////////////////
+  for(Long64_t n=0; n<nentry; n++){
+  //for(Long64_t n=0; n<100; n++){
+    ch->GetEntry(n);
+    Int_t i = Tofw_Paddle - 1;
+    if(i < MINPADDLE || i >= NUMPADDLE) continue;
+    Double_t tmpzet = MusicZ, tmpaoq = FRSAoQ;
+    if(pid(tmpzet, tmpaoq, false)==1) continue;
+    //if(TMath::Abs(FRSAoQ-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.*f_aoq[i]->GetParameter(2) || TMath::Abs(FragZ-tmpzet)>0.4 || TMath::Abs(FragTof-40-0.4*(Double_t)i)>2.) continue; //||
+    //if(TMath::Abs(44./18.-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.5*f_aoq[i]->GetParameter(2) || TMath::Abs(FragZ-tmpzet)>0.4 || TMath::Abs(FragZ-18.)>0.4 || TMath::Abs(Mw3_Y)>10.) continue; //||select only one isotope
+    //if(TMath::Abs(FRSAoQ-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.5*f_aoq[i]->GetParameter(2) || TMath::Abs(FragZ-tmpzet)>0.4 || TMath::Abs(FragZ-18.)>0.4 || TMath::Abs(Mw3_Y)>10.) continue; //||select only one isotope
+    if(TMath::Abs(2.5-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.5*f_aoq[i]->GetParameter(2) || TMath::Abs(FragZ-tmpzet)>0.4 || ((int)(tmpzet/2))*2!=((int)tmpzet)) continue; //||select only one isotope
+    Double_t betacalc = TMath::Sqrt((FragBrho*FragBrho) / (pow(tmpaoq*mc_e,2) + pow(FragBrho,2)));
+    //for(int j=0;j<3;j++) cout<<f_betatof[i]->GetParameter(j)<<" ";
+    //cout<<endl;
+    h_deltabeta_twime[i]->Fill(TwimE,
+			       - 100. * (betacalc) * (FragTof + f_betatof[i]->GetParameter(1)) / f_betatof[i]->GetParameter(0) + 100.);
+    //
+    if(++neve%100000==0)
+      cout<<n<<" enrties done in "<<nentry<<flush;//endl;//
+  }
+  cout<<endl;
+  //Draw
+  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+    c -> cd((i%(NUMPADDLE/2))+1);
+    h_deltabeta_twime[i]->Draw("colz");
+    if(i==NUMPADDLE/2-1) c->Print(outpdf);
+  }
+  c->Print(outpdf);
+  for(int i = MINPADDLE; i<NUMPADDLE; i++){
+    c -> cd((i%(NUMPADDLE/2))+1);
+    h_deltabeta_twime[i]->Draw("colz");
+    //TProfile *prof = h_deltabeta_twime[i]->ProfileX();
+    //prof->Draw("same");
+    //prof
+    h_deltabeta_twime[i]->Fit(Form("f_betatheta%i",i+1),"","",h_deltabeta_twime[i]->GetMean() - 1.6* h_deltabeta_twime[i]->GetStdDev(), h_deltabeta_twime[i]->GetMean() + 1.6* h_deltabeta_twime[i]->GetStdDev());
+    if(i==NUMPADDLE/2-1) c->Print(outpdf);
+  }
+  c->Print(outpdf);
+  ////////////////////////////
+  ////deltabeta_theta  ////////////////////////////
+  ////////////////////////////
   for(Long64_t n=0; n<nentry; n++){
   //for(Long64_t n=0; n<100; n++){
     ch->GetEntry(n);
@@ -352,6 +395,7 @@ void delta_beta_method(){
     if(i==NUMPADDLE/2-1) c->Print(outpdf);
   }
   c->Print(outpdf);
+  //////////////
   /*
   for(int i = MINPADDLE; i<NUMPADDLE; i++){
     c -> cd((i%(NUMPADDLE/2))+1);
@@ -560,7 +604,9 @@ Int_t initbranch(){
   ch->SetBranchAddress("FRSAoQ",&FRSAoQ);
   ch->SetBranchAddress("FRSBrho",&FRSBrho);
   ch->SetBranchAddress("FRSBeta",&FRSBeta);
+  ch->SetBranchAddress("MusicE", &MusicE);
   ch->SetBranchAddress("MusicZ", &MusicZ);
+  ch->SetBranchAddress("TwimE", &TwimE);
   ch->SetBranchAddress("FragZ", &FragZ);
   ch->SetBranchAddress("FragBrho",&FragBrho);
   ch->SetBranchAddress("TwimTheta", &TwimTheta);
@@ -584,6 +630,8 @@ Int_t initbranch(){
   tree->Branch("Frag_Brho",&FragBrho);
   tree->Branch("Frag_Z", &FragZ);
   tree->Branch("Frag_Tof", &FragTof);
+  tree->Branch("MusicE", &MusicE);
+  tree->Branch("TwimE", &TwimE);
   tree->Branch("TwimTheta", &TwimTheta);
   tree->Branch("Mw1_X", &Mw1_X);
   tree->Branch("Mw2_X", &Mw2_X);
