@@ -14,7 +14,7 @@ void califa_frag_tree()
   loadtrees();
   
   //Running the analysis Looop (where the magic happens)
-  //analysisLoop(1e7);
+  //analysisLoop(1e6);
   analysisLoop();
 
   //Writing the produced histos to disk. This is up to you to change to your liking
@@ -65,7 +65,7 @@ void loadtrees()
     //tmpfilename = new TString(InputFileName);
     tmpfilename.ReplaceAll("RUN",Form("%04d", runnumcsv[i]));
     cout <<"Loading: " << tmpfilename << endl;
-    eventTree -> Add(tmpfilename);
+    eventTree -> Add(tmpfilename, 0);
   }
   if(nEvents==-1)
     {
@@ -102,6 +102,9 @@ void analysisLoop(int max_events)
 
       //Check if both Musics registered a charge
       if(nFrsHits==0 || nFragmentHits == 0) continue;
+      fTpat=EventHeader->GetTpat();
+      //if(fTpat!=0) cout<<fTpat<<endl;
+
       //Prepare the parameters for the charge selection
       //r3bMusicHit = (R3BMusicHitData*)fR3BMusicHitData->At(0);
       FrsHit = (R3BSofFrsData*)fSofFrsData->At(0);
@@ -145,7 +148,6 @@ void analysisLoop(int max_events)
 
       //Whatever you want to do with the data, do it here! Above, you see which values were stored for each hit.
       //cout<<r3bMusicCharge<<" "<<TwimCharge<<endl;
-      if(ftpat!=0) cout<<ftpat<<endl;
       //As an example I fill here histos with my selected events
       histCalifaHighEnTheta->Fill(thetaP2P);
       histCalifaTheta1vsTheta2->Fill(theta[0],theta[1]);
@@ -219,13 +221,10 @@ void writeHistos()
 
 void SetTreeBranches(){
   // Access the data structure to extract the values
-  //fEventHeader = new TClonesArray("EventHeader", 5);
-  //fEventHeader = new TClonesArray("R3BEvtHeader", 5);
-  //eventTree->SetBranchAddress("EventHeader",&fEventHeader);
-  //eventTree->SetBranchAddress("R3BEvtHeader",&fEventHeader);
-  //eventTree->SetBranchAddress("cbmout",&fEventHeader);
-  //eventTree->SetBranchAddress("EventHeader.fTpat",&fTpat);
-  //eventTree->SetBranchAddress("EventHeader.fTpat",&ftpat);
+  
+  EventHeader = new R3BEventHeader();
+  bEventHeader = eventTree->GetBranch("EventHeader.");
+  bEventHeader->SetAddress(&EventHeader);
   //
   fCalifaHitData = new TClonesArray("R3BCalifaHitData", 5);
   eventTree->SetBranchAddress("CalifaHitData",&fCalifaHitData);
@@ -240,8 +239,8 @@ void SetTreeBranches(){
   eventTree->SetBranchAddress("SofTrackingData",&fSofTrackingData);
   //////
   //////
-  //OutTree->Branch("EventHeader",&fEventHeader);
-  //OutTree->Branch("fTpat",&ftpat);
+  OutTree->Branch("EventHeader",&EventHeader);
+  //OutTree->Branch("fTpat",&fTpat);
   OutTree->Branch("CalifaProtonMult",&mult);
   OutTree->Branch("CalifaTheta",theta, "theta[2]/D");
   OutTree->Branch("CalifaPhi",phi, "phi[2]/D");
@@ -252,12 +251,14 @@ void SetTreeBranches(){
   OutTree->Branch("CalifaHitData",&fCalifaHitData);
   OutTree->Branch("SofFrsData",&fSofFrsData);
   OutTree->Branch("SofTrackingData",&fSofTrackingData);
+  //
+  cout<<"Branches are set"<<endl;
 }
 
 
 void resetVariables()
 {
-  ftpat=DEFAULTINTEGER;
+  fTpat=DEFAULTINTEGER;
   mult=DEFAULTINTEGER;
   //
   //CALIFA
@@ -285,6 +286,10 @@ void resetVariables()
       r3bMusicHit->Clear();
     }
     */
+  if(EventHeader)
+    {
+      EventHeader->Clear();
+    }
   if(FrsHit)
     {
       FrsHit->Clear();

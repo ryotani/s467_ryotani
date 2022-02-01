@@ -62,8 +62,9 @@ Int_t nCalifaHits=DEFAULTINTEGER;
 Int_t nFrsHits=DEFAULTINTEGER, nFragmentHits=DEFAULTINTEGER;
 
 //R3BEventHeaderPropagator* EventHeader;
-//FairEventHeader* EventHeader;
-//Int_t ftpat;//=DEFAULTINTEGER;
+R3BEventHeader* EventHeader;
+TBranch* bEventHeader;
+Int_t fTpat=DEFAULTINTEGER;
 // Trying to obtain the tpat info but not working right now.
 
 R3BSofFrsData* FrsHit;
