@@ -49,7 +49,7 @@ void filltree(int runnum)
     // NumSofSci, file names and paths -----------------------------
     Int_t sofiaWR, NumSofSci, IdS2, IdS8;
     TString ntuple_options = "RAW";//"RAW,time-stitch=1000" // For no stitched data
-    TString filename, outputFilename, sofiacalfilename, vftxcalfilename, tofwhitfilename, musiccalfilename;
+    TString filename, outputFilename, frsfragment_paramfile, common_paramfile, musiccalfilename;
     Double_t brho28;
     
     if(runnum==0){
@@ -110,16 +110,18 @@ void filltree(int runnum)
       filename = dir_rawfile;
       filename.Append(Form("main%04d_*.lmd", runnum));
       //
-      if(FRSsetting[i] < 9){
-	sofiacalfilename = sofiacaldir + "CalibParam_lowgain.par";
+      if(FRSsetting[i] < 9){//Default
+	//frsfragment_paramfile = sofiacaldir + "CalibParam_lowgain.par";
+	frsfragment_paramfile = sofiacaldir + "FRS13.par";
+	musiccalfilename = sofiacaldir + "music_highgain.par";
       } else if(musicgain[i] == 0){
-	sofiacalfilename = sofiacaldir + "CalibParam_lowgain_FRS" + to_string(FRSsetting[i]) + ".par";
+	frsfragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + ".par";
+	musiccalfilename = sofiacaldir + "music_lowgain.par";
       } else {
-	sofiacalfilename = sofiacaldir + "CalibParam_highgain_FRS" + to_string(FRSsetting[i]) + ".par";
+	frsfragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + ".par";
+	musiccalfilename = sofiacaldir + "music_highgain.par";
       }
-      vftxcalfilename = sofiacaldir + "tcal_VFTX.par";
-      tofwhitfilename = sofiacaldir + "tofw_hit.par";
-      musiccalfilename = sofiacaldir + "music_cal.par";
+      common_paramfile = sofiacaldir + "common.par";
       //
       auto datime = new TDatime();
       TString str_datime = datime->AsString();
@@ -128,10 +130,9 @@ void filltree(int runnum)
       outputFilename.Append(Form("s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str()));
 
       std::cout << "LMD FILE: " << filename << std::endl;
-      std::cout << "PARAM FILE (VFTX): " << vftxcalfilename << std::endl;
-      std::cout << "PARAM FILE (TofW): " << tofwhitfilename << std::endl;
+      std::cout << "PARAM FILE (Common): " << common_paramfile << std::endl;
       std::cout << "PARAM FILE (MUSIC CAL): " << musiccalfilename << std::endl;
-      std::cout << "PARAM FILE (OTHERS): " << sofiacalfilename << std::endl;
+      std::cout << "PARAM FILE (FRS FRAGMENT): " << frsfragment_paramfile << std::endl;
       std::cout << "OUTPUT FILE: " << outputFilename << std::endl;
       std::cout << "Brho28: " << brho28 << std::endl;
       
@@ -142,9 +143,8 @@ void filltree(int runnum)
     }
     // Output file -----------------------------------------
     ucesb_path.ReplaceAll("//", "/");
-    sofiacalfilename.ReplaceAll("//", "/");
-    vftxcalfilename.ReplaceAll("//", "/");
-    tofwhitfilename.ReplaceAll("//", "/");
+    frsfragment_paramfile.ReplaceAll("//", "/");
+    common_paramfile.ReplaceAll("//", "/");
     musiccalfilename.ReplaceAll("//", "/");
     califamapfilename.ReplaceAll("//", "/");
     califacalfilename.ReplaceAll("//", "/");
@@ -291,9 +291,8 @@ void filltree(int runnum)
     {
         TList* parList1 = new TList();
 	parList1->Add(new TObjString(musiccalfilename));
-        parList1->Add(new TObjString(sofiacalfilename));
-	parList1->Add(new TObjString(vftxcalfilename));
-	parList1->Add(new TObjString(tofwhitfilename));
+        parList1->Add(new TObjString(frsfragment_paramfile));
+	parList1->Add(new TObjString(common_paramfile));
         parIo1->open(parList1, "in");
         rtdb->setFirstInput(parIo1);
         rtdb->print();
@@ -304,9 +303,8 @@ void filltree(int runnum)
         { // SOFIA and CALIFA mapping: Ascii files
             TList* parList1 = new TList();
 	    parList1->Add(new TObjString(musiccalfilename));
-            parList1->Add(new TObjString(sofiacalfilename));
-	    parList1->Add(new TObjString(vftxcalfilename));
-	    parList1->Add(new TObjString(tofwhitfilename));
+            parList1->Add(new TObjString(frsfragment_paramfile));
+	    parList1->Add(new TObjString(common_paramfile));
             parList1->Add(new TObjString(califamapfilename));
             parIo1->open(parList1);
             rtdb->setFirstInput(parIo1);
@@ -316,9 +314,8 @@ void filltree(int runnum)
         { // SOFIA, CALIFA mapping and CALIFA calibration parameters
             TList* parList1 = new TList();
 	    parList1->Add(new TObjString(musiccalfilename));
-            parList1->Add(new TObjString(sofiacalfilename));
-            parList1->Add(new TObjString(vftxcalfilename));
-	    parList1->Add(new TObjString(tofwhitfilename));
+            parList1->Add(new TObjString(frsfragment_paramfile));
+            parList1->Add(new TObjString(common_paramfile));
             parIo1->open(parList1, "in");
 	    rtdb->setFirstInput(parIo1);
             rtdb->print();
