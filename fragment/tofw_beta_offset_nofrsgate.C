@@ -30,9 +30,9 @@ TString targ = "PP";
 TString infile = "./fragment/output/mktree_fragment_Dec_PP.root";
 */
 //
-TString outpdf = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Jan") + ".pdf";
-TString outcsv = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Jan") + ".csv";
-TString outroot = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Jan") + ".root";
+TString outpdf = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Feb") + ".pdf";
+TString outcsv = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Feb") + ".csv";
+TString outroot = "./fragment/output/tofw_beta_offset_paddle_" + targ + Form("_nofrsgate_Feb") + ".root";
 //TString recobrho_outpdf = "./fragment/output/tofw_beta_offset_paddlebrho_" + targ + Form("_nofrsgate_zdiff%i",zetdiff) + ".pdf";
 bool IsEmpty=false;
 const Double_t sigma = 2.;
@@ -75,7 +75,7 @@ void tofw_beta_offset_nofrsgate(){
   //
   c->Print(outpdf + "]");
   //
-  //filltree();
+  filltree();
   writecsv();
 }
 
@@ -251,7 +251,7 @@ void delta_beta_method(){
       	f_fragfit[i][A][Z] -> SetParLimits(3,(double)Z-0.1,(double)Z+0.1);
 	f_fragfit[i][A][Z] -> SetParLimits(4,0.03,0.15);
 	//
-	if(i>0) continue;
+	if(i>MINPADDLE) continue;
 	for(int DN=0; DN<3; DN++){ // Delta N
 	  for(int DZ=0; DZ<3; DZ++){ // Delta Z
 	    h_counts_paddle[A][Z][DN][DZ] = new TH1F(Form("h_counts_paddle_%i_%i_%i_%i",A,Z,DN,DZ),
@@ -557,10 +557,16 @@ void filltree(){
       FragAoQ_corr = NAN;
     }else{
       //cout<<(int)Tofw_Paddle<<endl;
-      FragAoQ_corr =
+      //    f_betatof[i] = new TF1(Form("f_betatof%i",i+1), "[0]/(x + [1])+[2]",40,600);
+      Int_t j = Tofw_Paddle-1;
+      Double_t beta_fit = f_betatof[j]->GetParameter(0)*(1. + 1000.*TwimTheta*f_betatheta[j]->GetParameter(1))/(FragTof + f_betatof[j]->GetParameter(1)) + f_betatof[j]->GetParameter(2);
+      Double_t aoq_fit = (FragBrho * TMath::Sqrt(1.-beta_fit*beta_fit))/(beta_fit * mc_e);
+      FragAoQ_corr = aoq_fit;
+	/*
 	FragAoQ + fit_prof[Tofw_Paddle-1]->GetParameter(0)
 	+ fit_prof[Tofw_Paddle-1]->GetParameter(1) * TwimTheta * 1000.;
 	//+ fit_prof[Tofw_Paddle-1]->GetParameter(2) * pow(TwimTheta*1000.,2.); // pol2
+	*/
     }
     tree->Fill();
     if(i%100000==0)

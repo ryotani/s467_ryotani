@@ -507,14 +507,14 @@ void filltree(int runnum)
 	frsfilltree->SetIdS8(IdS8);* /
         run->AddTask(frsfilltree);
     }
-* /
+*/
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
       R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree();
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
     }
-    */
+
     // Initialize -------------------------------------------
     run->Init();
     FairLogger::GetLogger()->SetLogScreenLevel("INFO");

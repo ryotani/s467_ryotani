@@ -3,8 +3,9 @@
 
 function initialise () {
     #for runnum in {249..358..1} #FRS9-13
-    for runnum in {272..358..1} #all frs13
+    #for runnum in {272..358..1} #all frs13
     #for runnum in {276..285..1}
+    for runnum in {262..271..1} {368..380..1} # all frs11,12 for 38Ca
     #for runnum in 238 273 361 366
     do
 	list=$list' '$runnum
@@ -16,10 +17,6 @@ function initialise () {
     
 #eval parallel --gnu --ungroup -j20 "root -l -b -q 'rawsofsci_offline.C('"{}"')'" ::: ${SEQ}
 function myfunc () {
-    #    time root -l -b -q 'rawsofsci_offline.C('"$1"')' &> /dev/null
-    #    time root -l -b -q 'tcal_VFTX_offline.C('"$1"')' &> /dev/null
-    #time root -l -b -q 'sofia_offline.C('"$1"')' &> /dev/null
-    #time nice root -l -b -q 'nearline.C('"$1"')' 1> ./log/run$1.log 2> ./log/err$1.log
     time nice root -l -b -q 'filltree.C('"$1"')' 1> ./log/run$1.log 2> ./log/err$1.log
     echo 'Finished run:'$1
 }
