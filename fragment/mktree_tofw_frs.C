@@ -5,6 +5,11 @@ int posmin=1325, posmax=1424; TString targetname = "empty";
 //int posmin=362, posmax=362; TString targetname = "carbon";
 //int posmin=893, posmax=893; TString targetname = "PP";
 
+//int FRSsettingRange[2] = {13, 13}; TString FRSname="50Ca";//Set range of FRS srttings for 50Ca
+//int FRSsettingRange[2] = {11, 12}; TString FRSname="38Ca";//Set range of FRS srttings for 38Ca
+int FRSsettingRange[2] = {11, 11}; TString FRSname="38Ca";//Set range of FRS srttings for 38Ca
+TString outdir = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/rootfile_land/mktree/";
+
 TCanvas *c;
 TH1F *htime[NUMPADDLE], *hpos[NUMPADDLE];
 TH2F *htimeoffset;
@@ -48,16 +53,16 @@ void mktree_tofw_frs(int runnum){
 
     RunList>>runnumcsv[i]>>dumchar>>FRSsetting[i]>>dumchar>>brhocsv[i]>>dumchar>>targetpos[i]>>dumchar>>musicgain[i]>>dumchar>>junk[i];
 
-    if(FRSsetting[i]!=13) continue;
+    if(FRSsetting[i]<FRSsettingRange[0]||FRSsetting[i]>FRSsettingRange[1]) continue;
     if(junk[i]!=0) continue;
     if(targetpos[i]<posmin || targetpos[i]>posmax) continue;
     cout<<runnumcsv[i]<<" "<<dumchar<<" "<<FRSsetting[i]<<" "<<dumchar<<" "<<brhocsv[i]<<" "<<dumchar<<" "<<targetpos[i]<<" "<<dumchar<<" "<<musicgain[i]<<" "<<dumchar<<" "<<junk[i]<<endl;
 
-    filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/fragment_Nov2021/s467_filltree_Setting13_%04d_24Jan.root", runnumcsv[i]);
+    filename = Form("/u/taniuchi/s467/rootfiles/rootfile_land/202002_s467/s467_filltree_Setting%i_%04d_8Feb.root", FRSsetting[i], runnumcsv[i]);
     //ch -> Add(filename);
     ch -> AddFile(filename);
   }
-  ch->Merge(Form("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/fragment/output/mktree_fragment_Jan_%s.root",targetname.Data()));
+  ch->Merge(Form("%smktree_fragment_%s_%s.root",outdir.Data(),FRSname.Data(),targetname.Data()));
   /*
   for(int i = firstrun; i < lastrun+1; i++){
     filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_%04d_ToFWhitpar.root", i);
