@@ -1,28 +1,46 @@
-#define NUMPADDLE 28
-#define NUMHIST 5
-int posmin=1325, posmax=1424; TString targetname = "empty";
-//int posmin=539, posmax=539; TString targetname = "ch2-24mm";
-//int posmin=362, posmax=362; TString targetname = "carbon";
-//int posmin=893, posmax=893; TString targetname = "PP";
-
-//int FRSsettingRange[2] = {13, 13}; TString FRSname="50Ca";//Set range of FRS srttings for 50Ca
-//int FRSsettingRange[2] = {11, 12}; TString FRSname="38Ca";//Set range of FRS srttings for 38Ca
-int FRSsettingRange[2] = {11, 11}; TString FRSname="38Ca";//Set range of FRS srttings for 38Ca
+TString indir = "/u/taniuchi/s467/rootfiles/rootfile_land/202002_s467/";
 TString outdir = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/rootfile_land/mktree/";
 
-TCanvas *c;
-TH1F *htime[NUMPADDLE], *hpos[NUMPADDLE];
-TH2F *htimeoffset;
-TF1 *func[NUMPADDLE], *funcpos[NUMPADDLE];
-
-TChain *ch;//*chout;
-//TTree *tree[500];
-TEventList *el;
+TChain *ch;
 TString filename;
 TFile* fout;
-TH2F* hfrs[NUMHIST], *htofw[NUMHIST];
 
-void mktree_tofw_frs(int runnum){
+void mktree_tofw_frs(int FRSset1 = 13, int FRSset2 = 13, int i_target=0, TString suffix = "8Feb");
+
+void mktree_tofw_frs(int FRSset1, int FRSset2, int i_target, TString suffix){
+  TString FRSname, targetname;
+  int posmin, posmax;
+  int FRSsettingRange[2] = {FRSset1, FRSset2};
+  if(FRSset1==13){
+    FRSname = "50Ca";
+  }else if(FRSset1==11||FRSset1==12){
+    FRSname = "38Ca";
+  }else{
+    cerr<<"Check if the FRSsetting number is correct." <<endl;
+    return;
+  }
+  //
+  if(i_target==0){
+    targetname = "empty";
+    posmin=1325;
+    posmax=1424;
+  }else if(i_target==1){
+    targetname = "ch2-24mm";
+    posmin=539;
+    posmax=539;
+  }else if(i_target==2){
+    targetname = "carbon";
+    posmin=362;
+    posmax=362;
+  }else if(i_target==2){
+    targetname = "PP";
+    posmin=893;
+    posmax=893;
+  }else{
+    cerr<<"No target defined"<<endl;
+    return;
+  }
+  //
   gStyle->SetStatColor(0);
   gStyle->SetStatStyle();
   gStyle->SetStatX(0.9);  
@@ -30,8 +48,6 @@ void mktree_tofw_frs(int runnum){
   gStyle->SetOptStat();
   //TString pdfout;
   ch = new TChain("Tree");
-  Int_t firstrun = runnum>500?274:runnum;
-  Int_t lastrun = (runnum>500?358+1:runnum);
 
   std::ifstream RunList("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/RunSummary.csv", std::ios::in);
   if(!RunList.is_open()) std::cerr <<"No run summary found\n";
@@ -58,88 +74,11 @@ void mktree_tofw_frs(int runnum){
     if(targetpos[i]<posmin || targetpos[i]>posmax) continue;
     cout<<runnumcsv[i]<<" "<<dumchar<<" "<<FRSsetting[i]<<" "<<dumchar<<" "<<brhocsv[i]<<" "<<dumchar<<" "<<targetpos[i]<<" "<<dumchar<<" "<<musicgain[i]<<" "<<dumchar<<" "<<junk[i]<<endl;
 
-    filename = Form("/u/taniuchi/s467/rootfiles/rootfile_land/202002_s467/s467_filltree_Setting%i_%04d_8Feb.root", FRSsetting[i], runnumcsv[i]);
-    //ch -> Add(filename);
+    filename = Form("%ss467_filltree_Setting%i_%04d_%s.root", indir.Data(), FRSsetting[i], runnumcsv[i], suffix.Data());
+    cout<<"Input file: "<<filename<<endl;
     ch -> AddFile(filename);
   }
-  ch->Merge(Form("%smktree_fragment_%s_%s.root",outdir.Data(),FRSname.Data(),targetname.Data()));
-  /*
-  for(int i = firstrun; i < lastrun+1; i++){
-    filename = Form("/u/taniuchi/s467/rootfiles/rootfiletmp/TofW/s467_FRSTree_Setting13_%04d_ToFWhitpar.root", i);
-    //ch -> Add(filename);
-    ch -> AddFile(filename);
-    //cout << "Filename: " << filename <<endl;
-  }
-  */
-  //fout = new TFile("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/tofw/output/mktree_tofw_frs.root","recreate");
-  /*
-  ch->SetBranchStatus("*",0);
-  ch->SetBranchStatus("SofFrsData.fZ",1);
-  ch->SetBranchStatus("SofFrsData.fAq",1);
-  ch->SetBranchStatus("SofFrsData.fBeta",1);
-  ch->SetBranchStatus("SofFrsData.fBrho",1);
-  ch->SetBranchStatus("TofWHitData.*",1);
-  //
-  Double_t fZ[3] = {0.};
-  ch->SetBranchAddress("SofFrsData.fZ", fZ);
-
-  / *
-  for(int i=0; i<NUMHIST; i++){
-    hfrs[i] = new TH2F(Form("hfrs%i",i), Form("hfrs%i",i) , 500, 2.2, 2.8, 500, 10, 35);
-    htofw[i] = new TH2F(Form("htofw%i",i), Form("htofw%i",i) , 30, -0.5, 29.5, 1000, -5, 5);
-  }
-  ch->Draw("fZ:fAq>>hfrs0","SofFrsData.fZ>0", "colz");
-  ch->Draw("TofWHitData.fTime:TofWHitData.fPaddleId>>htofw0", "SofFrsData.fZ>0", "colz");
-  ch->Draw("fZ:fAq>>hfrs1","SofFrsData.fZ>0 && abs(SofFrsData.fZ-20)<0.5", "colz");
-  ch->Draw("TofWHitData.fTime:TofWHitData.fPaddleId>>htofw1", "SofFrsData.fZ>0 && abs(SofFrsData.fZ-20)<0.5", "colz");
-  ch->Draw("fZ:fAq>>hfrs2","SofFrsData.fZ>0 && abs(SofFrsData.fZ-19)<0.5", "colz");
-  ch->Draw("TofWHitData.fTime:TofWHitData.fPaddleId>>htofw2", "SofFrsData.fZ>0 && abs(SofFrsData.fZ-19)<0.5", "colz");
-  ch->Draw("fZ:fAq>>hfrs3","SofFrsData.fZ>0 && abs(SofFrsData.fZ-21)<0.5", "colz");
-  ch->Draw("TofWHitData.fTime:TofWHitData.fPaddleId>>htofw3", "SofFrsData.fZ>0 && abs(SofFrsData.fZ-21)<0.5", "colz");
-  */
-  /* /
-  el = new TEventList("elist","elist");  
-  ch -> Draw(">>elist","SofFrsData.fZ>0");
-  cout << "Num Tree = " << ch->GetNtrees();//ch->GetTreeNumber();
-  cout << ", Num Entry = " << ch->GetEntries()<<", Num Valid Entries = " <<el->GetN()<<", Valid ratio (%) = "<<(double)(el->GetN())/(double)(ch->GetEntries()) *100.<< endl;
-  ch ->SetEventList(el);
-  */
-    
-  /*
-  for(int i = firstrun; i < lastrun+1; i++){
-    tree[i] = new TTree(Form("tree%i",i), Form("tree%i",i));
-    tree[i] = (ch->GetTree())->CopyTree("SofFrsData.fZ>0");
-    //tree[i] = (ch->GetTree())->CloneTree(-1,"fast");
-    cout<<tree[i] -> GetEntries() <<endl;
-  }
-  //ch->Merge("test.root");
-  / * /
-  for(Long64_t i = 0; i < 100; i++){
-    //Long64_t ientry = LoadTree(el->GetEntry(i));
-    //Long64_t ientry = ch->LoadTree(el->GetEntry(i));
-    //ch->GetEntry(el->GetEntry(i));
-    ch->GetEntry(i);
-    //cout <<el->GetEntry(i) << " "<< fZ <<endl;
-    cout <<fZ[0] <<endl;
-  }
-  * /
-  //tree->Write();
-  for(int i =0; i<NUMHIST; i++){
-    hfrs[i] ->Write();
-    htofw[i] ->Write();
-  }
-  */
-  
-  //ch->CloneTree()->Write();
-  //fout->Close();
-
-
-  
-  //  c->Print(pdfout);
-
-}
-
-
-void mktree_tofw_frs(){
-  mktree_tofw_frs(1000);
+  TString outfilename=Form("%smktree_fragment_%s_%s.root",outdir.Data(),FRSname.Data(),targetname.Data());
+  cout<<"Output file: "<<outfilename<<endl;
+  ch->Merge(outfilename);
 }

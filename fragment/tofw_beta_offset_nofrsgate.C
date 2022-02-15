@@ -10,11 +10,12 @@ TString FRS="50Ca";
 Float_t FRSAoQ, FRSBeta, FRSBrho, MusicE, TwimE, MusicZ, FragZ, TwimTheta, Mw1_X, Mw2_X, Mw3_X, Mw1_Y, Mw2_Y, Mw3_Y, Tofw_Y, FragTof, FragAoQ, FragAoQ_corr, FragBrho;
 UChar_t Tofw_Paddle;
 Long64_t nentry=0;
+TString targ, infile;
 //
-
+/*
 TString targ = "empty";
 TString infile = "./rootfiles/rootfile_land/mktree/mktree_fragment_"+FRS+"_empty.root";
-
+*/
 //
 /*
 TString targ = "ch2";
@@ -30,38 +31,69 @@ TString infile = "./rootfiles/rootfile_land/mktree/mktree_fragment_"+FRS+"_carbo
 TString targ = "PP";
 TString infile = "./rootfiles/rootfile_land/mktree/mktree_fragment_"+ FRS +"_PP.root";
 */
+TString outpdf ;
+TString outcsv ;
+TString outroot;
 //
-TString outpdf = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".pdf";
-TString outcsv = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".csv";
-TString outroot = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".root";
-//TString recobrho_outpdf = "./fragment/output/tofw_beta_offset_paddlebrho_" + targ + Form("_nofrsgate_zdiff%i",zetdiff) + ".pdf";
 bool IsEmpty=false;
-const Double_t sigma = 2.;
+const Double_t sigma_frs = 4., sigma = 2., sigma3 = 3.;//Set conditions for PID gating
 const Int_t MINA=36, MAXA=55, MINZ=16, MAXZ=22;
 //
-ofstream fcsv(outcsv, ofstream::out);
-TFile *fout = new TFile(outroot,"RECREATE");
+ofstream fcsv;
+TFile *fout;
 TF1 *fit_prof[NUMPADDLE];
 TH2F *h_frsbeta_betacalc[NUMPADDLE], *h_deltabeta_tof[NUMPADDLE], *h_deltabeta_twime[NUMPADDLE], *h_deltabeta_theta[NUMPADDLE], *h_deltabeta_pid[NUMPADDLE];
 TH2F *h_gatedpid[NUMPADDLE][100][50];
-Int_t NumGated[NUMPADDLE][100][50][100][50] = {0};
-TH1F *h_counts_paddle[100][50][3][3], *h_counts_mw3x[100][50][3][3];;
+Int_t NumGated[NUMPADDLE][100][50][100][50] = {0}, NumGated3[NUMPADDLE][100][50][100][50] = {0}; // Count hits in 2sigma and 3sigma
+TH1F *h_counts_paddle[100][50][3][3], *h_counts_mw3x[100][50][3][3], *h_counts_mw3x3[100][50][3][3];
 TF1 *f_FitGated[100][50][3][3];
 TF2 *f_fragfit[NUMPADDLE][100][50];
 TF1 *f_aoq[NUMPADDLE], *f_betatof[NUMPADDLE], *f_betatheta[NUMPADDLE];
 TTree *tree;
 
-void tofw_beta_offset_nofrsgate();
+void tofw_beta_offset_nofrsgate(int i_target=1);
 void define_conditions();
 void delta_beta_method();
 void initialise();
 void filltree();
-Int_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i=0);
+Double_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i=0);
 Int_t initbranch();
 void writecsv();
 
 //////////
-void tofw_beta_offset_nofrsgate(){
+void tofw_beta_offset_nofrsgate(int i_target){
+  switch (i_target){
+  case 0:
+    targ = "empty";
+    infile = "./rootfiles/rootfile_land/mktree/mktree_fragment_"+FRS+"_empty.root";
+    break;
+  case 1:
+    targ = "ch2";
+    infile = "./rootfiles/rootfile_land/mktree/mktree_fragment_"+FRS+"_ch2-24mm.root";
+    break;
+  case 2:
+    targ = "carbon";
+    infile = "./rootfiles/rootfile_land/mktree/mktree_fragment_"+FRS+"_carbon.root";
+    break;
+  case 3:
+    targ = "PP";
+    infile = "./rootfiles/rootfile_land/mktree/mktree_fragment_"+ FRS +"_PP.root";
+    break;
+  default:
+    cerr<<"No target info"<<endl;
+    return;
+  }
+  outpdf = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".pdf";
+  outcsv = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".csv";
+  outroot = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".root";
+  //
+  fcsv.open(outcsv, ofstream::out);
+  fout = new TFile(outroot,"RECREATE");
+  //TString recobrho_outpdf = "./fragment/output/tofw_beta_offset_paddlebrho_" + targ + Form("_nofrsgate_zdiff%i",zetdiff) + ".pdf";
+
+
+  cout<< targ<< " "<<infile<<endl;
+
   initialise();
   c = new TCanvas();
   c->Divide(4,4);
@@ -200,6 +232,10 @@ void delta_beta_method(){
 	    h_counts_mw3x[A][Z][DN][DZ] = new TH1F(Form("h_counts_mw3x_%i_%i_%i_%i",A,Z,DN,DZ),
 						   Form("Distribution of hits in X for the reaction from A=%i Z=%i with #DeltaN=%i #DeltaZ=%i reaction",A,Z,DN,DZ),
 						   60,-300,300);
+	    h_counts_mw3x3[A][Z][DN][DZ] = new TH1F(Form("h_counts_mw3x3_%i_%i_%i_%i",A,Z,DN,DZ),
+						   Form("Distribution of hits in X for the reaction from A=%i Z=%i with #DeltaN=%i #DeltaZ=%i reaction with larger pid gate",A,Z,DN,DZ),
+						   60,-300,300);
+	    h_counts_mw3x3[A][Z][DN][DZ]->SetLineColor(kBlue);
 	  }
 	}
 	h_counts_paddle[A][Z][0][0]->SetLineColor(1);
@@ -218,7 +254,7 @@ void delta_beta_method(){
     Int_t i = Tofw_Paddle - 1;
     if(i < MINPADDLE || i >= NUMPADDLE) continue;
     Double_t tmpzet = MusicZ, tmpaoq = FRSAoQ;
-    if(pid(tmpzet, tmpaoq, false)==1) continue;
+    if(pid(tmpzet, tmpaoq, false)>sigma_frs) continue;
     //cout<<i<<": "<<MusicZ<<" "<<FRSAoQ<<" "<<tmpzet<<" "<<tmpaoq<<endl;
     if(TMath::Abs(FRSAoQ-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.*f_aoq[i]->GetParameter(2)  || TMath::Abs(FragZ-tmpzet)>0.4 ||
        TMath::Abs(TwimTheta-6e-3)*1000. > 14. || TMath::Abs(FragTof-40-0.4*(Double_t)i)>2.) continue;
@@ -264,7 +300,7 @@ void delta_beta_method(){
     Int_t i = Tofw_Paddle - 1;
     if(i < MINPADDLE || i >= NUMPADDLE) continue;
     Double_t tmpzet = MusicZ, tmpaoq = FRSAoQ;
-    if(pid(tmpzet, tmpaoq, false)==1) continue;
+    if(pid(tmpzet, tmpaoq, false)>sigma_frs) continue;
     //if(TMath::Abs(FRSAoQ-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.*f_aoq[i]->GetParameter(2) || TMath::Abs(FragZ-tmpzet)>0.4 || TMath::Abs(FragTof-40-0.4*(Double_t)i)>2.) continue; //||
     //if(TMath::Abs(44./18.-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.5*f_aoq[i]->GetParameter(2) || TMath::Abs(FragZ-tmpzet)>0.4 || TMath::Abs(FragZ-18.)>0.4 || TMath::Abs(Mw3_Y)>10.) continue; //||select only one isotope
     //if(TMath::Abs(FRSAoQ-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.5*f_aoq[i]->GetParameter(2) || TMath::Abs(FragZ-tmpzet)>0.4 || TMath::Abs(FragZ-18.)>0.4 || TMath::Abs(Mw3_Y)>10.) continue; //||select only one isotope
@@ -305,7 +341,7 @@ void delta_beta_method(){
     Int_t i = Tofw_Paddle - 1;
     if(i < MINPADDLE || i >= NUMPADDLE) continue;
     Double_t tmpzet = MusicZ, tmpaoq = FRSAoQ;
-    if(pid(tmpzet, tmpaoq, false)==1) continue;
+    if(pid(tmpzet, tmpaoq, false)>sigma_frs) continue;
     if(TMath::Abs(FRSAoQ-FragAoQ-f_aoq[i]->GetParameter(1)) > 2.*f_aoq[i]->GetParameter(2) || TMath::Abs(FragZ-tmpzet)>0.4 || TMath::Abs(FragTof-40-0.4*(Double_t)i)>2.) continue; //||
        //TMath::Abs(TwimTheta-6e-3)*1000. > 14. ) continue;
     //if(TMath::Abs(Mw3_Y - Mw1_Y -20.)>5) continue; // Y cut
@@ -409,7 +445,7 @@ void delta_beta_method(){
     Double_t beta_fit = f_betatof[i]->GetParameter(0)*(1. + 1000.*TwimTheta*f_betatheta[i]->GetParameter(1))/(FragTof + f_betatof[i]->GetParameter(1)) + f_betatof[i]->GetParameter(2);
     Double_t aoq_fit = (FragBrho * TMath::Sqrt(1.-beta_fit*beta_fit))/(beta_fit * mc_e);
     Double_t tmpzet = MusicZ, tmpaoq = FRSAoQ;
-    if(pid(tmpzet, tmpaoq, false)==1) continue;
+    if(pid(tmpzet, tmpaoq, false)>sigma_frs) continue;
     Int_t tmpA = tmpaoq*tmpzet;
     Int_t tmpZ = tmpzet;
     if(tmpA<MINA||tmpA>=MAXA||tmpZ<MINZ||tmpZ>=MAXZ) continue;
@@ -418,14 +454,21 @@ void delta_beta_method(){
     NumGated[i][tmpA][tmpZ][0][0]++; // Incoming particles within acceptance
     //
     Double_t tmpfragzet = FragZ, tmpfragaoq = aoq_fit;
-    if(pid(tmpfragzet, tmpfragaoq, true, i)==0){
+    Double_t sigma_tmp = pid(tmpfragzet, tmpfragaoq, true, i);
+    if(sigma_tmp < sigma3){
       Int_t tmpfragA = tmpfragaoq*tmpfragzet;
       Int_t tmpfragZ = tmpfragzet;
-      NumGated[i][tmpA][tmpZ][tmpfragA][tmpfragZ]++;
       Int_t DZ = tmpZ-tmpfragZ;
       Int_t DN = tmpA-tmpfragA - DZ;
+      NumGated3[i][tmpA][tmpZ][tmpfragA][tmpfragZ]++;
       if(DN>=0 && DZ>=0 && DN<3 && DZ<3){
-	h_counts_mw3x[tmpA][tmpZ][DN][DZ]->Fill(Mw3_X);
+	h_counts_mw3x3[tmpA][tmpZ][DN][DZ]->Fill(Mw3_X);
+      }
+      if(sigma_tmp < sigma){ // stricter gating
+	NumGated[i][tmpA][tmpZ][tmpfragA][tmpfragZ]++;
+	if(DN>=0 && DZ>=0 && DN<3 && DZ<3){
+	  h_counts_mw3x[tmpA][tmpZ][DN][DZ]->Fill(Mw3_X);
+	}
       }
     }
     /*
@@ -478,6 +521,7 @@ void delta_beta_method(){
   c->Divide(3,3);
   for (int Z = MINZ; Z < MAXZ; Z++){
     for (int A = MINA; A < MAXA; A++){
+      if(h_counts_paddle[A][Z][0][0]->Integral()==0) continue;
       for(int D = 0; D<9; D++){
 	c->cd(D+1);
 	h_counts_paddle[A][Z][D%3][D/3]->Draw();
@@ -487,11 +531,13 @@ void delta_beta_method(){
   }
   for (int Z = MINZ; Z < MAXZ; Z++){
     for (int A = MINA; A < MAXA; A++){
+      if(h_counts_mw3x[A][Z][0][0]->GetEntries()==0) continue;
       for(int D = 0; D<9; D++){
 	c->cd(D+1);
 	int DN=D%3, DZ=D/3;
   	f_FitGated[A][Z][DN][DZ] = new TF1(Form("f_FitGated%i%i%i%i",A,Z,DN,DZ), "gausn", -300, 300);
-	h_counts_mw3x[A][Z][DN][DZ]->Draw();
+	h_counts_mw3x3[A][Z][DN][DZ]->Draw();
+	h_counts_mw3x[A][Z][DN][DZ]->Draw("same");
 	h_counts_mw3x[A][Z][DN][DZ]->Fit(f_FitGated[A][Z][DN][DZ], "LL R","");
       }
       c->Print(outpdf);
@@ -499,7 +545,7 @@ void delta_beta_method(){
   }
 }
 
-Int_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i){
+Double_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i){
   Int_t tmpzet = (Int_t) (zet + 0.5);
   Int_t tmpmass = (Int_t) ((Double_t)tmpzet * aoq + 0.5);
   Double_t tmpaoq = (Double_t)tmpmass/((Double_t)tmpzet);
@@ -508,27 +554,26 @@ Int_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i){
   Double_t rangeaoq = 0.;
   Double_t value = 0.;
   if(!isfrag){
-    rangezet = 4.* 1.11e-1;
-    rangeaoq = 4.* 1.34e-3;
+    rangezet = 1.11e-1;
+    rangeaoq = 1.34e-3;
     value = pow(((Double_t)tmpzet - zet)/rangezet, 2) + pow((tmpaoq - aoq)/rangeaoq, 2);
   }else if(MINPADDLE <= i && i < NUMPADDLE){
-    if(tmpmass<MINA||tmpmass>=MAXA||tmpzet<MINZ||tmpzet>=MAXZ) return 1;
-    rangezet = sigma* f_fragfit[i][tmpmass][tmpzet]->GetParameter(4);
-    rangeaoq = sigma* f_fragfit[i][tmpmass][tmpzet]->GetParameter(2);
+    if(tmpmass<MINA||tmpmass>=MAXA||tmpzet<MINZ||tmpzet>=MAXZ) return NAN;
+    rangezet = f_fragfit[i][tmpmass][tmpzet]->GetParameter(4);
+    rangeaoq = f_fragfit[i][tmpmass][tmpzet]->GetParameter(2);
     value = pow((f_fragfit[i][tmpmass][tmpzet]->GetParameter(3) - zet)/rangezet, 2) + pow((f_fragfit[i][tmpmass][tmpzet]->GetParameter(1) - aoq)/rangeaoq, 2);
   }else{
-    return 1;
+    return NAN;
   }
   //
-  if(value < 1){
+  if(!isnan(value)){
     zet = (Double_t) tmpzet;
     aoq = (Double_t) tmpaoq;
-    return 0;
   }else{
     zet = NAN;
     aoq = NAN;
-    return 1;
   }
+  return TMath::Sqrt(value);
 }
 
 void filltree(){
@@ -566,27 +611,36 @@ void writecsv(){
   //  fcsv<<"test"<<endl;
   fcsv << "FRS Z, FRS A, Frag Z, Frag A";
   for(int i = MINPADDLE; i<NUMPADDLE; i++) fcsv<<", Paddle "<<i+1;
-  fcsv << ", total"<<endl;
+  fcsv << ", total, total3, total_ratio 2sigma-3sigma"<<endl;
   for(int FZ = MINZ; FZ< MAXZ; FZ++){
     for(int FA= MINA; FA< MAXA; FA++){
-      int total=0;
+      int total=0, total3=0;
+      if(h_counts_mw3x[FA][FZ][0][0]->GetEntries()==0) continue;
+      //
       fcsv<<FZ<<", "<<FA<<", "<<"0"<<", 0";
       for(int i = MINPADDLE; i<NUMPADDLE; i++){
 	fcsv<<", "<<NumGated[i][FA][FZ][0][0];
 	total +=NumGated[i][FA][FZ][0][0];
-      }
-      fcsv<<", "<<total<<endl;
+	//total3 +=NumGated3[i][FA][FZ][0][0];
+      }// no gate in fragment
+      fcsv<<", "<<total<<",0 ,0"<<endl; //total3<<", "<<(double)total/(double)total3<<endl;
       //
       for(int CZ = MINZ; CZ<=FZ; CZ++){
 	for(int CA= MINA; CA<=FA; CA++){
 	  total = 0;
+	  total3= 0;
 	  fcsv<<FZ<<", "<<FA<<", "<<CZ<<", "<<CA;
 	  for(int i = MINPADDLE; i<NUMPADDLE; i++){
 	    fcsv<<", "<<NumGated[i][FA][FZ][CA][CZ];
 	    total +=NumGated[i][FA][FZ][CA][CZ];
+	    total3 +=NumGated3[i][FA][FZ][CA][CZ];
 	  }
-	  int total_fit = ((FA-CA)-(FZ-CZ)<3&&FZ-CZ<3)?f_FitGated[FA][FZ][FA-CA-(FZ-CZ)][FZ-CZ]->GetParameter(0):0;
-	  fcsv<<", "<<total<<", "<<total_fit<<endl;
+	  Double_t total_fit = 0;
+	  Int_t DZ = FZ-CZ, DN = (FA-CA)-(FZ-CZ);
+	  if(DN<3 && DZ<3 && DN>=0)
+	    total_fit = f_FitGated[FA][FZ][DN][DZ]->GetParameter(0)/10.; // bin width =10mm
+	  //fcsv<<", "<<total<<", "<<(double)total/(double)total3<<", "<<total_fit<<endl;
+	  fcsv<<", "<<total<<", "<<total3<<", "<<(double)total/(double)total3<<endl;
 	}
       }
     }
