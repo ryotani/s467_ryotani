@@ -43,18 +43,21 @@ musicZHitPar:  Float_t \
 //----------------------------------------------------------------------------
 twimSectionNumberPar:  Int_t  1 
 twimAnodeNumberPar:  Int_t  16 
+twimAnodeTRefPar:  Int_t  2
+twimAnodeTrigPar:  Int_t  2
+twimMaxMultPar:  Int_t  10
 twimAnodeEFitPar:  Int_t  3 
-twimInUsePar:  Int_t \
+twimAnodePosFitPar:  Int_t  3
+twimSec1InUsePar:  Int_t \
   1 1 1 1 1 1 1 1 1 1  \
   1 1 1 1 1 1 
-twimCalEPar:  Float_t \
+twimSec1CalEPar:  Float_t \
   0 0 0 0 0 0 0 0 0 0  \
   0 0 0 0 0 0 0 0 0 0  \
   0 0 0 0 0 0 0 0 0 0  \
   0 0 0 0 0 0 0 0 0 0  \
   0 0 0 0 0 0 0 0 
-twimPosFitPar:  Int_t  3 
-twimPosPar:  Float_t \
+twimSec1PosPar:  Float_t \
   71.4913 -0.00649849 0 70.8936 -0.00644369 0 70.5041 -0.00641595 0 70.2266  \
   -0.00640024 0 70.006 -0.00640077 0 69.8187 -0.00640386 0 69.7261 -0.00640805  \
   0 69.5363 -0.00639783 0 69.134 -0.00638402 0 68.7864 -0.00637566 0  \
@@ -78,8 +81,4 @@ twimAnodePosPar:  Float_t \
 twimZHitParamsFitPar:  Int_t  3
 twimZHitPar:  Float_t \
   0.181 0.3943570841 1.87E-04
-//With beta correction
-//  0.181 0.418 2.1e-4 
-// Without beta correction
-//  -0.5389789963 0.5877633547 0.0 // Online
 ##############################################################################

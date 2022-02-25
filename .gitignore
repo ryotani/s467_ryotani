@@ -1,5 +1,6 @@
 profile.h
 *~
+*.o
 *.d
 *C.so
 *dict.pcm

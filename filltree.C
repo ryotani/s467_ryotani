@@ -176,8 +176,8 @@ void filltree(int runnum)
     R3BAmsReader* unpackams;
     R3BCalifaFebexReader* unpackcalifa;
     //R3BWhiterabbitCalifaReader* unpackWRCalifa;
-    R3BSofMwpcReader* unpackmwpc;
-    R3BSofTwimReader* unpacktwim;
+    R3BMwpcReader* unpackmwpc;
+    R3BTwimReader* unpacktwim;
     R3BSofTofWReader* unpacktofw;
     R3BSofScalersReader* unpackscalers;
     R3BNeulandTamexReader* unpackneuland;
@@ -201,7 +201,7 @@ void filltree(int runnum)
     {
       unpacksci = new R3BSofSciReader((EXT_STR_h101_SOFSCI_t*)&ucesb_struct.sci, offsetof(EXT_STR_h101, sci),NumSofSci);
       unpackWRMaster = new R3BWhiterabbitMasterReader((EXT_STR_h101_WRMASTER*)&ucesb_struct.wrmaster, offsetof(EXT_STR_h101, wrmaster), 0x300);
-      unpackWRSofia = new R3BSofWhiterabbitReader((EXT_STR_h101_WRSOFIA*)&ucesb_struct.wrsofia, offsetof(EXT_STR_h101, wrsofia), sofiaWR);
+      unpackWRSofia = new R3BSofWhiterabbitReader((EXT_STR_h101_WRSOFIA*)&ucesb_struct.wrsofia, offsetof(EXT_STR_h101, wrsofia), sofiaWR, 0xf00); // No sofiaWR2 available but tentatively assign as 0xf00.
     }
 
     if (fCalifa)
@@ -213,9 +213,9 @@ void filltree(int runnum)
     }
 
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
-        unpackmwpc = new R3BSofMwpcReader((EXT_STR_h101_SOFMWPC_t*)&ucesb_struct.mwpc, offsetof(EXT_STR_h101, mwpc));
+        unpackmwpc = new R3BMwpcReader((EXT_STR_h101_SOFMWPC_t*)&ucesb_struct.mwpc, offsetof(EXT_STR_h101, mwpc));
     if (fTwim)
-        unpacktwim = new R3BSofTwimReader((EXT_STR_h101_SOFTWIM_t*)&ucesb_struct.twim, offsetof(EXT_STR_h101, twim));
+        unpacktwim = new R3BTwimReader((EXT_STR_h101_SOFTWIM_t*)&ucesb_struct.twim, offsetof(EXT_STR_h101, twim));
     if (fTofW)
         unpacktofw = new R3BSofTofWReader((EXT_STR_h101_SOFTOFW_t*)&ucesb_struct.tofw, offsetof(EXT_STR_h101, tofw));
     if (fScalers)
@@ -342,11 +342,11 @@ void filltree(int runnum)
     // MWPC0
     if (fMwpc0)
     {
-        R3BSofMwpc0Mapped2Cal* MW0Map2Cal = new R3BSofMwpc0Mapped2Cal();
+        R3BMwpc0Mapped2Cal* MW0Map2Cal = new R3BMwpc0Mapped2Cal();
         MW0Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW0Map2Cal);
 
-        R3BSofMwpc0Cal2Hit* MW0Cal2Hit = new R3BSofMwpc0Cal2Hit();
+        R3BMwpc0Cal2Hit* MW0Cal2Hit = new R3BMwpc0Cal2Hit();
         MW0Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW0Cal2Hit);
     }
@@ -404,7 +404,7 @@ void filltree(int runnum)
     // MWPC1
     if (fMwpc1)
     {
-        R3BSofMwpc1Mapped2Cal* MW1Map2Cal = new R3BSofMwpc1Mapped2Cal();
+        R3BMwpc1Mapped2Cal* MW1Map2Cal = new R3BMwpc1Mapped2Cal();
         MW1Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW1Map2Cal);
     }
@@ -412,11 +412,12 @@ void filltree(int runnum)
     // TWIM
     if (fTwim)
     {
-        R3BSofTwimMapped2Cal* TwimMap2Cal = new R3BSofTwimMapped2Cal();
+        R3BTwimMapped2Cal* TwimMap2Cal = new R3BTwimMapped2Cal();
         TwimMap2Cal->SetOnline(NOTstorecaldata);
+	TwimMap2Cal->SetExpId(expId);
         run->AddTask(TwimMap2Cal);
 
-        R3BSofTwimCal2Hit* TwimCal2Hit = new R3BSofTwimCal2Hit();
+        R3BTwimCal2Hit* TwimCal2Hit = new R3BTwimCal2Hit();
         TwimCal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(TwimCal2Hit);
     }
@@ -424,18 +425,18 @@ void filltree(int runnum)
     // MWPC2
     if (fMwpc2)
     {
-        R3BSofMwpc2Mapped2Cal* MW2Map2Cal = new R3BSofMwpc2Mapped2Cal();
+        R3BMwpc2Mapped2Cal* MW2Map2Cal = new R3BMwpc2Mapped2Cal();
         MW2Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW2Map2Cal);
 
-        R3BSofMwpc2Cal2Hit* MW2Cal2Hit = new R3BSofMwpc2Cal2Hit();
+        R3BMwpc2Cal2Hit* MW2Cal2Hit = new R3BMwpc2Cal2Hit();
         MW2Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW2Cal2Hit);
     }
 
     if (fMwpc1 && fMwpc2)
     {
-        R3BSofMwpc1Cal2Hit* MW1Cal2Hit = new R3BSofMwpc1Cal2Hit();
+        R3BMwpc1Cal2Hit* MW1Cal2Hit = new R3BMwpc1Cal2Hit();
         MW1Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW1Cal2Hit);
     }
@@ -443,11 +444,11 @@ void filltree(int runnum)
     // MWPC3
     if (fMwpc3)
     {
-        R3BSofMwpc3Mapped2Cal* MW3Map2Cal = new R3BSofMwpc3Mapped2Cal();
+        R3BMwpc3Mapped2Cal* MW3Map2Cal = new R3BMwpc3Mapped2Cal();
         MW3Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW3Map2Cal);
 
-        R3BSofMwpc3Cal2Hit* MW3Cal2Hit = new R3BSofMwpc3Cal2Hit();
+        R3BMwpc3Cal2Hit* MW3Cal2Hit = new R3BMwpc3Cal2Hit();
         MW3Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW3Cal2Hit);
     }

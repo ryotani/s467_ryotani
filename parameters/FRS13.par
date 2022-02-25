@@ -97,10 +97,10 @@ BrhoParameter:	 Float_t \
 # 54Ca setting
 ##############################################################################
 ##############################################################################
-# Class:   tofwGeoPar
+# Class:   TofwGeoPar
 # Context: GeometryParameterContext
 ##############################################################################
-[tofwGeoPar]
+[TofwGeoPar]
 PositionX: Double_t -3300.
 PositionY: Double_t 0.
 PositionZ: Double_t 8170.
