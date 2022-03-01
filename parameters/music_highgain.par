@@ -46,17 +46,15 @@ twimAnodeNumberPar:  Int_t  16
 twimAnodeTRefPar:  Int_t  2
 twimAnodeTrigPar:  Int_t  2
 twimMaxMultPar:  Int_t  10
-twimAnodeEFitPar:  Int_t  3 
+twimAnodeEFitPar:  Int_t  2
 twimAnodePosFitPar:  Int_t  3
 twimSec1InUsePar:  Int_t \
   1 1 1 1 1 1 1 1 1 1  \
   1 1 1 1 1 1 
 twimSec1CalEPar:  Float_t \
-  0 0 0 0 0 0 0 0 0 0  \
-  0 0 0 0 0 0 0 0 0 0  \
-  0 0 0 0 0 0 0 0 0 0  \
-  0 0 0 0 0 0 0 0 0 0  \
-  0 0 0 0 0 0 0 0 
+  0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0  \
+  0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0  \
+  0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0
 twimSec1PosPar:  Float_t \
   71.4913 -0.00649849 0 70.8936 -0.00644369 0 70.5041 -0.00641595 0 70.2266  \
   -0.00640024 0 70.006 -0.00640077 0 69.8187 -0.00640386 0 69.7261 -0.00640805  \
