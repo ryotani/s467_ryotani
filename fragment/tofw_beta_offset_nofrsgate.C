@@ -83,9 +83,9 @@ void tofw_beta_offset_nofrsgate(int i_target){
     cerr<<"No target info"<<endl;
     return;
   }
-  outpdf = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".pdf";
-  outcsv = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".csv";
-  outroot = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Feb") + ".root";
+  outpdf  = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Mar") + ".pdf";
+  outcsv  = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Mar") + ".csv";
+  outroot = "./fragment/output/tofw_beta_offset_paddle_" + FRS + "_"+ targ + Form("_nofrsgate_Mar") + ".root";
   //
   fcsv.open(outcsv, ofstream::out);
   fout = new TFile(outroot,"RECREATE");
