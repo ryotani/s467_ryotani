@@ -160,11 +160,13 @@ void filltree(int runnum)
     R3BUcesbSource* source =
         new R3BUcesbSource(filename, ntuple_options, ucesb_path, &ucesb_struct, sizeof(ucesb_struct));
     source->SetMaxEvents(nev);
-    source->SetSkipEvents(fSkip_tpat0);//skip tpat=0 events.
+    //source->SetSkipEvents(fSkip_tpat0);//skip tpat=0 events. // This line is replaced with TrloiiReader->SetTpat(0x1);
 
     // Definition of reader ---------------------------------
     source->AddReader(new R3BUnpackReader(&ucesb_struct.unpack,offsetof(EXT_STR_h101, unpack)));
-    source->AddReader(new R3BTrloiiTpatReader(&ucesb_struct.unpacktpat,offsetof(EXT_STR_h101, unpacktpat)));
+    auto TrloiiReader = new R3BTrloiiTpatReader(&ucesb_struct.unpacktpat,offsetof(EXT_STR_h101, unpacktpat));
+    TrloiiReader->SetTpat(0x1); // Select tpat condition
+    source->AddReader(TrloiiReader);
     
     R3BFrsReaderNov19* unpackfrs;
     R3BMusicReader* unpackmusic;
@@ -499,17 +501,7 @@ void filltree(int runnum)
         R3BSofScalersOnlineSpectra* scalersonline = new R3BSofScalersOnlineSpectra();
         run->AddTask(scalersonline);
     }
-    /*
-    if (fSci&&fMusic&&fTwim){
-      R3BSofFrsFillTree* frsfilltree = new R3BSofFrsFillTree();
-	/ *frsfilltree->SetNbDetectors(NumSofSci);
-	frsfilltree->SetNbChannels(3);
-	frsfilltree->SetIdS2(IdS2);
-	frsfilltree->SetIdS8(IdS8);* /
-        run->AddTask(frsfilltree);
-    }
-*/
-    if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
+    if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW&&(!fCalifa)){
       R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree();
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);

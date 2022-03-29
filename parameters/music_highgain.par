@@ -5,13 +5,12 @@
 [musicCalPar]
 //----------------------------------------------------------------------------
 musicAnodeNumberPar:  Int_t  8 
-musicAnodeEFitPar:  Int_t  3 
+musicAnodeEFitPar:  Int_t  2
 musicInUsePar:  Int_t \
   1 1 1 1 1 1 1 1 
 musicCalEPar:  Float_t \
-  0 0 0 0 0 0 0 0 0 0  \
-  0 0 0 0 0 0 0 0 0 0  \
-  0 0 0 0 
+  0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0  \
+  0.0 1.0 0.0 1.0
 musicPosFitPar:  Int_t  3 
 musicPosPar:  Float_t \
   222.883 -0.0113117 0 223.076 -0.0113246 0 224.003 -0.0113812 0 225.262  \
