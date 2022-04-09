@@ -13,8 +13,10 @@ void mktree_tofw_frs(int FRSset1, int FRSset2, int i_target, TString suffix){
   int FRSsettingRange[2] = {FRSset1, FRSset2};
   if(FRSset1==13){
     FRSname = "50Ca";
+  }else if(FRSset1==122){
+    FRSname = "38Ca_122"; // Only the latter half
   }else if(FRSset1==11||FRSset1==12){
-    FRSname = "38Ca";
+     FRSname = "38Ca";
   }else{
     cerr<<"Check if the FRSsetting number is correct." <<endl;
     return;
@@ -73,7 +75,7 @@ void mktree_tofw_frs(int FRSset1, int FRSset2, int i_target, TString suffix){
     if(junk[i]!=0) continue;
     if(targetpos[i]<posmin || targetpos[i]>posmax) continue;
     cout<<runnumcsv[i]<<" "<<dumchar<<" "<<FRSsetting[i]<<" "<<dumchar<<" "<<brhocsv[i]<<" "<<dumchar<<" "<<targetpos[i]<<" "<<dumchar<<" "<<musicgain[i]<<" "<<dumchar<<" "<<junk[i]<<endl;
-
+    if(FRSsetting[i]==122) FRSsetting[i]=12;
     filename = Form("%ss467_filltree_Setting%i_%04d_%s.root", indir.Data(), FRSsetting[i], runnumcsv[i], suffix.Data());
     cout<<"Input file: "<<filename<<endl;
     ch -> AddFile(filename);

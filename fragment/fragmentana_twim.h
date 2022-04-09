@@ -1,7 +1,8 @@
 #include "TCanvas.h"
-#include "TProof.h"
+//#include "TProof.h"
 #include "TString.h"
 #include "TChain.h"
+#include "TFile.h"
 #include "TH2.h"
 #include "TH1.h"
 #include "TF1.h"
@@ -9,6 +10,8 @@
 #include "TEllipse.h"
 #include "TProfile.h"
 #include "TStyle.h"
+#include "TSpectrum.h"
+#include "TCut.h"
 #include "TLine.h"
 #include "TMath.h"
 #include <cmath>
