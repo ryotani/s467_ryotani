@@ -20,7 +20,7 @@ typedef struct EXT_STR_h101_t
     EXT_STR_h101_SOFMWPC_onion_t mwpc;
     EXT_STR_h101_MUSIC_onion_t music;
     EXT_STR_h101_SOFSCI_onion_t sci;
-    EXT_STR_h101_AMS_t ams;
+    //EXT_STR_h101_AMS_t ams;
     EXT_STR_h101_WRMASTER_t wrmaster;
     EXT_STR_h101_WRSOFIA_t wrsofia;
     EXT_STR_h101_WRS2_t wrs2;
@@ -160,12 +160,11 @@ void filltree(int runnum)
     R3BUcesbSource* source =
         new R3BUcesbSource(filename, ntuple_options, ucesb_path, &ucesb_struct, sizeof(ucesb_struct));
     source->SetMaxEvents(nev);
-    //source->SetSkipEvents(fSkip_tpat0);//skip tpat=0 events. // This line is replaced with TrloiiReader->SetTpat(0x1);
 
     // Definition of reader ---------------------------------
     source->AddReader(new R3BUnpackReader(&ucesb_struct.unpack,offsetof(EXT_STR_h101, unpack)));
     auto TrloiiReader = new R3BTrloiiTpatReader(&ucesb_struct.unpacktpat,offsetof(EXT_STR_h101, unpacktpat));
-    TrloiiReader->SetTpat(0x1); // Select tpat condition
+    TrloiiReader->SetTpatRange(1,4); // Select tpat condition : 1=min vias, 2=califaOR(p), 3=neuland, 4=califa&neuland, 8=califa off, 9=neuland off.
     source->AddReader(TrloiiReader);
     
     R3BFrsReaderNov19* unpackfrs;
@@ -281,6 +280,8 @@ void filltree(int runnum)
     }
     // Create online run ------------------------------------
     FairRunOnline* run = new FairRunOnline(source);
+    R3BEventHeader* EvntHeader = new R3BEventHeader();
+    run->SetEventHeader(EvntHeader);
     run->SetRunId(fRunId);
     run->SetSink(new FairRootFileSink(outputFilename));
     run->ActivateHttpServer(refresh, port);
@@ -421,6 +422,7 @@ void filltree(int runnum)
 
         R3BTwimCal2Hit* TwimCal2Hit = new R3BTwimCal2Hit();
         TwimCal2Hit->SetOnline(NOTstorehitdata);
+        TwimCal2Hit->SetExpId(expId);
         run->AddTask(TwimCal2Hit);
     }
 
