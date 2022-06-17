@@ -26,7 +26,7 @@ function mapp() {
     if [[ -z $MAPP_NR_CPUS ]] ; then
 	#local MAPP_NR_CPUS=$(grep "processor:" < /proc/cpuinfo | wc -l)
 	#   max core for calculation; modified by Toshiyuki Sumikama
-	local MAPP_NR_CPUS=20 # should be half as number of cores
+	local MAPP_NR_CPUS=50 # should be half as number of cores
     fi
     local mapp_pid=$(exec bash -c 'echo $PPID')
     local mapp_funname=$1

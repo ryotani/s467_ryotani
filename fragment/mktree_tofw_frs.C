@@ -72,6 +72,7 @@ void mktree_tofw_frs(int FRSset1, int FRSset2, int i_target, TString suffix){
     RunList>>runnumcsv[i]>>dumchar>>FRSsetting[i]>>dumchar>>brhocsv[i]>>dumchar>>targetpos[i]>>dumchar>>musicgain[i]>>dumchar>>junk[i];
 
     if(FRSsetting[i]<FRSsettingRange[0]||FRSsetting[i]>FRSsettingRange[1]) continue;
+    if(FRSsettingRange[1]==122 && FRSsetting[i] > 12 && FRSsetting[i] < 122) continue; // after run 262 removed, it should be fine to use both.
     if(junk[i]!=0) continue;
     if(targetpos[i]<posmin || targetpos[i]>posmax) continue;
     cout<<runnumcsv[i]<<" "<<dumchar<<" "<<FRSsetting[i]<<" "<<dumchar<<" "<<brhocsv[i]<<" "<<dumchar<<" "<<targetpos[i]<<" "<<dumchar<<" "<<musicgain[i]<<" "<<dumchar<<" "<<junk[i]<<endl;

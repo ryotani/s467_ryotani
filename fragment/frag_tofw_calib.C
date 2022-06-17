@@ -117,9 +117,9 @@ void frag_tofw_calib(int i_target, int FRS_setting){
     cerr<<"No target info"<<endl;
     return;
   }
-  outpdf  = "./fragment/output/tofw_calib_" + FRS + "_"+ targ + Form("_Apr") + ".pdf";
-  outcsv  = "./fragment/output/tofw_calib_" + FRS + "_"+ targ + Form("_Apr") + ".csv";
-  outroot = "./fragment/output/tofw_calib_" + FRS + "_"+ targ + Form("_Apr") + ".root";
+  outpdf  = "./fragment/output/tofw_calib_" + FRS + "_"+ targ + Form("_May") + ".pdf";
+  outcsv  = "./fragment/output/tofw_calib_" + FRS + "_"+ targ + Form("_May") + ".csv";
+  outroot = "./fragment/output/tofw_calib_" + FRS + "_"+ targ + Form("_May") + ".root";
   outpar  = "./fragment/output/frag_tofw_calib_" + FRS + "_" + targ + ".par";
   //
   fcsv.open(outcsv, ofstream::out);
@@ -635,7 +635,7 @@ void writeparam(){
     int Paddle = i+1;
     if (fFragmentPar->GetInUse(Paddle) != 1) continue;
     fFragmentPar->SetEffectivLength(f_betatof[i]->GetParameter(0), Paddle);
-    fFragmentPar->SetTofWOffset(f_betatof[i]->GetParameter(1), Paddle);
+    fFragmentPar->SetTofWOffset(-1. * f_betatof[i]->GetParameter(1), Paddle); // sign should be inverted
   }
   cout<<endl<<"New FragmentPar:"<<endl;
   fFragmentPar->printParams();
