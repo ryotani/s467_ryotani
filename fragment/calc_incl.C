@@ -39,9 +39,9 @@ using namespace std;
 TString dir_rootfile = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/fragment/output/" ;
 TString filename = "tofw_calib_FRS_TARG_Apr.root"; // TARG will be replaced
 #ifdef test
-TString outfilename = "incl_out_test_indivfit_30May_FRS_TARG.root";
+TString outfilename = "incl_out_test_indivfit_21Jun_FRS_TARG.root";
 #else
-TString outfilename = "incl_out_indivfit_30May_FRS_TARG.root";
+TString outfilename = "incl_out_indivfit_21Jun_FRS_TARG.root";
 #endif
 TString outcsvname = "incl_list_FRS_TARG.csv";
 TString targetname[3] = {"empty","carbon","ch2"};
@@ -655,6 +655,7 @@ int fit_aoq_gated_paddle(int i, int p, int zfrs, int afrs, int zfrag){
   int numpeaks = rangeA[1]-rangeA[0]+1;
   if(numpeaks<1) return 1;
   auto h_tmp = h_aoq_gated[i][p][zfrs][afrs][k];
+  h_tmp->Rebin(2);
   if(h_tmp->GetEntries()<1) return 1;
   //
   //cout<<h_tmp->GetEntries()<<endl;
@@ -736,14 +737,14 @@ int fit_aoq_gated_paddle(int i, int p, int zfrs, int afrs, int zfrag){
     }else{
       //f_tmp ->SetParLimits(3*j+1,0.1*params[3*j+1],1.3*params[3*j+1]);
       f_tmp ->SetParameter(3*j+1,params[3*j+1]);
-      //f_tmp ->SetParLimits(3*j+2,params[3*j+2] - 0.1/(double)k, params[3*j+2] + 0.1/(double)k);
+      f_tmp ->SetParLimits(3*j+2,params[3*j+2] - 0.2/(double)k, params[3*j+2] + 0.1/(double)k);
       //f_tmp ->SetParameter(3*j+2,params[3*j+2]);
-      //f_tmp ->SetParLimits(3*j+3,0.75*params[3*j+3],3.5*params[3*j+3]);
+      f_tmp ->SetParLimits(3*j+3,0.2*params[3*j+3],1.2*params[3*j+3]);
       //f_tmp ->SetParLimits(3*j+3,0.75*params[3*j+3], significance*params[3*j+3]);
       //f_tmp ->SetParameter(3*j+3,params[3*j+3]);
     }
   }
-  h_tmp->Fit(f_tmp,"Q LL","",((double)rangeA[0]-0.3)/(double)k, ((double)rangeA[1]+0.7)/(double)k);
+  h_tmp->Fit(f_tmp,"Q LL","",((double)rangeA[0]-0.3)/(double)k, ((double)rangeA[1]+1.0)/(double)k);
   //
   cout<<"AoQ fit result for target "<<targetname[i]<<", paddle"<<p+1<<", Z"<<zfrs<<", A"<<afrs<< ", Z_frag"<<k<<". Chi-sq:"<<f_tmp->GetChisquare()<<", NDF:"<<f_tmp->GetNDF()<<endl<<endl;
   //
@@ -789,6 +790,7 @@ TF1* generate_func(TString name, int numpeaks, double minpos, double interval, d
   }
   //cout<<formula<<" func generated"<<endl;
   //f_tmp->SetVectorized(true);
+  f_tmp->SetNpx(2000);
   return f_tmp;
 }
 
@@ -841,7 +843,8 @@ void calcincl(){
 	double E_tmp = 0.;
 	Eunreacted[i] = 0.;
 	if((f_aoq[i][NUMPADDLE][FZ][FA][k]) && i_unreacted > 0){
-	  for(int p =0; p<NUMPADDLE; p++){
+	  //for(int p =0; p<NUMPADDLE; p++){
+	  {int p = NUMPADDLE;
 	    if(!f_aoq[i][p][FZ][FA][k]) continue;
 	    Iunreacted[i] += TMath::Sqrt(2*TMath::Pi()) / width_bin
 	      * f_aoq[i][p][FZ][FA][k]->GetParameter(3*i_unreacted + 1)
@@ -894,7 +897,8 @@ void calcincl(){
 	//
 	int i_1n = FA - rangeA[0] - 1;
 	if(i_1n >= 0){
-	  for(int p =0; p<NUMPADDLE; p++){
+	  //for(int p =0; p<NUMPADDLE; p++){
+	  {int p = NUMPADDLE;
 	    if(!f_aoq[i][p][FZ][FA][k]) continue;
 	    I1n[i] += TMath::Sqrt(2*TMath::Pi()) / width_bin
 	      * f_aoq[i][p][FZ][FA][k]->GetParameter(3*i_1n + 1)
@@ -957,7 +961,8 @@ void calcincl(){
 	rangeA[0] = (int)(MINAOQ*(double)k+0.3);
 	int i_1p = FA - rangeA[0] - 1;
 	if((f_aoq[i][NUMPADDLE][FZ][FA][k]) && i_1p >= 0){
-	  for(int p =0; p<NUMPADDLE; p++){
+	  //for(int p =0; p<NUMPADDLE; p++){
+	  {int p = NUMPADDLE;
 	    if(!f_aoq[i][p][FZ][FA][k]) continue;
 	    I1p[i] += TMath::Sqrt(2*TMath::Pi()) / width_bin
 	      * f_aoq[i][p][FZ][FA][k]->GetParameter(3*i_1p + 1)

@@ -1,13 +1,17 @@
+TString string_Date ="21Jun";
 //TString strfilein[2] = {"fragment/output/incl_out_indivfit_30May_38Ca_all.root", "fragment/output/incl_out_indivfit_30May_50Ca_all.root"};
-TString strfilein[2] = {"fragment/output/incl_out_indivfit_14Jun_38Ca_all.root", "fragment/output/incl_out_indivfit_14Jun_50Ca_all.root"};
+//TString strfilein[2] = {"fragment/output/incl_out_indivfit_14Jun_38Ca_all.root", "fragment/output/incl_out_indivfit_14Jun_50Ca_all.root"};
+TString strfilein[2] = {"fragment/output/incl_out_indivfit_21Jun_38Ca_all.root", "fragment/output/incl_out_indivfit_21Jun_50Ca_all.root"};
 TFile *filein[2];
 TGraphErrors *g[3][3][2]; // file name, target, reaction
-TCanvas *c, *c2;
-void incl_49Ca1n();
+TCanvas *c, *c2, *cfit;;
+void incl_49Ca1n(), draw_aoq_fit();;
 double ch2_1n =0.;
 double Ech2_1n=0.;
 double carbon_1n=0.;
 double Ecarbon_1n=0.;
+double sigma[100][3][3]={0.}; // [target][reaction]
+double sigma_err[100][3][3]={0.}; // 
 int color[3]={kBlack, kBlue, kRed};
 
 void draw_incl(){
@@ -31,7 +35,9 @@ void draw_incl(){
 	    double eY = g[0][targ][reaction]->GetErrorY(N);
 	    if(X < 38.5 ||(42.5 < X && X < 46.5) || (41.5 < X && X<42.5)) continue;
 	    g[2][targ][reaction]->SetPoint(N0, X, Y);
-	    g[2][targ][reaction]->SetPointError(N0, eX, eY);	    
+	    g[2][targ][reaction]->SetPointError(N0, eX, eY);
+	    sigma[(int)X][targ][reaction] = Y;
+	    sigma_err[(int)X][targ][reaction] = eY;
 	  }
 	} else if(i==1){
 	  for(int N=0; N < g[1][targ][reaction]->GetN(); N++){
@@ -56,7 +62,9 @@ void draw_incl(){
 	    if((40.5 < X && X < 46.5) || (50 < X && reaction == 0)) continue;
 	    //if(X < 38.5 ||(40.5 < X && X < 46.5)) continue;
 	    g[2][targ][reaction]->SetPoint(N0, X, Y);
-	    g[2][targ][reaction]->SetPointError(N0, eX, eY);	    
+	    g[2][targ][reaction]->SetPointError(N0, eX, eY);
+	    sigma[(int)X][targ][reaction] = Y;
+	    sigma_err[(int)X][targ][reaction] = eY;
 	  }
 	  /*
 	  for(int N=0; N<g[0][targ][reaction]->GetN(); N++){
@@ -67,8 +75,8 @@ void draw_incl(){
 	}
       }
     }
-  }
-  for(int targ=0; targ<3; targ++){
+  } 
+ for(int targ=0; targ<3; targ++){
     for(int reaction=0; reaction<2; reaction++){
       for(int N=0; N<g[2][targ][reaction]->GetN(); N++){
 	double X, Y;
@@ -144,9 +152,10 @@ void draw_incl(){
     legend->SetTextAlign(12);
     legend->SetLineWidth(0);
     legend->Draw();
-    c2->SaveAs(Form("./fragment/output/incl_%s_50Ca_19Jun.png",reaction==0?"-1n":"-1p"));
-    c2->SaveAs(Form("./fragment/output/incl_%s_50Ca_19Jun.pdf",reaction==0?"-1n":"-1p"));
+    c2->SaveAs(Form("./fragment/output/incl_%s_50Ca_%s.png",reaction==0?"-1n":"-1p",string_Date.Data()));
+    c2->SaveAs(Form("./fragment/output/incl_%s_50Ca_%s.pdf",reaction==0?"-1n":"-1p",string_Date.Data()));
   }
+  draw_aoq_fit();
 }
 /*
   NO.   NAME      VALUE            ERROR          SIZE      DERIVATIVE 
@@ -200,4 +209,146 @@ void incl_49Ca1n(){
 +double zoff=0.3; // tentative.
 +
 */
+}
+
+
+void draw_aoq_fit(){
+  cfit = new TCanvas("aoqfit","aoqfit",1000,1000);
+  cfit->Divide(3,2);
+  TH2F* htmp[6];
+  //for(int i =0; i < 6 ;i++) cfit->cd(1+3*(i%2)+i/2)->SetLogy();
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf[");
+  //
+  int mass_list[] = {39, 40, 41, 47, 48, 49, 50, 51};
+  //
+  for(int l = 0; l < (sizeof mass_list)/(sizeof mass_list[0]); l++){
+    TFile *tmpfile;
+    if(l<3){
+      tmpfile = filein[0];
+    }else{
+      tmpfile = filein[1];
+    }
+    htmp[0] = (TH2F*) tmpfile->FindObjectAny(Form("h_aoq_gated_all_Z20_A%i_Z20_empty", mass_list[l]))->Clone();
+    htmp[3] = (TH2F*) tmpfile->FindObjectAny(Form("h_aoq_gated_all_Z20_A%i_Z19_empty", mass_list[l]))->Clone();
+    htmp[1] = (TH2F*) tmpfile->FindObjectAny(Form("h_aoq_gated_all_Z20_A%i_Z20_carbon", mass_list[l]))->Clone();
+    htmp[4] = (TH2F*) tmpfile->FindObjectAny(Form("h_aoq_gated_all_Z20_A%i_Z19_carbon", mass_list[l]))->Clone();
+    htmp[2] = (TH2F*) tmpfile->FindObjectAny(Form("h_aoq_gated_all_Z20_A%i_Z20_ch2", mass_list[l]))->Clone();
+    htmp[5] = (TH2F*) tmpfile->FindObjectAny(Form("h_aoq_gated_all_Z20_A%i_Z19_ch2", mass_list[l]))->Clone();
+    //    for(int i =0; i < 6 ; i++){
+    //cfit->cd(1+3*(i%2)+i/2);
+    //htmp[i]->Draw();
+    //}
+    //TLatex latex;
+    //latex.SetTextSize(0.025);
+    for(int i =0; i < 6 ; i++){
+      cfit->cd(i+1)->SetLogy();
+      htmp[i]->Draw();
+      if(i%3==0) continue;
+      if(i%3==1){
+	auto *t = new TLatex((double)(mass_list[l]+1)/20.,htmp[i]->GetMaximum(),Form("#sigma_{c} = %.1f #pm %.1f", sigma[mass_list[l]][0][i/3], sigma_err[mass_list[l]][0][i/3]) );
+	t->Draw();
+	//latex.DrawLatex(2.2,.6,Form("#sigma_{c} = %.1f #pm %.1f", sigma[mass_list[l]][0][i/3], sigma_err[mass_list[l]][0][i/3]) );
+      }
+      if(i%3==2){
+	auto *t = new TLatex( (double)(mass_list[l]+1)/20.,1.2*htmp[i]->GetMaximum(),Form("#sigma_{ch2} = %.1f #pm %.1f", sigma[mass_list[l]][1][i/3], sigma_err[mass_list[l]][1][i/3]) );
+	auto *t2 = new TLatex((double)(mass_list[l]+1)/20.,0.9*htmp[i]->GetMaximum(),Form("#sigma_{p} = %.1f #pm %.1f", sigma[mass_list[l]][2][i/3], sigma_err[mass_list[l]][2][i/3]) );
+	t->Draw();
+	t2->Draw();
+      }
+    }
+    cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+    //
+    for(int i =0; i < 6 ; i++){
+      cfit->cd(i+1)->SetLogy(0);
+      //htmp[i]->Draw();
+    }
+    cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+  }
+   
+  /*
+  htmp[0] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A40_Z20_empty")->Clone();
+  htmp[1] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A40_Z19_empty")->Clone();
+  htmp[2] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A40_Z20_carbon")->Clone();
+  htmp[3] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A40_Z19_carbon")->Clone();
+  htmp[4] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A40_Z20_ch2")->Clone();
+  htmp[5] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A40_Z19_ch2")->Clone();
+  for(int i =0; i < 6 ; i++){
+    cfit->cd(1+3*(i%2)+i/2);
+    htmp[i]->Draw();
+  }
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+  //
+  htmp[0] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A41_Z20_empty")->Clone();
+  htmp[1] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A41_Z19_empty")->Clone();
+  htmp[2] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A41_Z20_carbon")->Clone();
+  htmp[3] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A41_Z19_carbon")->Clone();
+  htmp[4] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A41_Z20_ch2")->Clone();
+  htmp[5] = (TH2F*) filein[0]->FindObjectAny("h_aoq_gated_all_Z20_A41_Z19_ch2")->Clone();
+  for(int i =0; i < 6 ; i++){
+    cfit->cd(1+3*(i%2)+i/2);
+    htmp[i]->Draw();
+  }
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+  //
+  htmp[0] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A47_Z20_empty")->Clone();
+  htmp[1] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A47_Z19_empty")->Clone();
+  htmp[2] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A47_Z20_carbon")->Clone();
+  htmp[3] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A47_Z19_carbon")->Clone();
+  htmp[4] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A47_Z20_ch2")->Clone();
+  htmp[5] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A47_Z19_ch2")->Clone();
+  for(int i =0; i < 6 ; i++){
+    cfit->cd(1+3*(i%2)+i/2);
+    htmp[i]->Draw();
+  }
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+  //
+  htmp[0] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A48_Z20_empty")->Clone();
+  htmp[1] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A48_Z19_empty")->Clone();
+  htmp[2] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A48_Z20_carbon")->Clone();
+  htmp[3] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A48_Z19_carbon")->Clone();
+  htmp[4] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A48_Z20_ch2")->Clone();
+  htmp[5] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A48_Z19_ch2")->Clone();
+  for(int i =0; i < 6 ; i++){
+    cfit->cd(1+3*(i%2)+i/2);
+    htmp[i]->Draw();
+  }
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+  //
+  htmp[0] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A49_Z20_empty")->Clone();
+  htmp[1] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A49_Z19_empty")->Clone();
+  htmp[2] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A49_Z20_carbon")->Clone();
+  htmp[3] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A49_Z19_carbon")->Clone();
+  htmp[4] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A49_Z20_ch2")->Clone();
+  htmp[5] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A49_Z19_ch2")->Clone();
+  for(int i =0; i < 6 ; i++){
+    cfit->cd(1+3*(i%2)+i/2);
+    htmp[i]->Draw();
+  }
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+  //
+  htmp[0] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A50_Z20_empty")->Clone();
+  htmp[1] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A50_Z19_empty")->Clone();
+  htmp[2] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A50_Z20_carbon")->Clone();
+  htmp[3] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A50_Z19_carbon")->Clone();
+  htmp[4] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A50_Z20_ch2")->Clone();
+  htmp[5] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A50_Z19_ch2")->Clone();
+  for(int i =0; i < 6 ; i++){
+    cfit->cd(1+3*(i%2)+i/2);
+    htmp[i]->Draw();
+  }
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+  //
+  htmp[0] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A51_Z20_empty")->Clone();
+  htmp[1] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A51_Z19_empty")->Clone();
+  htmp[2] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A51_Z20_carbon")->Clone();
+  htmp[3] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A51_Z19_carbon")->Clone();
+  htmp[4] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A51_Z20_ch2")->Clone();
+  htmp[5] = (TH2F*) filein[1]->FindObjectAny("h_aoq_gated_all_Z20_A51_Z19_ch2")->Clone();
+  for(int i =0; i < 6 ; i++){
+    cfit->cd(1+3*(i%2)+i/2);
+    htmp[i]->Draw();
+  }
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf");
+  / */
+  cfit->SaveAs("fragment/output/frag_aoq_fit.pdf]");
 }
