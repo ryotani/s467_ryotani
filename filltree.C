@@ -431,6 +431,11 @@ void filltree(int runnum)
         R3BMwpc1Mapped2Cal* MW1Map2Cal = new R3BMwpc1Mapped2Cal();
         MW1Map2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(MW1Map2Cal);
+
+        R3BMwpc1Cal2Hit* MW1Cal2Hit = new R3BMwpc1Cal2Hit();
+	MW1Cal2Hit->SetExpId(expId);
+        MW1Cal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(MW1Cal2Hit);
     }
 
     // TWIM
@@ -455,15 +460,9 @@ void filltree(int runnum)
         run->AddTask(MW2Map2Cal);
 
         R3BMwpc2Cal2Hit* MW2Cal2Hit = new R3BMwpc2Cal2Hit();
+	MW2Cal2Hit->SetExpId(expId);
         MW2Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW2Cal2Hit);
-    }
-
-    if (fMwpc1 && fMwpc2)
-    {
-        R3BMwpc1Cal2Hit* MW1Cal2Hit = new R3BMwpc1Cal2Hit();
-        MW1Cal2Hit->SetOnline(NOTstorehitdata);
-        run->AddTask(MW1Cal2Hit);
     }
 
     // MWPC3
@@ -474,6 +473,7 @@ void filltree(int runnum)
         run->AddTask(MW3Map2Cal);
 
         R3BMwpc3Cal2Hit* MW3Cal2Hit = new R3BMwpc3Cal2Hit();
+	MW3Cal2Hit->SetExpId(expId);
         MW3Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW3Cal2Hit);
     }
