@@ -10,14 +10,19 @@ const Int_t expId = 467;               // select experiment: 444 or 467
 // *********************************** //
 
 
-std::ifstream RunList("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/RunSummary.csv", std::ios::in);
-TString dir_rawfile = "/u/taniuchi/s467/lmd_stitched/";
-TString dir_output = "./rootfiles/rootfile_land/";
+TString dir_ana = "./";
 TString dir = gSystem->Getenv("VMCWORKDIR");
-TString sofiacaldir = dir + "/sofia/macros/s467_ryotani/parameters/";
+//
+TString s_runlist = dir_ana + "RunSummary.csv";
+std::ifstream RunList(s_runlist, std::ios::in);
+TString dir_rawfile = "/u/taniuchi/s467/lmd_stitched/";
+TString dir_output = dir_ana + "rootfiles/";
+TString sofiacaldir = dir_ana + "parameters/";
+//
 TString ucesb_dir = getenv("UCESB_DIR");
 TString upexps_dir = ucesb_dir + "/../upexps/";
 TString ucesb_path = upexps_dir + "/202002_s467/202002_s467 --allow-errors --input-buffer=100Mi";
+//TString ucesb_path = upexps_dir + "/202002_s467_jentob/202002_s467 --allow-errors --input-buffer=100Mi";
 
 // store data or not ------------------------------------
 Bool_t fCal_level_califa = true;  // set true if there exists a file with the calibration parameters
@@ -33,7 +38,6 @@ Bool_t fFrsSci = true;   // Start: Plastic scintillators at FRS
 Bool_t fMwpc0 = true;    // MWPC0 for tracking at entrance of Cave-C
 Bool_t fMusic = true;    // R3B-Music: Ionization chamber for charge-Z
 Bool_t fSci = true;      // Start: Plastic scintillator for ToF
-//Bool_t fAms = false;     // AMS tracking detectors
 Bool_t fCalifa = true;  // Califa calorimeter
 Bool_t fMwpc1 = true;    // MWPC1 for tracking of fragments in front of target
 Bool_t fMwpc2 = true;    // MWPC2 for tracking of fragments before GLAD
@@ -44,18 +48,11 @@ Bool_t fScalers = false;  // SIS3820 scalers at Cave C
 //Bool_t fNeuland = true;  // NeuLAND for neutrons behind GLAD
 //Bool_t fTracking = true; // Tracking of fragments inside GLAD
 
-Bool_t fSkip_tpat0 = true;
 
 // Calibration files ------------------------------------
 //TString califamapdir = dir + "/macros/r3b/unpack/s467/califa/parameters/";
 TString califamapdir = dir + "/macros/r3b/unpack/s467/califa/parameters/";
-TString califamapfilename = califamapdir + "CALIFA_mapping_Feb82020.par";
+TString califamapfilename = califamapdir + "CALIFA_mapping_Feb82020.par";// not used
 // Parameters for CALIFA calibration in keV
-//TString califadir = "/home/christian/calibration_Files/s467/";
-TString califadir = dir + "/macros/r3b/unpack/s467/califa/parameters/";
-TString califacalfilename = califadir + "Califa_Cal8Feb2020.root";
-
-//// Parameters for CALIFA mapping
-//TString califamapfilename = califamapdir + "CALIFA_mapping.par";
-//// Parameters for CALIFA calibration in keV
-//TString califacalfilename = califadir + "Califa_Cal8Feb2020.root";
+TString califadir = dir_ana + "parameters/";
+TString califacalfilename = califadir + "Califa_CalibParam25012022_60Co_Incomplete.root";
