@@ -31,7 +31,7 @@ tpcCalPar:  Float_t \
 //----------------------------------------------------------------------------
 PositionX: Double_t 0.
 PositionY: Double_t 0.
-PositionZ: Double_t -190.
+PositionZ: Double_t -251.6
 RotationX: Double_t 0.
 RotationY: Double_t 0.
 RotationZ: Double_t 0.
@@ -44,6 +44,31 @@ Z: Double_t 14.
 A: Double_t 28.0855
 Density: Double_t 1.0
 IonisationEnergy: Double_t 57.4e-6
+## Geometry see elog 666
+#############################################################################
+#############################################################################
+# Class:   RoluGeoPar
+# Context: GeometryParameterContext
+#############################################################################
+[RoluGeoPar]
+//----------------------------------------------------------------------------
+PositionX: Double_t 0.
+PositionY: Double_t 0.
+PositionZ: Double_t -211.01
+RotationX: Double_t 0.
+RotationY: Double_t 0.
+RotationZ: Double_t 0.
+DimensionX: Double_t 20.
+DimensionY: Double_t 20.
+DimensionZ: Double_t 0.5
+SigmaX: Double_t 0.0
+SigmaY: Double_t 0.0
+Z: Double_t 0.
+A: Double_t 0.
+Density: Double_t 0.0
+IonisationEnergy: Double_t 0.
+## From ruler measurement Z position should be -190 cm, but to fit with
+## the music angle (not calibrated yet), -251.6 + 40.59 = -211.0 cm is taken
 #############################################################################
 #############################################################################
 # Class:   Mwpc1GeoPar
@@ -53,7 +78,7 @@ IonisationEnergy: Double_t 57.4e-6
 //----------------------------------------------------------------------------
 PositionX: Double_t 0.
 PositionY: Double_t 0.
-PositionZ: Double_t 42.
+PositionZ: Double_t 19.7
 RotationX: Double_t 0.
 RotationY: Double_t 0.
 RotationZ: Double_t 0.
@@ -66,8 +91,31 @@ Z: Double_t 14.
 A: Double_t 28.0855
 Density: Double_t 1.0
 IonisationEnergy: Double_t 57.4e-6
+## Elog entry 666
 ##############################################################################
-
+#############################################################################
+# Class:   Mwpc2GeoPar
+# Context: GeometryParameterContext
+#############################################################################
+[Mwpc2GeoPar]
+//----------------------------------------------------------------------------
+PositionX: Double_t 0.
+PositionY: Double_t 0.
+PositionZ: Double_t 85.4
+RotationX: Double_t 0.
+RotationY: Double_t 0.
+RotationZ: Double_t 0.
+DimensionX: Double_t 20.
+DimensionY: Double_t 20.
+DimensionZ: Double_t 0.5
+SigmaX: Double_t 0.1
+SigmaY: Double_t 1.
+Z: Double_t 14.
+A: Double_t 28.0855
+Density: Double_t 1.0
+IonisationEnergy: Double_t 57.4e-6
+## Elog entry 666
+##############################################################################
 //----------------------------------------------------------------------------
 ##############################################################################
 ##############################################################################
