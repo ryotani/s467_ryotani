@@ -30,8 +30,8 @@ typedef struct EXT_STR_h101_t
     EXT_STR_h101_SOFTWIM_onion_t twim;
     EXT_STR_h101_SOFTOFW_onion_t tofw;
     EXT_STR_h101_SOFSCALERS_onion_t scalers;
-    EXT_STR_h101_raw_nnp_tamex_t raw_nnp;
-    EXT_STR_h101_WRNEULAND_t wrneuland;
+    EXT_STR_h101_raw_nnp_tamex_onion_t raw_nnp; //EXT_STR_h101_raw_nnp_tamex_t raw_nnp;
+    //EXT_STR_h101_WRNEULAND_t wrneuland;
     EXT_STR_h101_FRS_t frs;
 } EXT_STR_h101;
 
@@ -51,7 +51,62 @@ void filltree(int runnum)
     TString ntuple_options = "RAW";//"RAW,time-stitch=1000" // For no stitched data
     TString filename, outputFilename, frs_paramfile, fragment_paramfile, common_paramfile, musiccalfilename;
     Double_t brho28;
-    
+    //-------------------------------------------------------------------------
+    //added by KB for NeuLAND:
+    const Int_t nBarsPerPlane = 50; // number of scintillator bars per plane
+    const Int_t nPlanes = 16;       // number of planes (for TCAL calibration)
+    const double distanceToTarget = 1520.;
+    const Int_t trigger = -1; // 1 - onspill, 2 - offspill. -1 - all
+    double timeoffset = 0.;
+    if (262<runnum & runnum<269) {
+      timeoffset = 4202.+6.2;
+    } else if (276<runnum & runnum<304) {
+      timeoffset = 7200.+78.0; //check spectra
+    } else if (303<runnum & runnum<359) {
+      timeoffset = 7200.+58.0; //check spectra
+    } else if (367<runnum & runnum<381) {
+      timeoffset = 10610.+0.3; //check spectra
+    }
+
+
+    // associate parameter file:
+#define LENGTH(x) (sizeof x / sizeof *x)
+
+    Int_t calib_file[400]={0};
+    Int_t two[]={328,330,357};
+    Int_t three[]={281,284,287,294,297,300,308,311,318,321,332,335,342,345,348,351,354};
+    Int_t four[]={277,290,314,324,338,368,372};
+    Int_t five[]={303,376};
+    Int_t six[]={263};
+	    
+    for (Int_t i=0;i<LENGTH(calib_file); i++)
+      {   
+	for (Int_t j=0;j<LENGTH(two);j++)
+	  {   
+	    for (Int_t iruns=0;iruns<2;iruns++)  calib_file[two[j]+iruns] = two[j];
+	  }   
+	for (Int_t j=0;j<LENGTH(three);j++)
+	  {   
+	    for (Int_t iruns=0;iruns<3;iruns++)  calib_file[three[j]+iruns] = three[j];
+	  }   
+	for (Int_t j=0;j<LENGTH(four);j++)
+	  {   
+	    for (Int_t iruns=0;iruns<4;iruns++)  calib_file[four[j]+iruns] = four[j];
+	  }   
+	for (Int_t j=0;j<LENGTH(five);j++)
+	  {   
+	    for (Int_t iruns=0;iruns<5;iruns++)  calib_file[five[j]+iruns] = five[j];
+	  }
+	for (Int_t j=0;j<LENGTH(six);j++)
+	  {   
+	    for (Int_t iruns=0;iruns<6;iruns++)  calib_file[six[j]+iruns] = six[j];
+	  }
+      } 
+    const TString syncParFileName = TString::Format("/u/boretzky/s467/params_new_sync_%04d.root", calib_file[runnum]);
+    cout << "NeuLAND calibration parameters from:   " << syncParFileName << endl;
+
+    //-------------------------------------------------------------------------
+
     if(runnum==0){
       //filename = "--stream=lxlanddaq01:9000";
       cerr<<"No online analysis available"<<endl;
@@ -200,7 +255,7 @@ void filltree(int runnum)
     R3BSofTofWReader* unpacktofw;
     R3BSofScalersReader* unpackscalers;
     R3BNeulandTamexReader* unpackneuland;
-    R3BWhiterabbitNeulandReader* unpackWRNeuland;
+    //R3BWhiterabbitNeulandReader* unpackWRNeuland;
 
     if (fFrs)
       unpackfrs= new R3BFrsReaderNov19((EXT_STR_h101_FRS*)&ucesb_struct.frs,
@@ -237,6 +292,8 @@ void filltree(int runnum)
         unpacktwim = new R3BTwimReader((EXT_STR_h101_SOFTWIM_t*)&ucesb_struct.twim, offsetof(EXT_STR_h101, twim));
     if (fTofW)
         unpacktofw = new R3BSofTofWReader((EXT_STR_h101_SOFTOFW_t*)&ucesb_struct.tofw, offsetof(EXT_STR_h101, tofw));
+    if (fNeuland)
+      unpackneuland = new R3BNeulandTamexReader(&ucesb_struct.raw_nnp, offsetof(EXT_STR_h101,raw_nnp));
     if (fScalers)
         unpackscalers =
             new R3BSofScalersReader((EXT_STR_h101_SOFSCALERS_t*)&ucesb_struct.scalers, offsetof(EXT_STR_h101, scalers));
@@ -286,11 +343,16 @@ void filltree(int runnum)
         unpacktwim->SetOnline(NOTstoremappeddata);
         source->AddReader(unpacktwim);
     }
-      if (fTofW)
+    if (fTofW)
     {
         unpacktofw->SetOnline(NOTstoremappeddata);
         source->AddReader(unpacktofw);
     }
+    if (fNeuland)
+      {
+	unpackneuland->SetOnline(NOTstoremappeddata);
+	source->AddReader(unpackneuland);
+      }
     if (fScalers)
     {
         unpackscalers->SetOnline(NOTstoremappeddata);
@@ -299,6 +361,7 @@ void filltree(int runnum)
     // Create online run ------------------------------------
     FairRunOnline* run = new FairRunOnline(source);
     R3BEventHeader* EvntHeader = new R3BEventHeader();
+    EvntHeader->SetExpId(expId);
     run->SetEventHeader(EvntHeader);
     run->SetRunId(fRunId);
     run->SetSink(new FairRootFileSink(outputFilename));
@@ -317,7 +380,6 @@ void filltree(int runnum)
 	parList1->Add(new TObjString(common_paramfile));
         parIo1->open(parList1, "in");
         rtdb->setFirstInput(parIo1);
-        rtdb->print();
     }
     else
     {
@@ -331,7 +393,6 @@ void filltree(int runnum)
             parList1->Add(new TObjString(califamapfilename));
             parIo1->open(parList1);
             rtdb->setFirstInput(parIo1);
-            rtdb->print();
         }
         else
         { // SOFIA, CALIFA mapping and CALIFA calibration parameters
@@ -351,7 +412,21 @@ void filltree(int runnum)
             rtdb->setSecondInput(parIo2);
         }
     }
-    
+    if (fNeuland)
+      {
+	//added by KB: root file for NeuLAND - test with one file
+	auto parIO = new FairParRootFileIo(false);
+	parIO->open(syncParFileName,"in");
+	rtdb->setSecondInput(parIO);
+        rtdb->addRun(999);
+	rtdb->getContainer("LandTCalPar");
+        rtdb->setInputVersion(999, (char*)"LandTCalPar", 1, 1);
+        rtdb->getContainer("NeulandHitPar");
+        rtdb->setInputVersion(999, (char*)"NeulandHitPar", 1, 1);
+        cout << "did neuland stuff for rtdb" << endl;
+      }
+    rtdb->print();
+
     // Add analysis task ------------------------------------
     // TPCs at S2
     if (fFrsTpcs)
@@ -404,6 +479,12 @@ void filltree(int runnum)
         SofSciSTcal2Hit->SetOnline(NOTstorehitdata);
         SofSciSTcal2Hit->SetCalParams(675.,-1922.);//ToF calibration at Cave-C
         run->AddTask(SofSciSTcal2Hit);
+	//
+	// for CALIFA and Neuland
+	R3BEventHeaderPropagator *RunIdTask = new R3BEventHeaderPropagator();
+	run->AddTask(RunIdTask);
+	auto sofstart = new R3BSofiaProvideTStart();
+	run->AddTask(sofstart);
     }
 
     // CALIFA
@@ -433,7 +514,7 @@ void filltree(int runnum)
         run->AddTask(MW1Map2Cal);
 
         R3BMwpc1Cal2Hit* MW1Cal2Hit = new R3BMwpc1Cal2Hit();
-	MW1Cal2Hit->SetExpId(expId);
+	//MW1Cal2Hit->SetExpId(expId);
         MW1Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW1Cal2Hit);
     }
@@ -443,12 +524,12 @@ void filltree(int runnum)
     {
         R3BTwimMapped2Cal* TwimMap2Cal = new R3BTwimMapped2Cal();
         TwimMap2Cal->SetOnline(NOTstorecaldata);
-	TwimMap2Cal->SetExpId(expId);
+	//TwimMap2Cal->SetExpId(expId);
         run->AddTask(TwimMap2Cal);
 
         R3BTwimCal2Hit* TwimCal2Hit = new R3BTwimCal2Hit();
         TwimCal2Hit->SetOnline(NOTstorehitdata);
-        TwimCal2Hit->SetExpId(expId);
+        //TwimCal2Hit->SetExpId(expId);
         run->AddTask(TwimCal2Hit);
     }
 
@@ -460,7 +541,7 @@ void filltree(int runnum)
         run->AddTask(MW2Map2Cal);
 
         R3BMwpc2Cal2Hit* MW2Cal2Hit = new R3BMwpc2Cal2Hit();
-	MW2Cal2Hit->SetExpId(expId);
+	//MW2Cal2Hit->SetExpId(expId);
         MW2Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW2Cal2Hit);
     }
@@ -473,7 +554,7 @@ void filltree(int runnum)
         run->AddTask(MW3Map2Cal);
 
         R3BMwpc3Cal2Hit* MW3Cal2Hit = new R3BMwpc3Cal2Hit();
-	MW3Cal2Hit->SetExpId(expId);
+	//MW3Cal2Hit->SetExpId(expId);
         MW3Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW3Cal2Hit);
     }
@@ -493,10 +574,30 @@ void filltree(int runnum)
 
         // --- Tcal 2 Hit for SofTofW :
         R3BSofTofWSingleTCal2Hit* SofTofWTcal2Hit = new R3BSofTofWSingleTCal2Hit();
-	SofTofWTcal2Hit->SetTofLISE(43.);
+	//SofTofWTcal2Hit->SetTofLISE(43.); // Code to be updated. No need for setTof. It is set from param
         SofTofWTcal2Hit->SetOnline(NOTstorehitdata);
+	SofTofWTcal2Hit->SetExpId(467); ///// Codes to be updated
         run->AddTask(SofTofWTcal2Hit);
     }
+
+    // NeuLAND
+    if (fNeuland)
+    {
+	auto tcal = new R3BNeulandMapped2Cal();
+        tcal->SetTrigger(trigger);
+        tcal->SetNofModules(nPlanes, nBarsPerPlane);
+        tcal->SetNhitmin(1);
+        tcal->EnableWalk(true);
+        run->AddTask(tcal);
+			    
+       auto nlhit = new R3BNeulandCal2Hit();
+       nlhit->SetDistanceToTarget(distanceToTarget);
+       nlhit->SetGlobalTimeOffset(timeoffset);
+       nlhit->SetEnergyCutoff(0.0);
+       run->AddTask(nlhit);	
+    
+    }    
+
     // Add sofana task ------------------------------------
     if (fSci&&fMusic)
     {
@@ -524,13 +625,14 @@ void filltree(int runnum)
         R3BSofScalersOnlineSpectra* scalersonline = new R3BSofScalersOnlineSpectra();
         run->AddTask(scalersonline);
     }
+    /*
     if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW&&(!fCalifa)){
       R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree();
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
     }
-
+    */
     // Initialize -------------------------------------------
     run->Init();
     FairLogger::GetLogger()->SetLogScreenLevel("INFO");

@@ -46,6 +46,38 @@ Density: Double_t 1.0
 IonisationEnergy: Double_t 57.4e-6
 ## Geometry see elog 666
 #############################################################################
+##############################################################################
+# Class:   GladFieldPar
+# Context: GladFieldParContext
+##############################################################################
+[GladFieldPar]
+//----------------------------------------------------------------------------
+Bz: Float_t 0
+EffLength: Float_t 210.
+FieldCentre: Float_t 308.
+##############################################################################
+#############################################################################
+# Class:   TargetGeoPar
+# Context: GeometryParameterContext
+#############################################################################
+[TargetGeoPar]
+//----------------------------------------------------------------------------
+PositionX: Double_t 0.
+PositionY: Double_t 0.
+PositionZ: Double_t -68.425
+RotationX: Double_t 0.
+RotationY: Double_t 0.
+RotationZ: Double_t 0.
+DimensionX: Double_t 6.0
+DimensionY: Double_t 6.0
+DimensionZ: Double_t 0.04
+SigmaX: Double_t 0.
+SigmaY: Double_t 0.
+Z: Double_t 1.
+A: Double_t 1.
+Density: Double_t 2.26
+IonisationEnergy: Double_t 55.9e-6
+#############################################################################
 #############################################################################
 # Class:   RoluGeoPar
 # Context: GeometryParameterContext
@@ -1554,8 +1586,10 @@ TcalPar:  Float_t \
   5 5 5 5 5 5 5 5 5 5 
 nDetectorsTcalPar:  Int_t  4 
 nChannelsTcalPar:  Int_t  3 
-nSignalsTcalPar:  Int_t  12 
-nTcalParsPerSignal:  Int_t  1000 
+nTcalParsPerSignal:  Int_t  1000
+ClockOffsets:  Float_t \
+  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. \
+  0. 0.
 ##############################################################################
 ##############################################################################
 # Class:   SofTofWTcalPar
@@ -7166,5 +7200,11 @@ TcalPar:  Float_t \
   0 0 0 0 0 0 0 0 0 0 
 nDetectorsTcalPar:  Int_t  28 
 nChannelsTcalPar:  Int_t  2 
-nSignalsTcalPar:  Int_t  56 
 nTcalParsPerSignal:  Int_t  1000 
+ClockOffsets:  Float_t \
+  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. \
+  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. \
+  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. \
+  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. \
+  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. \
+  0. 0. 0. 0. 0. 0.
