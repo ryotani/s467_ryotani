@@ -26,7 +26,7 @@ typedef struct EXT_STR_h101_t
     EXT_STR_h101_WRS2_t wrs2;
     EXT_STR_h101_WRS8_t wrs8;
     EXT_STR_h101_CALIFA_t califa;
-    //EXT_STR_h101_WRCALIFA_t wrcalifa;
+    EXT_STR_h101_WRCALIFA_t wrcalifa;
     EXT_STR_h101_SOFTWIM_onion_t twim;
     EXT_STR_h101_SOFTOFW_onion_t tofw;
     EXT_STR_h101_SOFSCALERS_onion_t scalers;
@@ -170,7 +170,7 @@ void filltree(int runnum)
 	musiccalfilename = sofiacaldir + "music_highgain.par";
       } else {
 	frs_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + ".par";
-	if(FRSsetting[i] <= 11){
+	if(FRSsetting[i] < 11){
 	  fragment_paramfile = sofiacaldir + "FRS13_empty.par";
 	} else {
 	  switch (targetpos[i])
@@ -249,7 +249,7 @@ void filltree(int runnum)
     R3BSofWhiterabbitReader* unpackWRSofia;
     R3BAmsReader* unpackams;
     R3BCalifaFebexReader* unpackcalifa;
-    //R3BWhiterabbitCalifaReader* unpackWRCalifa;
+    R3BWhiterabbitCalifaReader* unpackWRCalifa;
     R3BMwpcReader* unpackmwpc;
     R3BTwimReader* unpacktwim;
     R3BSofTofWReader* unpacktofw;
@@ -282,8 +282,8 @@ void filltree(int runnum)
     {
         unpackcalifa =
 	  new R3BCalifaFebexReader((EXT_STR_h101_CALIFA*)&ucesb_struct.califa, offsetof(EXT_STR_h101, califa));
-        //unpackWRCalifa = new R3BWhiterabbitCalifaReader(
-        //    (EXT_STR_h101_WRCALIFA*)&ucesb_struct.wrcalifa, offsetof(EXT_STR_h101, wrcalifa), 0xa00, 0xb00);
+        unpackWRCalifa = new R3BWhiterabbitCalifaReader(
+            (EXT_STR_h101_WRCALIFA*)&ucesb_struct.wrcalifa, offsetof(EXT_STR_h101, wrcalifa), 0xa00, 0xb00);
     }
 
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
@@ -330,8 +330,8 @@ void filltree(int runnum)
     {
         unpackcalifa->SetOnline(NOTstoremappeddata);
         source->AddReader(unpackcalifa);
-        //unpackWRCalifa->SetOnline(NOTstoremappeddata);
-        //source->AddReader(unpackWRCalifa);
+        unpackWRCalifa->SetOnline(NOTstoremappeddata);
+        source->AddReader(unpackWRCalifa);
     }
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
     {
