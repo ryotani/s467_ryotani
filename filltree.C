@@ -20,198 +20,230 @@ typedef struct EXT_STR_h101_t
     EXT_STR_h101_SOFMWPC_onion_t mwpc;
     EXT_STR_h101_MUSIC_onion_t music;
     EXT_STR_h101_SOFSCI_onion_t sci;
-    //EXT_STR_h101_AMS_t ams;
+    // EXT_STR_h101_AMS_t ams;
     EXT_STR_h101_WRMASTER_t wrmaster;
     EXT_STR_h101_WRSOFIA_t wrsofia;
     EXT_STR_h101_WRS2_t wrs2;
     EXT_STR_h101_WRS8_t wrs8;
     EXT_STR_h101_CALIFA_t califa;
-    EXT_STR_h101_WRCALIFA_t wrcalifa;
+    // EXT_STR_h101_WRCALIFA_t wrcalifa;
     EXT_STR_h101_SOFTWIM_onion_t twim;
     EXT_STR_h101_SOFTOFW_onion_t tofw;
     EXT_STR_h101_SOFSCALERS_onion_t scalers;
-    EXT_STR_h101_raw_nnp_tamex_onion_t raw_nnp; //EXT_STR_h101_raw_nnp_tamex_t raw_nnp;
-    //EXT_STR_h101_WRNEULAND_t wrneuland;
+    EXT_STR_h101_raw_nnp_tamex_onion_t raw_nnp; // EXT_STR_h101_raw_nnp_tamex_t raw_nnp;
+    // EXT_STR_h101_WRNEULAND_t wrneuland;
     EXT_STR_h101_FRS_t frs;
 } EXT_STR_h101;
 
 void filltree(int runnum);
 
-void filltree(){
-  filltree(340);
-}
+void filltree() { filltree(340); }
 
 void filltree(int runnum)
 {
     TStopwatch timer;
     timer.Start();
-    
+
     // NumSofSci, file names and paths -----------------------------
     Int_t sofiaWR, NumSofSci, IdS2, IdS8;
-    TString ntuple_options = "RAW";//"RAW,time-stitch=1000" // For no stitched data
+    TString ntuple_options = "RAW"; //"RAW,time-stitch=1000" // For no stitched data
     TString filename, outputFilename, frs_paramfile, fragment_paramfile, common_paramfile, musiccalfilename;
     Double_t brho28;
     //-------------------------------------------------------------------------
-    //added by KB for NeuLAND:
+    // added by KB for NeuLAND:
     const Int_t nBarsPerPlane = 50; // number of scintillator bars per plane
     const Int_t nPlanes = 16;       // number of planes (for TCAL calibration)
     const double distanceToTarget = 1520.;
     const Int_t trigger = -1; // 1 - onspill, 2 - offspill. -1 - all
     double timeoffset = 0.;
-    if (262<runnum & runnum<269) {
-      timeoffset = 4202.+6.2;
-    } else if (276<runnum & runnum<304) {
-      timeoffset = 7200.+78.0; //check spectra
-    } else if (303<runnum & runnum<359) {
-      timeoffset = 7200.+58.0; //check spectra
-    } else if (367<runnum & runnum<381) {
-      timeoffset = 10610.+0.3; //check spectra
+    if (262 < runnum & runnum < 269)
+    {
+        timeoffset = 4202. + 6.2;
     }
-
+    else if (276 < runnum & runnum < 304)
+    {
+        timeoffset = 7200. + 78.0; // check spectra
+    }
+    else if (303 < runnum & runnum < 359)
+    {
+        timeoffset = 7200. + 58.0; // check spectra
+    }
+    else if (367 < runnum & runnum < 381)
+    {
+        timeoffset = 10610. + 0.3; // check spectra
+    }
 
     // associate parameter file:
 #define LENGTH(x) (sizeof x / sizeof *x)
 
-    Int_t calib_file[400]={0};
-    Int_t two[]={328,330,357};
-    Int_t three[]={281,284,287,294,297,300,308,311,318,321,332,335,342,345,348,351,354};
-    Int_t four[]={277,290,314,324,338,368,372};
-    Int_t five[]={303,376};
-    Int_t six[]={263};
-	    
-    for (Int_t i=0;i<LENGTH(calib_file); i++)
-      {   
-	for (Int_t j=0;j<LENGTH(two);j++)
-	  {   
-	    for (Int_t iruns=0;iruns<2;iruns++)  calib_file[two[j]+iruns] = two[j];
-	  }   
-	for (Int_t j=0;j<LENGTH(three);j++)
-	  {   
-	    for (Int_t iruns=0;iruns<3;iruns++)  calib_file[three[j]+iruns] = three[j];
-	  }   
-	for (Int_t j=0;j<LENGTH(four);j++)
-	  {   
-	    for (Int_t iruns=0;iruns<4;iruns++)  calib_file[four[j]+iruns] = four[j];
-	  }   
-	for (Int_t j=0;j<LENGTH(five);j++)
-	  {   
-	    for (Int_t iruns=0;iruns<5;iruns++)  calib_file[five[j]+iruns] = five[j];
-	  }
-	for (Int_t j=0;j<LENGTH(six);j++)
-	  {   
-	    for (Int_t iruns=0;iruns<6;iruns++)  calib_file[six[j]+iruns] = six[j];
-	  }
-      } 
+    Int_t calib_file[400] = { 0 };
+    Int_t two[] = { 328, 330, 357 };
+    Int_t three[] = { 281, 284, 287, 294, 297, 300, 308, 311, 318, 321, 332, 335, 342, 345, 348, 351, 354 };
+    Int_t four[] = { 277, 290, 314, 324, 338, 368, 372 };
+    Int_t five[] = { 303, 376 };
+    Int_t six[] = { 263 };
+
+    for (Int_t i = 0; i < LENGTH(calib_file); i++)
+    {
+        for (Int_t j = 0; j < LENGTH(two); j++)
+        {
+            for (Int_t iruns = 0; iruns < 2; iruns++)
+                calib_file[two[j] + iruns] = two[j];
+        }
+        for (Int_t j = 0; j < LENGTH(three); j++)
+        {
+            for (Int_t iruns = 0; iruns < 3; iruns++)
+                calib_file[three[j] + iruns] = three[j];
+        }
+        for (Int_t j = 0; j < LENGTH(four); j++)
+        {
+            for (Int_t iruns = 0; iruns < 4; iruns++)
+                calib_file[four[j] + iruns] = four[j];
+        }
+        for (Int_t j = 0; j < LENGTH(five); j++)
+        {
+            for (Int_t iruns = 0; iruns < 5; iruns++)
+                calib_file[five[j] + iruns] = five[j];
+        }
+        for (Int_t j = 0; j < LENGTH(six); j++)
+        {
+            for (Int_t iruns = 0; iruns < 6; iruns++)
+                calib_file[six[j] + iruns] = six[j];
+        }
+    }
     const TString syncParFileName = TString::Format("/u/boretzky/s467/params_new_sync_%04d.root", calib_file[runnum]);
     cout << "NeuLAND calibration parameters from:   " << syncParFileName << endl;
 
     //-------------------------------------------------------------------------
 
-    if(runnum==0){
-      //filename = "--stream=lxlanddaq01:9000";
-      cerr<<"No online analysis available"<<endl;
-      return 1;
-    }else if (expId==444){ // not modified
-      NumSofSci = 1; // s444: PRIMARY BEAM EXP, 1 SofSci at CAVE C ONLY
-      IdS2 = 0;
-      IdS8 = 0;
-      sofiaWR = 0x500;
-      
-      filename = "/lustre/land/202002_s444/stitched/main0040_0001.lmd";
-      outputFilename = "data_s444_online.root";
-      
-      upexps_dir = ucesb_dir + "/../upexps/";                      // for local computers
-      // upexps_dir = "/u/land/fake_cvmfs/upexps";                 // for lxlandana computers
-      // upexps_dir = "/u/land/lynx.landexp/202002_s444/upexps/";  // for lxg computers
-      ucesb_path = upexps_dir + "/202002_s444/202002_s444 --allow-errors --input-buffer=100Mi";
-      
-      sofiacaldir = dir + "/sofia/macros/s444/parameters/";
+    if (runnum == 0)
+    {
+        // filename = "--stream=lxlanddaq01:9000";
+        cerr << "No online analysis available" << endl;
+        return 1;
     }
-    else if (expId==467){
-      NumSofSci = 4; // s467: SECONDARY BEAM EXP, 2 at S2, 1 at S8, 1 at CAVE C
-      IdS2 = 2;
-      IdS8 = 3;
-      sofiaWR = 0xe00;
+    else if (expId == 444)
+    {                  // not modified
+        NumSofSci = 1; // s444: PRIMARY BEAM EXP, 1 SofSci at CAVE C ONLY
+        IdS2 = 0;
+        IdS8 = 0;
+        sofiaWR = 0x500;
 
-      if(!RunList.is_open()) std::cerr <<"No run summary found\n";
-      int runnumcsv[500], targetpos[500], musicgain[500], junk[500];
-      int FRSsetting[500]; // calib:0, ToFCalib:6-8, 40Ca:9, 39Ca:10, 38Ca:11,12, 50Ca:13, ToFWcalib:14
-      string dummyline;
-      char dumchar;
-      double brhocsv[500];
-      std::getline (RunList, dummyline);
-      Int_t i=0;
-      
-      while(true){
-	RunList>>runnumcsv[i]>>dumchar>>FRSsetting[i]>>dumchar>>brhocsv[i]>>dumchar>>targetpos[i]>>dumchar>>musicgain[i]>>dumchar>>junk[i];
-	//std::cout<<runnumcsv[i]<<dumchar<<FRSsetting[i]<<dumchar<<brhocsv[i]<<dumchar<<targetpos[i]<<dumchar<<musicgain[i]<<dumchar<<junk[i]<<std::endl;
-	if(runnumcsv[i] == runnum){
-	  if(junk[i] == 0){
-	    // if(targetpos[i]!=1424) return;
-	    brho28 = brhocsv[i];
-	    break;
-	  } else {
-	    std::cout << "Junk run" << std::endl;
-	    return;
-	  }
-	}
-	if(i > 400 || !RunList.good()){
-	  std::cerr << "No info for run found" <<std::endl;
-	  return;
-	}
-	i++;
-      }
-      
-      filename = dir_rawfile;
-      filename.Append(Form("main%04d_*.lmd", runnum));
-      //
-      if(FRSsetting[i] < 9){//Default
-	frs_paramfile = sofiacaldir + "FRS13.par";
-	musiccalfilename = sofiacaldir + "music_highgain.par";
-      } else {
-	frs_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + ".par";
-	if(FRSsetting[i] < 11){
-	  fragment_paramfile = sofiacaldir + "FRS13_empty.par";
-	} else {
-	  switch (targetpos[i])
-	    {
-	    case 539:
-	      fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_ch2.par";
-	      break;
-	    case 362:
-	      fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_carbon.par";
-	      break;
-	    default:
-	      fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_empty.par";
-	      break;
-	    }
-	}
-	if(musicgain[i] == 0){
-	  musiccalfilename = sofiacaldir + "music_lowgain.par";	
-	} else {
-	  musiccalfilename = sofiacaldir + "music_highgain.par";
-	}
-      }
-      common_paramfile = sofiacaldir + "common.par";
-      //
-      auto datime = new TDatime();
-      TString str_datime = datime->AsString();
-      string month = str_datime(4,3);
-      outputFilename = dir_output;
-      outputFilename.Append(Form("s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str()));
+        filename = "/lustre/land/202002_s444/stitched/main0040_0001.lmd";
+        outputFilename = "data_s444_online.root";
 
-      std::cout << "LMD FILE: " << filename << std::endl;
-      std::cout << "PARAM FILE (Common): " << common_paramfile << std::endl;
-      std::cout << "PARAM FILE (MUSIC CAL): " << musiccalfilename << std::endl;
-      std::cout << "PARAM FILE (FRS): " << frs_paramfile << std::endl;
-      std::cout << "PARAM FILE (FRAGMENT): " << fragment_paramfile << std::endl;
-      std::cout << "OUTPUT FILE: " << outputFilename << std::endl;
-      std::cout << "Brho28: " << brho28 << std::endl;
-      
+        upexps_dir = ucesb_dir + "/../upexps/"; // for local computers
+        // upexps_dir = "/u/land/fake_cvmfs/upexps";                 // for lxlandana computers
+        // upexps_dir = "/u/land/lynx.landexp/202002_s444/upexps/";  // for lxg computers
+        ucesb_path = upexps_dir + "/202002_s444/202002_s444 --allow-errors --input-buffer=100Mi";
+
+        sofiacaldir = dir + "/sofia/macros/s444/parameters/";
     }
-    else{
-      std::cout << "Experiment was not selected" << std::endl;
-      gApplication->Terminate();
+    else if (expId == 467)
+    {
+        NumSofSci = 4; // s467: SECONDARY BEAM EXP, 2 at S2, 1 at S8, 1 at CAVE C
+        IdS2 = 2;
+        IdS8 = 3;
+        sofiaWR = 0xe00;
+
+        if (!RunList.is_open())
+            std::cerr << "No run summary found\n";
+        int runnumcsv[500], targetpos[500], musicgain[500], junk[500];
+        int FRSsetting[500]; // calib:0, ToFCalib:6-8, 40Ca:9, 39Ca:10, 38Ca:11,12, 50Ca:13, ToFWcalib:14
+        string dummyline;
+        char dumchar;
+        double brhocsv[500];
+        std::getline(RunList, dummyline);
+        Int_t i = 0;
+
+        while (true)
+        {
+            RunList >> runnumcsv[i] >> dumchar >> FRSsetting[i] >> dumchar >> brhocsv[i] >> dumchar >> targetpos[i] >>
+                dumchar >> musicgain[i] >> dumchar >> junk[i];
+            // std::cout<<runnumcsv[i]<<dumchar<<FRSsetting[i]<<dumchar<<brhocsv[i]<<dumchar<<targetpos[i]<<dumchar<<musicgain[i]<<dumchar<<junk[i]<<std::endl;
+            if (runnumcsv[i] == runnum)
+            {
+                if (junk[i] == 0)
+                {
+                    // if(targetpos[i]!=1424) return;
+                    brho28 = brhocsv[i];
+                    break;
+                }
+                else
+                {
+                    std::cout << "Junk run" << std::endl;
+                    return;
+                }
+            }
+            if (i > 400 || !RunList.good())
+            {
+                std::cerr << "No info for run found" << std::endl;
+                return;
+            }
+            i++;
+        }
+
+        filename = dir_rawfile;
+        filename.Append(Form("main%04d_*.lmd", runnum));
+        //
+        if (FRSsetting[i] < 9)
+        { // Default
+            frs_paramfile = sofiacaldir + "FRS13.par";
+            musiccalfilename = sofiacaldir + "music_highgain.par";
+        }
+        else
+        {
+            frs_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + ".par";
+            if (FRSsetting[i] < 11)
+            {
+                fragment_paramfile = sofiacaldir + "FRS13_empty.par";
+            }
+            else
+            {
+                switch (targetpos[i])
+                {
+                    case 539:
+                        fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_ch2.par";
+                        break;
+                    case 362:
+                        fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_carbon.par";
+                        break;
+                    default:
+                        fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_empty.par";
+                        break;
+                }
+            }
+            if (musicgain[i] == 0)
+            {
+                musiccalfilename = sofiacaldir + "music_lowgain.par";
+            }
+            else
+            {
+                musiccalfilename = sofiacaldir + "music_highgain.par";
+            }
+        }
+        common_paramfile = sofiacaldir + "common.par";
+        //
+        auto datime = new TDatime();
+        TString str_datime = datime->AsString();
+        string month = str_datime(4, 3);
+        outputFilename = dir_output;
+        outputFilename.Append(
+            Form("s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str()));
+
+        std::cout << "LMD FILE: " << filename << std::endl;
+        std::cout << "PARAM FILE (Common): " << common_paramfile << std::endl;
+        std::cout << "PARAM FILE (MUSIC CAL): " << musiccalfilename << std::endl;
+        std::cout << "PARAM FILE (FRS): " << frs_paramfile << std::endl;
+        std::cout << "PARAM FILE (FRAGMENT): " << fragment_paramfile << std::endl;
+        std::cout << "PARAM FILE (CALIFA): " << califacalfilename << std::endl;
+        std::cout << "OUTPUT FILE: " << outputFilename << std::endl;
+        std::cout << "Brho28: " << brho28 << std::endl;
+    }
+    else
+    {
+        std::cout << "Experiment was not selected" << std::endl;
+        gApplication->Terminate();
     }
     // Output file -----------------------------------------
     ucesb_path.ReplaceAll("//", "/");
@@ -223,9 +255,8 @@ void filltree(int runnum)
     califacalfilename.ReplaceAll("//", "/");
 
     // Online server configuration --------------------------
-    Int_t refresh = 100; // Refresh rate for online histograms
+    Int_t refresh = 100;         // Refresh rate for online histograms
     Int_t port = 10000 + runnum; // Port number for the online visualization, example lxgXXXX:8888
-
 
     // Create source using ucesb for input ------------------
     EXT_STR_h101 ucesb_struct;
@@ -235,11 +266,12 @@ void filltree(int runnum)
     source->SetMaxEvents(nev);
 
     // Definition of reader ---------------------------------
-    source->AddReader(new R3BUnpackReader(&ucesb_struct.unpack,offsetof(EXT_STR_h101, unpack)));
-    auto TrloiiReader = new R3BTrloiiTpatReader(&ucesb_struct.unpacktpat,offsetof(EXT_STR_h101, unpacktpat));
-    TrloiiReader->SetTpatRange(1,4); // Select tpat condition : 1=min vias, 2=califaOR(p), 3=neuland, 4=califa&neuland, 8=califa off, 9=neuland off.
+    source->AddReader(new R3BUnpackReader(&ucesb_struct.unpack, offsetof(EXT_STR_h101, unpack)));
+    auto TrloiiReader = new R3BTrloiiTpatReader(&ucesb_struct.unpacktpat, offsetof(EXT_STR_h101, unpacktpat));
+    TrloiiReader->SetTpatRange(1, 4); // Select tpat condition : 1=min vias, 2=califaOR(p), 3=neuland, 4=califa&neuland,
+                                      // 8=califa off, 9=neuland off.
     source->AddReader(TrloiiReader);
-    
+
     R3BFrsReaderNov19* unpackfrs;
     R3BMusicReader* unpackmusic;
     R3BSofSciReader* unpacksci;
@@ -249,41 +281,46 @@ void filltree(int runnum)
     R3BSofWhiterabbitReader* unpackWRSofia;
     R3BAmsReader* unpackams;
     R3BCalifaFebexReader* unpackcalifa;
-    R3BWhiterabbitCalifaReader* unpackWRCalifa;
+    // R3BWhiterabbitCalifaReader* unpackWRCalifa;
     R3BMwpcReader* unpackmwpc;
     R3BTwimReader* unpacktwim;
     R3BSofTofWReader* unpacktofw;
     R3BSofScalersReader* unpackscalers;
     R3BNeulandTamexReader* unpackneuland;
-    //R3BWhiterabbitNeulandReader* unpackWRNeuland;
+    // R3BWhiterabbitNeulandReader* unpackWRNeuland;
 
     if (fFrs)
-      unpackfrs= new R3BFrsReaderNov19((EXT_STR_h101_FRS*)&ucesb_struct.frs,
-					     offsetof(EXT_STR_h101, frs));
+        unpackfrs = new R3BFrsReaderNov19((EXT_STR_h101_FRS*)&ucesb_struct.frs, offsetof(EXT_STR_h101, frs));
 
     if (fMusic)
         unpackmusic = new R3BMusicReader((EXT_STR_h101_MUSIC_t*)&ucesb_struct.music, offsetof(EXT_STR_h101, music));
-    
-    if(fFrsSci) {
-     unpackWRS2 = new R3BWhiterabbitS2Reader(
-            (EXT_STR_h101_WRS2*)&ucesb_struct.wrs2, offsetof(EXT_STR_h101, wrs2), 0x200);
-     unpackWRS8 = new R3BWhiterabbitS8Reader(
-            (EXT_STR_h101_WRS8*)&ucesb_struct.wrs8, offsetof(EXT_STR_h101, wrs8), 0x800);
+
+    if (fFrsSci)
+    {
+        unpackWRS2 =
+            new R3BWhiterabbitS2Reader((EXT_STR_h101_WRS2*)&ucesb_struct.wrs2, offsetof(EXT_STR_h101, wrs2), 0x200);
+        unpackWRS8 =
+            new R3BWhiterabbitS8Reader((EXT_STR_h101_WRS8*)&ucesb_struct.wrs8, offsetof(EXT_STR_h101, wrs8), 0x800);
     }
 
     if (fSci)
     {
-      unpacksci = new R3BSofSciReader((EXT_STR_h101_SOFSCI_t*)&ucesb_struct.sci, offsetof(EXT_STR_h101, sci),NumSofSci);
-      unpackWRMaster = new R3BWhiterabbitMasterReader((EXT_STR_h101_WRMASTER*)&ucesb_struct.wrmaster, offsetof(EXT_STR_h101, wrmaster), 0x300);
-      unpackWRSofia = new R3BSofWhiterabbitReader((EXT_STR_h101_WRSOFIA*)&ucesb_struct.wrsofia, offsetof(EXT_STR_h101, wrsofia), sofiaWR, 0xf00); // No sofiaWR2 available but tentatively assign as 0xf00.
+        unpacksci =
+            new R3BSofSciReader((EXT_STR_h101_SOFSCI_t*)&ucesb_struct.sci, offsetof(EXT_STR_h101, sci), NumSofSci);
+        unpackWRMaster = new R3BWhiterabbitMasterReader(
+            (EXT_STR_h101_WRMASTER*)&ucesb_struct.wrmaster, offsetof(EXT_STR_h101, wrmaster), 0x300);
+        unpackWRSofia = new R3BSofWhiterabbitReader((EXT_STR_h101_WRSOFIA*)&ucesb_struct.wrsofia,
+                                                    offsetof(EXT_STR_h101, wrsofia),
+                                                    sofiaWR,
+                                                    0xf00); // No sofiaWR2 available but tentatively assign as 0xf00.
     }
 
     if (fCalifa)
     {
         unpackcalifa =
-	  new R3BCalifaFebexReader((EXT_STR_h101_CALIFA*)&ucesb_struct.califa, offsetof(EXT_STR_h101, califa));
-        unpackWRCalifa = new R3BWhiterabbitCalifaReader(
-            (EXT_STR_h101_WRCALIFA*)&ucesb_struct.wrcalifa, offsetof(EXT_STR_h101, wrcalifa), 0xa00, 0xb00);
+            new R3BCalifaFebexReader((EXT_STR_h101_CALIFA*)&ucesb_struct.califa, offsetof(EXT_STR_h101, califa));
+        // unpackWRCalifa = new R3BWhiterabbitCalifaReader(
+        //    (EXT_STR_h101_WRCALIFA*)&ucesb_struct.wrcalifa, offsetof(EXT_STR_h101, wrcalifa), 0xa00, 0xb00);
     }
 
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
@@ -293,7 +330,7 @@ void filltree(int runnum)
     if (fTofW)
         unpacktofw = new R3BSofTofWReader((EXT_STR_h101_SOFTOFW_t*)&ucesb_struct.tofw, offsetof(EXT_STR_h101, tofw));
     if (fNeuland)
-      unpackneuland = new R3BNeulandTamexReader(&ucesb_struct.raw_nnp, offsetof(EXT_STR_h101,raw_nnp));
+        unpackneuland = new R3BNeulandTamexReader(&ucesb_struct.raw_nnp, offsetof(EXT_STR_h101, raw_nnp));
     if (fScalers)
         unpackscalers =
             new R3BSofScalersReader((EXT_STR_h101_SOFSCALERS_t*)&ucesb_struct.scalers, offsetof(EXT_STR_h101, scalers));
@@ -301,8 +338,8 @@ void filltree(int runnum)
 
     if (fFrs)
     {
-     unpackfrs->SetOnline(NOTstoremappeddata);
-     source->AddReader(unpackfrs);
+        unpackfrs->SetOnline(NOTstoremappeddata);
+        source->AddReader(unpackfrs);
     }
 
     if (fMusic)
@@ -320,7 +357,8 @@ void filltree(int runnum)
         source->AddReader(unpackWRSofia);
     }
 
-    if(fFrsSci) {
+    if (fFrsSci)
+    {
         unpackWRS2->SetOnline(NOTstoremappeddata);
         source->AddReader(unpackWRS2);
         unpackWRS8->SetOnline(NOTstoremappeddata);
@@ -330,8 +368,8 @@ void filltree(int runnum)
     {
         unpackcalifa->SetOnline(NOTstoremappeddata);
         source->AddReader(unpackcalifa);
-        unpackWRCalifa->SetOnline(NOTstoremappeddata);
-        source->AddReader(unpackWRCalifa);
+        // unpackWRCalifa->SetOnline(NOTstoremappeddata);
+        // source->AddReader(unpackWRCalifa);
     }
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
     {
@@ -349,10 +387,10 @@ void filltree(int runnum)
         source->AddReader(unpacktofw);
     }
     if (fNeuland)
-      {
-	unpackneuland->SetOnline(NOTstoremappeddata);
-	source->AddReader(unpackneuland);
-      }
+    {
+        unpackneuland->SetOnline(NOTstoremappeddata);
+        source->AddReader(unpackneuland);
+    }
     if (fScalers)
     {
         unpackscalers->SetOnline(NOTstoremappeddata);
@@ -369,15 +407,15 @@ void filltree(int runnum)
 
     // Runtime data base ------------------------------------
     FairRuntimeDb* rtdb = run->GetRuntimeDb();
-    
+
     FairParAsciiFileIo* parIo1 = new FairParAsciiFileIo(); // Ascii
     if (!fCalifa)
     {
         TList* parList1 = new TList();
-	parList1->Add(new TObjString(musiccalfilename));
+        parList1->Add(new TObjString(musiccalfilename));
         parList1->Add(new TObjString(frs_paramfile));
-	parList1->Add(new TObjString(fragment_paramfile));
-	parList1->Add(new TObjString(common_paramfile));
+        parList1->Add(new TObjString(fragment_paramfile));
+        parList1->Add(new TObjString(common_paramfile));
         parIo1->open(parList1, "in");
         rtdb->setFirstInput(parIo1);
     }
@@ -386,10 +424,10 @@ void filltree(int runnum)
         if (!fCal_level_califa)
         { // SOFIA and CALIFA mapping: Ascii files
             TList* parList1 = new TList();
-	    parList1->Add(new TObjString(musiccalfilename));
+            parList1->Add(new TObjString(musiccalfilename));
             parList1->Add(new TObjString(frs_paramfile));
-	    parList1->Add(new TObjString(fragment_paramfile));
-	    parList1->Add(new TObjString(common_paramfile));
+            parList1->Add(new TObjString(fragment_paramfile));
+            parList1->Add(new TObjString(common_paramfile));
             parList1->Add(new TObjString(califamapfilename));
             parIo1->open(parList1);
             rtdb->setFirstInput(parIo1);
@@ -397,13 +435,12 @@ void filltree(int runnum)
         else
         { // SOFIA, CALIFA mapping and CALIFA calibration parameters
             TList* parList1 = new TList();
-	    parList1->Add(new TObjString(musiccalfilename));
+            parList1->Add(new TObjString(musiccalfilename));
             parList1->Add(new TObjString(frs_paramfile));
-	    parList1->Add(new TObjString(fragment_paramfile));
+            parList1->Add(new TObjString(fragment_paramfile));
             parList1->Add(new TObjString(common_paramfile));
             parIo1->open(parList1, "in");
-	    rtdb->setFirstInput(parIo1);
-            rtdb->print();
+            rtdb->setFirstInput(parIo1);
             Bool_t kParameterMerged = kFALSE;
             FairParRootFileIo* parIo2 = new FairParRootFileIo(kParameterMerged); // Root file
             TList* parList2 = new TList();
@@ -413,30 +450,30 @@ void filltree(int runnum)
         }
     }
     if (fNeuland)
-      {
-	//added by KB: root file for NeuLAND - test with one file
-	auto parIO = new FairParRootFileIo(false);
-	parIO->open(syncParFileName,"in");
-	rtdb->setSecondInput(parIO);
+    {
+        // added by KB: root file for NeuLAND - test with one file
+        auto parIO = new FairParRootFileIo(false);
+        parIO->open(syncParFileName, "in");
+        rtdb->setSecondInput(parIO);
         rtdb->addRun(999);
-	rtdb->getContainer("LandTCalPar");
+        rtdb->getContainer("LandTCalPar");
         rtdb->setInputVersion(999, (char*)"LandTCalPar", 1, 1);
         rtdb->getContainer("NeulandHitPar");
         rtdb->setInputVersion(999, (char*)"NeulandHitPar", 1, 1);
         cout << "did neuland stuff for rtdb" << endl;
-      }
+    }
     rtdb->print();
 
     // Add analysis task ------------------------------------
     // TPCs at S2
     if (fFrsTpcs)
     {
-      R3BTpcMapped2Cal* TpcMap2Cal = new R3BTpcMapped2Cal();
-      TpcMap2Cal->SetOnline(NOTstorecaldata);
-      run->AddTask(TpcMap2Cal);
-      R3BTpcCal2Hit* TpcCal2Hit = new R3BTpcCal2Hit();
-      TpcCal2Hit->SetOnline(NOTstorehitdata);
-      run->AddTask(TpcCal2Hit);
+        R3BTpcMapped2Cal* TpcMap2Cal = new R3BTpcMapped2Cal();
+        TpcMap2Cal->SetOnline(NOTstorecaldata);
+        run->AddTask(TpcMap2Cal);
+        R3BTpcCal2Hit* TpcCal2Hit = new R3BTpcCal2Hit();
+        TpcCal2Hit->SetOnline(NOTstorehitdata);
+        run->AddTask(TpcCal2Hit);
     }
     // MWPC0
     if (fMwpc0)
@@ -477,14 +514,14 @@ void filltree(int runnum)
         // --- SingleTcal 2 Hit for SofSci
         R3BSofSciSingleTcal2Hit* SofSciSTcal2Hit = new R3BSofSciSingleTcal2Hit();
         SofSciSTcal2Hit->SetOnline(NOTstorehitdata);
-        SofSciSTcal2Hit->SetCalParams(675.,-1922.);//ToF calibration at Cave-C
+        SofSciSTcal2Hit->SetCalParams(675., -1922.); // ToF calibration at Cave-C
         run->AddTask(SofSciSTcal2Hit);
-	//
-	// for CALIFA and Neuland
-	R3BEventHeaderPropagator *RunIdTask = new R3BEventHeaderPropagator();
-	run->AddTask(RunIdTask);
-	auto sofstart = new R3BSofiaProvideTStart();
-	run->AddTask(sofstart);
+        //
+        // for CALIFA and Neuland
+        R3BEventHeaderPropagator* RunIdTask = new R3BEventHeaderPropagator();
+        run->AddTask(RunIdTask);
+        auto sofstart = new R3BSofiaProvideTStart();
+        run->AddTask(sofstart);
     }
 
     // CALIFA
@@ -495,15 +532,45 @@ void filltree(int runnum)
         CalifaMap2Cal->SetOnline(NOTstorecaldata);
         run->AddTask(CalifaMap2Cal);
         // R3BCalifaCrystalCal2Hit ---
-        R3BCalifaCrystalCal2Hit* CalifaCal2Hit = new R3BCalifaCrystalCal2Hit();
-        CalifaCal2Hit->SetCrystalThreshold(100.); // 100keV
-        CalifaCal2Hit->SetDRThreshold(10000.);    // 10MeV
-        CalifaCal2Hit->SetOnline(NOTstorehitdata);
-        run->AddTask(CalifaCal2Hit);
+        {
+            R3BCalifaCrystalCal2Hit* CalifaCal2Hit = new R3BCalifaCrystalCal2Hit();
+            CalifaCal2Hit->SetCrystalThreshold(100.); // 100keV
+            CalifaCal2Hit->SetDRThreshold(10000.);    // 10MeV
+            CalifaCal2Hit->SetOnline(NOTstorehitdata);
+            CalifaCal2Hit->SetRoundWindowAlg(0.20); // radian
+            CalifaCal2Hit->SelectGeometryVersion(2020);
+            CalifaCal2Hit->SetRandomization(false);
+            //CalifaCal2Hit->SetTCAName("CalifaHitData_Round020");
+            run->AddTask(CalifaCal2Hit);
+        }
+	/*
+        {
+            R3BCalifaCrystalCal2Hit* CalifaCal2Hit = new R3BCalifaCrystalCal2Hit();
+            CalifaCal2Hit->SetCrystalThreshold(100.); // 100keV
+            CalifaCal2Hit->SetDRThreshold(10000.);    // 10MeV
+            CalifaCal2Hit->SetOnline(NOTstorehitdata);
+            CalifaCal2Hit->SetSquareWindowAlg(0.20, 0.20);
+            CalifaCal2Hit->SelectGeometryVersion(2020);
+            CalifaCal2Hit->SetRandomization(false);
+            CalifaCal2Hit->SetTCAName("CalifaHitDataSquare");
+            run->AddTask(CalifaCal2Hit);
+        }
 
-        //R3BCalifaHitp2p* califaP2p = new R3BCalifaHitp2p();
-        //califaP2p->SetOnline(NOTstorecaldata);
-        //run->AddTask(califaP2p);
+        {
+            R3BCalifaCrystalCal2Hit* CalifaCal2Hit = new R3BCalifaCrystalCal2Hit();
+            CalifaCal2Hit->SetCrystalThreshold(100.); // 100keV
+            CalifaCal2Hit->SetDRThreshold(10000.);    // 10MeV
+            CalifaCal2Hit->SetOnline(NOTstorehitdata);
+            CalifaCal2Hit->SetConeAlg(0.20);
+            CalifaCal2Hit->SelectGeometryVersion(2020);
+            CalifaCal2Hit->SetRandomization(false);
+            CalifaCal2Hit->SetTCAName("CalifaHitData_Cone020");
+            run->AddTask(CalifaCal2Hit);
+        }
+	*/
+        // R3BCalifaHitp2p* califaP2p = new R3BCalifaHitp2p();
+        // califaP2p->SetOnline(NOTstorecaldata);
+        // run->AddTask(califaP2p);
     }
 
     // MWPC1
@@ -514,7 +581,7 @@ void filltree(int runnum)
         run->AddTask(MW1Map2Cal);
 
         R3BMwpc1Cal2Hit* MW1Cal2Hit = new R3BMwpc1Cal2Hit();
-	//MW1Cal2Hit->SetExpId(expId);
+        // MW1Cal2Hit->SetExpId(expId);
         MW1Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW1Cal2Hit);
     }
@@ -524,12 +591,12 @@ void filltree(int runnum)
     {
         R3BTwimMapped2Cal* TwimMap2Cal = new R3BTwimMapped2Cal();
         TwimMap2Cal->SetOnline(NOTstorecaldata);
-	//TwimMap2Cal->SetExpId(expId);
+        // TwimMap2Cal->SetExpId(expId);
         run->AddTask(TwimMap2Cal);
 
         R3BTwimCal2Hit* TwimCal2Hit = new R3BTwimCal2Hit();
         TwimCal2Hit->SetOnline(NOTstorehitdata);
-        //TwimCal2Hit->SetExpId(expId);
+        // TwimCal2Hit->SetExpId(expId);
         run->AddTask(TwimCal2Hit);
     }
 
@@ -541,7 +608,7 @@ void filltree(int runnum)
         run->AddTask(MW2Map2Cal);
 
         R3BMwpc2Cal2Hit* MW2Cal2Hit = new R3BMwpc2Cal2Hit();
-	//MW2Cal2Hit->SetExpId(expId);
+        // MW2Cal2Hit->SetExpId(expId);
         MW2Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW2Cal2Hit);
     }
@@ -554,7 +621,7 @@ void filltree(int runnum)
         run->AddTask(MW3Map2Cal);
 
         R3BMwpc3Cal2Hit* MW3Cal2Hit = new R3BMwpc3Cal2Hit();
-	//MW3Cal2Hit->SetExpId(expId);
+        // MW3Cal2Hit->SetExpId(expId);
         MW3Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW3Cal2Hit);
     }
@@ -574,50 +641,50 @@ void filltree(int runnum)
 
         // --- Tcal 2 Hit for SofTofW :
         R3BSofTofWSingleTCal2Hit* SofTofWTcal2Hit = new R3BSofTofWSingleTCal2Hit();
-	//SofTofWTcal2Hit->SetTofLISE(43.); // Code to be updated. No need for setTof. It is set from param
+        // SofTofWTcal2Hit->SetTofLISE(43.); // Code to be updated. No need for setTof. It is set from param
         SofTofWTcal2Hit->SetOnline(NOTstorehitdata);
-	SofTofWTcal2Hit->SetExpId(467); ///// Codes to be updated
+        // SofTofWTcal2Hit->SetExpId(467); ///// Codes to be updated
         run->AddTask(SofTofWTcal2Hit);
     }
 
     // NeuLAND
     if (fNeuland)
     {
-	auto tcal = new R3BNeulandMapped2Cal();
+        auto tcal = new R3BNeulandMapped2Cal();
         tcal->SetTrigger(trigger);
         tcal->SetNofModules(nPlanes, nBarsPerPlane);
         tcal->SetNhitmin(1);
         tcal->EnableWalk(true);
         run->AddTask(tcal);
-			    
-       auto nlhit = new R3BNeulandCal2Hit();
-       nlhit->SetDistanceToTarget(distanceToTarget);
-       nlhit->SetGlobalTimeOffset(timeoffset);
-       nlhit->SetEnergyCutoff(0.0);
-       run->AddTask(nlhit);	
-    
-    }    
 
-    // Add sofana task ------------------------------------
-    if (fSci&&fMusic)
-    {
-      R3BSofFrsAnalysis* frsana = new R3BSofFrsAnalysis();
-      frsana->SetOnline(NOTstorehitdata);
-      run -> AddTask(frsana);
+        auto nlhit = new R3BNeulandCal2Hit();
+        nlhit->SetDistanceToTarget(distanceToTarget);
+        nlhit->SetGlobalTimeOffset(timeoffset);
+        nlhit->SetEnergyCutoff(0.0);
+        run->AddTask(nlhit);
     }
 
-    if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW){
-      R3BSofFragmentAnalysis* fragmentana = new R3BSofFragmentAnalysis();
-      fragmentana->SetOnline(NOTstorehitdata);
-      fragmentana->SetTofWPos(560.);
-      run -> AddTask(fragmentana);
+    // Add sofana task ------------------------------------
+    if (fSci && fMusic)
+    {
+        R3BSofFrsAnalysis* frsana = new R3BSofFrsAnalysis();
+        frsana->SetOnline(NOTstorehitdata);
+        run->AddTask(frsana);
+    }
+
+    if (fSci && fMusic && fTwim && fMwpc0 && fMwpc1 && fMwpc2 && fMwpc3 && fTofW)
+    {
+        R3BSofFragmentAnalysis* fragmentana = new R3BSofFragmentAnalysis();
+        fragmentana->SetOnline(NOTstorehitdata);
+        fragmentana->SetTofWPos(560.);
+        run->AddTask(fragmentana);
     }
 
     // Add online task ------------------------------------
     if (fFrsTpcs)
     {
-       FrsTpcOnlineSpectra* tpconline= new FrsTpcOnlineSpectra();
-       run->AddTask(tpconline);
+        FrsTpcOnlineSpectra* tpconline = new FrsTpcOnlineSpectra();
+        run->AddTask(tpconline);
     }
 
     if (fScalers)
@@ -626,17 +693,17 @@ void filltree(int runnum)
         run->AddTask(scalersonline);
     }
     /*
-    if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW&&(!fCalifa)){
+      if (fSci&&fMusic&&fTwim&&fMwpc0&&fMwpc1&&fMwpc2&&fMwpc3&&fTofW&&(!fCalifa)){
       R3BSofFrsFragmentTree* frsfragmenttree = new R3BSofFrsFragmentTree();
       frsfragmenttree->SetIdS2(IdS2);
       frsfragmenttree->SetIdS8(IdS8);
       run->AddTask(frsfragmenttree);
-    }
+      }
     */
     // Initialize -------------------------------------------
     run->Init();
     FairLogger::GetLogger()->SetLogScreenLevel("INFO");
-    //FairLogger::GetLogger()->SetLogScreenLevel("DEBUG");
+    // FairLogger::GetLogger()->SetLogScreenLevel("DEBUG");
 
     // Run --------------------------------------------------
     run->Run((nev < 0) ? nev : 0, (nev < 0) ? 0 : nev);
@@ -651,4 +718,3 @@ void filltree(int runnum)
     std::cout << "Real time " << rtime << " s, CPU time " << ctime << " s" << std::endl << std::endl;
     gApplication->Terminate();
 }
-

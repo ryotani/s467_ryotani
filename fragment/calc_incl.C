@@ -4,6 +4,7 @@ const int NUMTARGET=2, NUMPADDLE=11, MAXEVENT=100000;
 #else
 const int NUMTARGET=3, NUMPADDLE=28, MAXEVENT=-1;
 #endif
+const int NUMTPAT = 4;
 /*
 const int MINZ=17, MAXZ=23, MAXA=55, MININCLZ=18, MAXINCLZ=23, BINAOQ=500, BINZ=500;
 const double MINAOQ=1.9, MAXAOQ=2.75;
@@ -39,9 +40,9 @@ using namespace std;
 TString dir_rootfile = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/fragment/output/" ;
 TString filename = "tofw_calib_FRS_TARG_Apr.root"; // TARG will be replaced
 #ifdef test
-TString outfilename = "incl_out_test_indivfit_21Jun_FRS_TARG.root";
+TString outfilename = "incl_out_test_indivfit_9Nov_tpat_FRS_TARG.root";
 #else
-TString outfilename = "incl_out_indivfit_21Jun_FRS_TARG.root";
+TString outfilename = "incl_out_indivfit_9Nov_tpat_FRS_TARG.root";
 #endif
 TString outcsvname = "incl_list_FRS_TARG.csv";
 TString targetname[3] = {"empty","carbon","ch2"};
@@ -49,6 +50,8 @@ TString reactionname[2] = {"-1n", "-1p"};
 TString targetelement[3] = {"carbon", "CH2", "proton"};
 TFile *fin[NUMTARGET], *fin2[NUMTARGET], *fout;
 TTree *tree[NUMTARGET], *tree2[NUMTARGET];
+TString tpatname[NUMTPAT] = {"Beam", "CALIFA", "Neuland", "CALIFA_Neuland"};
+Int_t tpatid[NUMTPAT] = {1,2,4,8};
 ofstream fcsv;
 //
 // Def variables
@@ -61,8 +64,8 @@ TGraphErrors *g_incl[MAXZ][3][2]; // 0: C, 1: CH2, 2: H, 0: -1n, 1: -1p
 //
 // Def histograms
 TH1D* h_music[NUMTARGET][NUMPADDLE+1], *h_aoq[NUMTARGET][NUMPADDLE+1][MAXA];
-TH1I* h_aoq_gated[NUMTARGET][NUMPADDLE+1][MAXZ][MAXA][MAXZ];
-TH2I* h_pid[NUMTARGET][NUMPADDLE+1];
+TH1I* h_aoq_gated[NUMTARGET][NUMPADDLE+1][MAXZ][MAXA][MAXZ], *h_aoq_gated_tpat[NUMTPAT][NUMTARGET][NUMPADDLE+1][MAXZ][MAXA][MAXZ];
+TH2I* h_pid[NUMTARGET][NUMPADDLE+1], *h_pid_tpat[NUMTPAT][NUMTARGET][NUMPADDLE+1];
 Int_t num_pid[NUMTARGET][NUMPADDLE+1][MAXZ][MAXA]={0};
 //TH2S* h_gated_pid[NUMTARGET][NUMPADDLE][MAXZ][MAXA];
 TF1* f_music[NUMTARGET][NUMPADDLE+1], *f_aoq[NUMTARGET][NUMPADDLE+1][MAXZ][MAXA][MAXZ];
@@ -72,7 +75,7 @@ void calc_incl(int index = -1);
 int loadfile();
 void fill_histos(int i), fit_music(int i), fill_aoq_gated(int i), fit_aoq(int i);
 void fill_histos_38Ca(int i), fill_aoq_gated_38Ca(int i);
-Int_t fit_music_paddle(int i, int p), fit_aoq_paddle(int i, int p, int z), fit_aoq_gated_paddle(int i, int p, int zfrs, int afrs, int zfrag);
+Int_t fit_music_paddle(int i, int p), fit_aoq_paddle(int i, int p, int z), fit_aoq_gated_paddle(int i, int p, int zfrs, int afrs, int zfrag, int i_tpat);
 Double_t pid(Double_t &zet, Double_t &aoq, bool isfrag=false, Int_t i=0, Int_t targ=-1);
 TF1* generate_func(TString name, int numpeaks, double minpos, double interval, double par_limit_range, double height_limit=1e10);
 void delete_histos(int i=0), calcincl();
@@ -116,7 +119,7 @@ void calc_incl(int index){
       cout<<"Targ: "<< targetname[i] <<", Fit for Paddle"<<p+1;
       for(int ZA=MININCLZ*MAXA; ZA<MAXINCLZ*MAXA; ZA++){//FRS: Z: ZA/MAXA, A: ZA%MAXA
 	for(int k =MINZ; k<=ZA/MAXA; k++){//Frag
-	  fit_aoq_gated_paddle(i,p,ZA/MAXA,ZA%MAXA,k);
+	  fit_aoq_gated_paddle(i,p,ZA/MAXA,ZA%MAXA,k, 0);
 	  //if(0!=fit_aoq_gated_paddle(i,p,ZA/MAXA,ZA%MAXA,k))
 	    //cout<<"Not fitted: "<<i<<", "<<p<<", "<<ZA/MAXA<<", "<<ZA%MAXA<<", "<<k<<endl;
 	}
@@ -157,6 +160,10 @@ void fill_histos(int i){
     cout<<"Preparing histos for paddle"<<p+1<<" ";
     TString dummy = Form("h_gated_pid_%i_",p+1) + targetname[i];
     h_pid[i][p] = new TH2I(dummy,dummy,BINAOQ, MINAOQ, MAXAOQ, BINZ, MINZ-0.5, MAXZ+0.5);
+    for(int tp=0; tp<NUMTPAT; tp++){
+      dummy = Form("h_gated_pid_tpat%i_%i_",tpatid[tp], p+1) + targetname[i];
+      h_pid_tpat[tp][i][p] = new TH2I(dummy,dummy,BINAOQ, MINAOQ, MAXAOQ, BINZ, MINZ-0.5, MAXZ+0.5);
+    }
     /*
     for(int j=0; j<MAXZ*MAXA; j++){
       dummy = Form("h_gated_pid_paddle%i_Z%i_A%i_Z%s", p+1, j/MAXA, j%MAXA, targetname[i].Data());
@@ -175,9 +182,18 @@ void fill_histos(int i){
     //
     if(ROLU_X < 0) continue;
     int p = Tofw_Paddle-1;
+    h_pid[i][NUMPADDLE]->Fill(FragAoQ_corr,FragZ);
+    for(int tp=0; tp<NUMTPAT; tp++){
+      if((tpat & tpatid[tp]) == tpatid[tp])
+	h_pid_tpat[tp][i][NUMPADDLE]->Fill(FragAoQ_corr,FragZ);
+    }
     if(p >= NUMPADDLE || p < 0) continue;
     h_pid[i][NUMPADDLE]->Fill(FragAoQ_corr,FragZ);
     h_pid[i][p]->Fill(FragAoQ_corr,FragZ);
+    for(int tp=0; tp<NUMTPAT; tp++){
+      if((tpat & tpatid[tp]) == tpatid[tp])
+	h_pid_tpat[tp][i][p]->Fill(FragAoQ_corr,FragZ);
+    }
     //
     /* // h_gated_pid is not used
     double tmpzet = MusicZ, tmpaoq = FRSAoQ;
@@ -226,9 +242,18 @@ void fill_histos_38Ca(int i){
     //
     if(ROLU_X < 0) continue;
     int p = Tofw_Paddle-1;
+    h_pid[i][NUMPADDLE]->Fill(FragAoQ_corr,FragZ+zoff);// offset only for FRS122 settings
+    for(int tp=0; tp<NUMTPAT; tp++){
+      if((tpat & tpatid[tp]) == tpatid[tp])
+	h_pid_tpat[tp][i][NUMPADDLE]->Fill(FragAoQ_corr,FragZ+zoff);
+    }
     if(p >= NUMPADDLE || p < 0) continue;
     h_pid[i][NUMPADDLE]->Fill(FragAoQ_corr,FragZ+zoff);// offset only for FRS122 settings
     h_pid[i][p]->Fill(FragAoQ_corr,FragZ+zoff);
+    for(int tp=0; tp<NUMTPAT; tp++){
+      if((tpat & tpatid[tp]) == tpatid[tp])
+	h_pid_tpat[tp][i][p]->Fill(FragAoQ_corr,FragZ+zoff);
+    }
   }
   cout<<endl;
 }
@@ -239,6 +264,8 @@ void delete_histos(int i){
   for(int p =0; p<NUMPADDLE; p++){
     //h_pid[i][p]->Clear();
     delete h_pid[i][p];
+    for(int tp=0; tp<NUMTPAT; tp++)
+      delete h_pid_tpat[tp][i][p];
     for(int j=0; j<MAXZ*MAXA; j++){
       //h_gated_pid[i][p][j/MAXA][j%MAXA]->Clear();
       //delete h_gated_pid[i][p][j/MAXA][j%MAXA];
@@ -259,6 +286,8 @@ void fit_music(int i){
 	cout<<"Too many events for TH2S"<<endl;
       }
       h_pid[i][p]->Write();
+      for(int tp=0; tp<NUMTPAT; tp++)
+	h_pid_tpat[tp][i][p]->Write();
       /*
       for(int j=0; j<MAXZ*MAXA; j++){
 	h_gated_pid[i][p][j/MAXA][j%MAXA]->Write();
@@ -554,6 +583,14 @@ void fill_aoq_gated(int i){
 	  dummy = Form("h_aoq_gated_all_Z%i_A%i_Z%i_%s", j/MAXA, j%MAXA, k, targetname[i].Data());
 	}
 	h_aoq_gated[i][p][j/MAXA][j%MAXA][k] = new TH1I(dummy,dummy,BINAOQ, MINAOQ, MAXAOQ);
+	//
+	for(int tp=0; tp<NUMTPAT; tp++){
+	  dummy = Form("h_aoq_gated_paddle%i_Z%i_A%i_Z%i_%s_tpat%i", p+1, j/MAXA, j%MAXA, k, targetname[i].Data(), tpatid[tp]);
+	  if(p==NUMPADDLE){
+	    dummy = Form("h_aoq_gated_all_Z%i_A%i_Z%i_%s_tpat%i", j/MAXA, j%MAXA, k, targetname[i].Data(), tpatid[tp]);
+	  }
+	  h_aoq_gated_tpat[tp][i][p][j/MAXA][j%MAXA][k] = new TH1I(dummy,dummy,BINAOQ, MINAOQ, MAXAOQ);
+	}
       }
     }
     get_mem_usage();
@@ -586,6 +623,13 @@ void fill_aoq_gated(int i){
     if(TMath::Abs(FragZ+zoff-pid_fraggate[i][p][tmpZ_frag][0][0]) > significance * pid_fraggate[i][p][tmpZ_frag][0][1]) continue; // For Z, 3 sigma cut applied.
     h_aoq_gated[i][NUMPADDLE][tmpZ][tmpA][tmpZ_frag]->Fill(FragAoQ_corr);
     h_aoq_gated[i][p][tmpZ][tmpA][tmpZ_frag]->Fill(FragAoQ_corr);
+    for(int tp=0; tp<NUMTPAT; tp++){
+      if((tpat & tpatid[tp]) == tpatid[tp]) //CALIFA trigger
+	{
+	  h_aoq_gated_tpat[tp][i][NUMPADDLE][tmpZ][tmpA][tmpZ_frag]->Fill(FragAoQ_corr);
+	  h_aoq_gated_tpat[tp][i][p][tmpZ][tmpA][tmpZ_frag]->Fill(FragAoQ_corr);
+	}
+    }
   }
 }
 //
@@ -641,10 +685,17 @@ void fill_aoq_gated_38Ca(int i){
     if(TMath::Abs(FragZ+zoff-pid_fraggate[i][p][tmpZ_frag][0][0]) > significance * pid_fraggate[i][p][tmpZ_frag][0][1]) continue; // For Z, 3 sigma cut applied.
     h_aoq_gated[i][NUMPADDLE][tmpZ][tmpA][tmpZ_frag]->Fill(FragAoQ_corr);
     h_aoq_gated[i][p][tmpZ][tmpA][tmpZ_frag]->Fill(FragAoQ_corr);
+    for(int tp=0; tp<NUMTPAT; tp++){
+      if((tpat & tpatid[tp]) == tpatid[tp]) //CALIFA trigger
+	{
+	  h_aoq_gated_tpat[tp][i][NUMPADDLE][tmpZ][tmpA][tmpZ_frag]->Fill(FragAoQ_corr);
+	  h_aoq_gated_tpat[tp][i][p][tmpZ][tmpA][tmpZ_frag]->Fill(FragAoQ_corr);
+	}
+    }
   }
 }
 //
-int fit_aoq_gated_paddle(int i, int p, int zfrs, int afrs, int zfrag){
+int fit_aoq_gated_paddle(int i, int p, int zfrs, int afrs, int zfrag, int i_tpat){
   //
   //ROOT::EnableImplicitMT();
   fout->cd();
@@ -655,7 +706,9 @@ int fit_aoq_gated_paddle(int i, int p, int zfrs, int afrs, int zfrag){
   int numpeaks = rangeA[1]-rangeA[0]+1;
   if(numpeaks<1) return 1;
   auto h_tmp = h_aoq_gated[i][p][zfrs][afrs][k];
-  h_tmp->Rebin(2);
+  auto h_tmp_tpat = h_aoq_gated_tpat[1][i][p][zfrs][afrs][k]; // CALIFA trig
+  h_tmp->Rebin(rebin);
+  h_tmp_tpat->Rebin(rebin);
   if(h_tmp->GetEntries()<1) return 1;
   //
   //cout<<h_tmp->GetEntries()<<endl;
@@ -760,6 +813,9 @@ int fit_aoq_gated_paddle(int i, int p, int zfrs, int afrs, int zfrag){
   }
   f_aoq[i][p][zfrs][afrs][k]->Write();
   h_tmp->Write();
+  //h_tmp_tpat->Write();
+  for(int tp=0; tp<NUMTPAT; tp++)
+    h_aoq_gated_tpat[tp][i][p][zfrs][afrs][k]->Write();
   return 0;
 }
 //
