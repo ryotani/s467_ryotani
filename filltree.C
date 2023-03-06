@@ -20,24 +20,21 @@ typedef struct EXT_STR_h101_t
     EXT_STR_h101_SOFMWPC_onion_t mwpc;
     EXT_STR_h101_MUSIC_onion_t music;
     EXT_STR_h101_SOFSCI_onion_t sci;
-    // EXT_STR_h101_AMS_t ams;
     EXT_STR_h101_WRMASTER_t wrmaster;
     EXT_STR_h101_WRSOFIA_t wrsofia;
     EXT_STR_h101_WRS2_t wrs2;
     EXT_STR_h101_WRS8_t wrs8;
     EXT_STR_h101_CALIFA_t califa;
-    // EXT_STR_h101_WRCALIFA_t wrcalifa;
     EXT_STR_h101_SOFTWIM_onion_t twim;
     EXT_STR_h101_SOFTOFW_onion_t tofw;
     EXT_STR_h101_SOFSCALERS_onion_t scalers;
     EXT_STR_h101_raw_nnp_tamex_onion_t raw_nnp; // EXT_STR_h101_raw_nnp_tamex_t raw_nnp;
-    // EXT_STR_h101_WRNEULAND_t wrneuland;
-    EXT_STR_h101_FRS_t frs;
+    EXT_STR_h101_WRNEULAND_t wrneuland;
 } EXT_STR_h101;
 
 void filltree(int runnum);
 
-void filltree() { filltree(340); }
+void filltree() { filltree(338); }
 
 void filltree(int runnum)
 {
@@ -46,8 +43,7 @@ void filltree(int runnum)
 
     // NumSofSci, file names and paths -----------------------------
     Int_t sofiaWR, NumSofSci, IdS2, IdS8;
-    TString ntuple_options = "RAW"; //"RAW,time-stitch=1000" // For no stitched data
-    TString filename, outputFilename, frs_paramfile, fragment_paramfile, common_paramfile, musiccalfilename;
+    TString outputFilename, frs_paramfile, fragment_paramfile, common_paramfile, musiccalfilename;
     Double_t brho28;
     //-------------------------------------------------------------------------
     // added by KB for NeuLAND:
@@ -83,34 +79,31 @@ void filltree(int runnum)
     Int_t five[] = { 303, 376 };
     Int_t six[] = { 263 };
 
-    for (Int_t i = 0; i < LENGTH(calib_file); i++)
-    {
-        for (Int_t j = 0; j < LENGTH(two); j++)
-        {
-            for (Int_t iruns = 0; iruns < 2; iruns++)
-                calib_file[two[j] + iruns] = two[j];
-        }
-        for (Int_t j = 0; j < LENGTH(three); j++)
-        {
-            for (Int_t iruns = 0; iruns < 3; iruns++)
-                calib_file[three[j] + iruns] = three[j];
-        }
-        for (Int_t j = 0; j < LENGTH(four); j++)
-        {
-            for (Int_t iruns = 0; iruns < 4; iruns++)
-                calib_file[four[j] + iruns] = four[j];
-        }
-        for (Int_t j = 0; j < LENGTH(five); j++)
-        {
-            for (Int_t iruns = 0; iruns < 5; iruns++)
-                calib_file[five[j] + iruns] = five[j];
-        }
-        for (Int_t j = 0; j < LENGTH(six); j++)
-        {
-            for (Int_t iruns = 0; iruns < 6; iruns++)
-                calib_file[six[j] + iruns] = six[j];
-        }
-    }
+    for (Int_t j = 0; j < LENGTH(two); j++)
+      {
+	for (Int_t iruns = 0; iruns < 2; iruns++)
+	  calib_file[two[j] + iruns] = two[j];
+      }
+    for (Int_t j = 0; j < LENGTH(three); j++)
+      {
+	for (Int_t iruns = 0; iruns < 3; iruns++)
+	  calib_file[three[j] + iruns] = three[j];
+      }
+    for (Int_t j = 0; j < LENGTH(four); j++)
+      {
+	for (Int_t iruns = 0; iruns < 4; iruns++)
+	  calib_file[four[j] + iruns] = four[j];
+      }
+    for (Int_t j = 0; j < LENGTH(five); j++)
+      {
+	for (Int_t iruns = 0; iruns < 5; iruns++)
+	  calib_file[five[j] + iruns] = five[j];
+      }
+    for (Int_t j = 0; j < LENGTH(six); j++)
+      {
+	for (Int_t iruns = 0; iruns < 6; iruns++)
+	  calib_file[six[j] + iruns] = six[j];
+      }
     const TString syncParFileName = TString::Format("/u/boretzky/s467/params_new_sync_%04d.root", calib_file[runnum]);
     cout << "NeuLAND calibration parameters from:   " << syncParFileName << endl;
 
@@ -182,9 +175,7 @@ void filltree(int runnum)
             }
             i++;
         }
-
-        filename = dir_rawfile;
-        filename.Append(Form("main%04d_*.lmd", runnum));
+        filename.ReplaceAll("RUNNUM",Form("%04d", runnum));
         //
         if (FRSsetting[i] < 9)
         { // Default
@@ -193,7 +184,7 @@ void filltree(int runnum)
         }
         else
         {
-            frs_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + ".par";
+  	    frs_paramfile = sofiacaldir + "FRS" + TString::Itoa(FRSsetting[i],10) + ".par";
             if (FRSsetting[i] < 11)
             {
                 fragment_paramfile = sofiacaldir + "FRS13_empty.par";
@@ -203,13 +194,13 @@ void filltree(int runnum)
                 switch (targetpos[i])
                 {
                     case 539:
-                        fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_ch2.par";
+                        fragment_paramfile = sofiacaldir + "FRS" + TString::Itoa(FRSsetting[i],10) + "_ch2.par";
                         break;
                     case 362:
-                        fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_carbon.par";
+                        fragment_paramfile = sofiacaldir + "FRS" + TString::Itoa(FRSsetting[i],10) + "_carbon.par";
                         break;
                     default:
-                        fragment_paramfile = sofiacaldir + "FRS" + to_string(FRSsetting[i]) + "_empty.par";
+                        fragment_paramfile = sofiacaldir + "FRS" + TString::Itoa(FRSsetting[i],10) + "_empty.par";
                         break;
                 }
             }
@@ -217,10 +208,19 @@ void filltree(int runnum)
             {
                 musiccalfilename = sofiacaldir + "music_lowgain.par";
             }
-            else
+            else if (musicgain[i] == 1)
             {
                 musiccalfilename = sofiacaldir + "music_highgain.par";
             }
+	    else if (musicgain[i] == 122)
+	    {
+	      musiccalfilename = sofiacaldir + "music_highgain122.par";
+	    }
+	    else
+	    {
+	      cerr<< "Nno music parameter file" <<endl;
+	    }
+
         }
         common_paramfile = sofiacaldir + "common.par";
         //
@@ -268,11 +268,9 @@ void filltree(int runnum)
     // Definition of reader ---------------------------------
     source->AddReader(new R3BUnpackReader(&ucesb_struct.unpack, offsetof(EXT_STR_h101, unpack)));
     auto TrloiiReader = new R3BTrloiiTpatReader(&ucesb_struct.unpacktpat, offsetof(EXT_STR_h101, unpacktpat));
-    TrloiiReader->SetTpatRange(1, 4); // Select tpat condition : 1=min vias, 2=califaOR(p), 3=neuland, 4=califa&neuland,
-                                      // 8=califa off, 9=neuland off.
+    TrloiiReader->SetTpatRange(min_tpat, max_tpat);
     source->AddReader(TrloiiReader);
 
-    R3BFrsReaderNov19* unpackfrs;
     R3BMusicReader* unpackmusic;
     R3BSofSciReader* unpacksci;
     R3BWhiterabbitS2Reader* unpackWRS2;
@@ -281,16 +279,12 @@ void filltree(int runnum)
     R3BSofWhiterabbitReader* unpackWRSofia;
     R3BAmsReader* unpackams;
     R3BCalifaFebexReader* unpackcalifa;
-    // R3BWhiterabbitCalifaReader* unpackWRCalifa;
     R3BMwpcReader* unpackmwpc;
     R3BTwimReader* unpacktwim;
     R3BSofTofWReader* unpacktofw;
     R3BSofScalersReader* unpackscalers;
     R3BNeulandTamexReader* unpackneuland;
-    // R3BWhiterabbitNeulandReader* unpackWRNeuland;
-
-    if (fFrs)
-        unpackfrs = new R3BFrsReaderNov19((EXT_STR_h101_FRS*)&ucesb_struct.frs, offsetof(EXT_STR_h101, frs));
+    R3BWhiterabbitNeulandReader* unpackWRNeuland;
 
     if (fMusic)
         unpackmusic = new R3BMusicReader((EXT_STR_h101_MUSIC_t*)&ucesb_struct.music, offsetof(EXT_STR_h101, music));
@@ -319,8 +313,6 @@ void filltree(int runnum)
     {
         unpackcalifa =
             new R3BCalifaFebexReader((EXT_STR_h101_CALIFA*)&ucesb_struct.califa, offsetof(EXT_STR_h101, califa));
-        // unpackWRCalifa = new R3BWhiterabbitCalifaReader(
-        //    (EXT_STR_h101_WRCALIFA*)&ucesb_struct.wrcalifa, offsetof(EXT_STR_h101, wrcalifa), 0xa00, 0xb00);
     }
 
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
@@ -335,13 +327,6 @@ void filltree(int runnum)
         unpackscalers =
             new R3BSofScalersReader((EXT_STR_h101_SOFSCALERS_t*)&ucesb_struct.scalers, offsetof(EXT_STR_h101, scalers));
     // Add readers ------------------------------------------
-
-    if (fFrs)
-    {
-        unpackfrs->SetOnline(NOTstoremappeddata);
-        source->AddReader(unpackfrs);
-    }
-
     if (fMusic)
     {
         unpackmusic->SetOnline(NOTstoremappeddata);
@@ -368,8 +353,6 @@ void filltree(int runnum)
     {
         unpackcalifa->SetOnline(NOTstoremappeddata);
         source->AddReader(unpackcalifa);
-        // unpackWRCalifa->SetOnline(NOTstoremappeddata);
-        // source->AddReader(unpackWRCalifa);
     }
     if (fMwpc0 || fMwpc1 || fMwpc2 || fMwpc3)
     {
@@ -443,9 +426,11 @@ void filltree(int runnum)
             rtdb->setFirstInput(parIo1);
             Bool_t kParameterMerged = kFALSE;
             FairParRootFileIo* parIo2 = new FairParRootFileIo(kParameterMerged); // Root file
-            TList* parList2 = new TList();
-            parList2->Add(new TObjString(califacalfilename));
-            parIo2->open(parList2);
+            //TList* parList2 = new TList();
+            //parList2->Add(new TObjString(califacalfilename));
+	    //parIo2->open(parList2); // See Class reference. If TList is used, allParams will be created.
+	    //
+	    parIo2->open(califacalfilename);
             rtdb->setSecondInput(parIo2);
         }
     }
@@ -463,6 +448,7 @@ void filltree(int runnum)
         cout << "did neuland stuff for rtdb" << endl;
     }
     rtdb->print();
+    cout<<"rtdb print end."<<endl;
 
     // Add analysis task ------------------------------------
     // TPCs at S2
@@ -517,9 +503,11 @@ void filltree(int runnum)
         SofSciSTcal2Hit->SetCalParams(675., -1922.); // ToF calibration at Cave-C
         run->AddTask(SofSciSTcal2Hit);
         //
+	/* This is for Offline analysis, R3BFileSource required
         // for CALIFA and Neuland
         R3BEventHeaderPropagator* RunIdTask = new R3BEventHeaderPropagator();
         run->AddTask(RunIdTask);
+	*/
         auto sofstart = new R3BSofiaProvideTStart();
         run->AddTask(sofstart);
     }
@@ -533,44 +521,43 @@ void filltree(int runnum)
         run->AddTask(CalifaMap2Cal);
         // R3BCalifaCrystalCal2Hit ---
         {
-            R3BCalifaCrystalCal2Hit* CalifaCal2Hit = new R3BCalifaCrystalCal2Hit();
-            CalifaCal2Hit->SetCrystalThreshold(100.); // 100keV
-            CalifaCal2Hit->SetDRThreshold(10000.);    // 10MeV
-            CalifaCal2Hit->SetOnline(NOTstorehitdata);
-            CalifaCal2Hit->SetRoundWindowAlg(0.20); // radian
-            CalifaCal2Hit->SelectGeometryVersion(2020);
-            CalifaCal2Hit->SetRandomization(false);
-            //CalifaCal2Hit->SetTCAName("CalifaHitData_Round020");
-            run->AddTask(CalifaCal2Hit);
+            R3BCalifaCrystalCal2Cluster* CalifaCal2Cluster = new R3BCalifaCrystalCal2Cluster();
+            CalifaCal2Cluster->SetCrystalThreshold(100.); // 100keV
+            //CalifaCal2Cluster->SetDRThreshold(10000.);    // 10MeV
+	    CalifaCal2Cluster->SetProtonClusterThreshold(10000.);    // 10MeV
+            CalifaCal2Cluster->SetOnline(NOTstorehitdata);
+            //CalifaCal2Cluster->SetRoundWindowAlg(0.20); // radian
+	    CalifaCal2Cluster->SetRoundWindow(0.20);
+            CalifaCal2Cluster->SelectGeometryVersion(2020);
+            CalifaCal2Cluster->SetRandomization(false);
+            //CalifaCal2Cluster->SetTCAName("CalifaHitData_Round020");
+            run->AddTask(CalifaCal2Cluster);
         }
 	/*
         {
-            R3BCalifaCrystalCal2Hit* CalifaCal2Hit = new R3BCalifaCrystalCal2Hit();
-            CalifaCal2Hit->SetCrystalThreshold(100.); // 100keV
-            CalifaCal2Hit->SetDRThreshold(10000.);    // 10MeV
-            CalifaCal2Hit->SetOnline(NOTstorehitdata);
-            CalifaCal2Hit->SetSquareWindowAlg(0.20, 0.20);
-            CalifaCal2Hit->SelectGeometryVersion(2020);
-            CalifaCal2Hit->SetRandomization(false);
-            CalifaCal2Hit->SetTCAName("CalifaHitDataSquare");
-            run->AddTask(CalifaCal2Hit);
+            R3BCalifaCrystalCal2Cluster* CalifaCal2Cluster = new R3BCalifaCrystalCal2Cluster();
+            CalifaCal2Cluster->SetCrystalThreshold(100.); // 100keV
+            CalifaCal2Cluster->SetDRThreshold(10000.);    // 10MeV
+            CalifaCal2Cluster->SetOnline(NOTstorehitdata);
+            CalifaCal2Cluster->SetSquareWindowAlg(0.20, 0.20);
+            CalifaCal2Cluster->SelectGeometryVersion(2020);
+            CalifaCal2Cluster->SetRandomization(false);
+            CalifaCal2Cluster->SetTCAName("CalifaHitDataSquare");
+            run->AddTask(CalifaCal2Cluster);
         }
 
         {
-            R3BCalifaCrystalCal2Hit* CalifaCal2Hit = new R3BCalifaCrystalCal2Hit();
-            CalifaCal2Hit->SetCrystalThreshold(100.); // 100keV
-            CalifaCal2Hit->SetDRThreshold(10000.);    // 10MeV
-            CalifaCal2Hit->SetOnline(NOTstorehitdata);
-            CalifaCal2Hit->SetConeAlg(0.20);
-            CalifaCal2Hit->SelectGeometryVersion(2020);
-            CalifaCal2Hit->SetRandomization(false);
-            CalifaCal2Hit->SetTCAName("CalifaHitData_Cone020");
-            run->AddTask(CalifaCal2Hit);
+            R3BCalifaCrystalCal2Cluster* CalifaCal2Cluster = new R3BCalifaCrystalCal2Cluster();
+            CalifaCal2Cluster->SetCrystalThreshold(100.); // 100keV
+            CalifaCal2Cluster->SetDRThreshold(10000.);    // 10MeV
+            CalifaCal2Cluster->SetOnline(NOTstorehitdata);
+            CalifaCal2Cluster->SetConeAlg(0.20);
+            CalifaCal2Cluster->SelectGeometryVersion(2020);
+            CalifaCal2Cluster->SetRandomization(false);
+            CalifaCal2Cluster->SetTCAName("CalifaHitData_Cone020");
+            run->AddTask(CalifaCal2Cluster);
         }
 	*/
-        // R3BCalifaHitp2p* califaP2p = new R3BCalifaHitp2p();
-        // califaP2p->SetOnline(NOTstorecaldata);
-        // run->AddTask(califaP2p);
     }
 
     // MWPC1
@@ -581,7 +568,6 @@ void filltree(int runnum)
         run->AddTask(MW1Map2Cal);
 
         R3BMwpc1Cal2Hit* MW1Cal2Hit = new R3BMwpc1Cal2Hit();
-        // MW1Cal2Hit->SetExpId(expId);
         MW1Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW1Cal2Hit);
     }
@@ -591,12 +577,10 @@ void filltree(int runnum)
     {
         R3BTwimMapped2Cal* TwimMap2Cal = new R3BTwimMapped2Cal();
         TwimMap2Cal->SetOnline(NOTstorecaldata);
-        // TwimMap2Cal->SetExpId(expId);
         run->AddTask(TwimMap2Cal);
 
         R3BTwimCal2Hit* TwimCal2Hit = new R3BTwimCal2Hit();
         TwimCal2Hit->SetOnline(NOTstorehitdata);
-        // TwimCal2Hit->SetExpId(expId);
         run->AddTask(TwimCal2Hit);
     }
 
@@ -608,7 +592,6 @@ void filltree(int runnum)
         run->AddTask(MW2Map2Cal);
 
         R3BMwpc2Cal2Hit* MW2Cal2Hit = new R3BMwpc2Cal2Hit();
-        // MW2Cal2Hit->SetExpId(expId);
         MW2Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW2Cal2Hit);
     }
@@ -621,7 +604,6 @@ void filltree(int runnum)
         run->AddTask(MW3Map2Cal);
 
         R3BMwpc3Cal2Hit* MW3Cal2Hit = new R3BMwpc3Cal2Hit();
-        // MW3Cal2Hit->SetExpId(expId);
         MW3Cal2Hit->SetOnline(NOTstorehitdata);
         run->AddTask(MW3Cal2Hit);
     }
@@ -641,9 +623,7 @@ void filltree(int runnum)
 
         // --- Tcal 2 Hit for SofTofW :
         R3BSofTofWSingleTCal2Hit* SofTofWTcal2Hit = new R3BSofTofWSingleTCal2Hit();
-        // SofTofWTcal2Hit->SetTofLISE(43.); // Code to be updated. No need for setTof. It is set from param
         SofTofWTcal2Hit->SetOnline(NOTstorehitdata);
-        // SofTofWTcal2Hit->SetExpId(467); ///// Codes to be updated
         run->AddTask(SofTofWTcal2Hit);
     }
 
@@ -681,12 +661,6 @@ void filltree(int runnum)
     }
 
     // Add online task ------------------------------------
-    if (fFrsTpcs)
-    {
-        FrsTpcOnlineSpectra* tpconline = new FrsTpcOnlineSpectra();
-        run->AddTask(tpconline);
-    }
-
     if (fScalers)
     {
         R3BSofScalersOnlineSpectra* scalersonline = new R3BSofScalersOnlineSpectra();
@@ -702,8 +676,8 @@ void filltree(int runnum)
     */
     // Initialize -------------------------------------------
     run->Init();
-    FairLogger::GetLogger()->SetLogScreenLevel("INFO");
-    // FairLogger::GetLogger()->SetLogScreenLevel("DEBUG");
+    FairLogger::GetLogger()->SetLogScreenLevel("info");
+    // FairLogger::GetLogger()->SetLogScreenLevel("debug");
 
     // Run --------------------------------------------------
     run->Run((nev < 0) ? nev : 0, (nev < 0) ? 0 : nev);

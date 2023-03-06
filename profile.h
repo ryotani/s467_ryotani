@@ -1,8 +1,13 @@
 const Int_t nev = -1; // number of events to read, -1 - until CTRL+C
 //const Int_t nev = 1000000; // Only nev events to read
-// Changed by KB from 1 to 999, necessary to read NeuLAND parameter container:
+
 //const Int_t fRunId = 999; // For Neuland
 const Int_t fRunId = 1; // For other detectors
+//
+// Select tpat condition : 1=min bias, 2=califaOR(p), 3=neuland, 4=califa&neuland,
+// 8=califa off, 9=neuland off.
+const Int_t min_tpat = 1;
+const Int_t max_tpat = 4;
 
 // *********************************** //
 // PLEASE CHANGE THE EXPERIMENT NUMBER //
@@ -15,19 +20,21 @@ TString dir = gSystem->Getenv("VMCWORKDIR");
 //
 TString s_runlist = dir_ana + "RunSummary.csv";
 std::ifstream RunList(s_runlist, std::ios::in);
-TString dir_rawfile = "/u/taniuchi/s467/lmd_stitched/";
-TString dir_output = dir_ana + "rootfiles/";
+TString lmdfilename = "/u/taniuchi/s467/lmd_stitched/mainRUNNUM_*.lmd";
+TString filename = lmdfilename; // For backward compatibility
+TString dir_output = dir_ana + "rootfiles/Feb2023_FSnov22/";
 TString sofiacaldir = dir_ana + "parameters/";
 //
 TString ucesb_dir = getenv("UCESB_DIR");
+//TString upexps_dir = "/u/land/latar/upexps";
 TString upexps_dir = ucesb_dir + "/../upexps/";
+//TString ucesb_path = upexps_dir + "/202002_s467_nov22/202002_s467 --allow-errors --input-buffer=100Mi";
 TString ucesb_path = upexps_dir + "/202002_s467/202002_s467 --allow-errors --input-buffer=100Mi";
-//TString ucesb_path = ucesb_dir + "/../hueg.upexps/202002_s467_test/202002_s467 --allow-errors --input-buffer=100Mi";
-//TString ucesb_path = upexps_dir + "/202002_s467_jentob/202002_s467 --allow-errors --input-buffer=100Mi";
+TString ntuple_options = "RAW"; //"RAW,time-stitch=1000" // For no stitched data
 
 // store data or not ------------------------------------
 Bool_t fCal_level_califa = true;  // set true if there exists a file with the calibration parameters
-Bool_t NOTstoremappeddata = false; // if true, don't store mapped data in the root file
+Bool_t NOTstoremappeddata = true; // if true, don't store mapped data in the root file
 Bool_t NOTstorecaldata = false;    // if true, don't store cal data in the root file
 Bool_t NOTstorehitdata = false;    // if true, don't store hit data in the root file
     
@@ -47,15 +54,11 @@ Bool_t fMwpc3 = true;    // MWPC3 for tracking of fragments behind GLAD
 Bool_t fTofW = true;     // ToF-Wall for time-of-flight of fragments behind GLAD
 Bool_t fScalers = false;  // SIS3820 scalers at Cave C
 Bool_t fNeuland = false;  // NeuLAND for neutrons behind GLAD
-//Bool_t fTracking = true; // Tracking of fragments inside GLAD
 
 
 // Calibration files ------------------------------------
-//TString califamapdir = dir + "/macros/r3b/unpack/s467/califa/parameters/";
 TString califamapdir = dir + "/macros/r3b/unpack/s467/califa/parameters/";
 TString califamapfilename = califamapdir + "CALIFA_mapping_Feb82020.par";// not used
 // Parameters for CALIFA calibration in keV
 TString califadir = dir_ana + "parameters/";
 TString califacalfilename = califadir + "Califa_CalibParam25012022_60Co_Incomplete.root";
-//TString califadir = dir + "/macros/r3b/unpack/s467/califa/parameters/";
-//TString califacalfilename = califadir + "Califa_Cal8Feb2020.root";

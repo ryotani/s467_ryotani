@@ -2,10 +2,11 @@
 
 
 function initialise () {
-    #for runnum in {249..358..1} #FRS9-13
+    #for runnum in {249..358..1} {368..380..1}#FRS9-13
     #for runnum in {272..358..1} #all frs13
     #for runnum in {276..285..1}
-    for runnum in {262..271..1} {368..380..1} # all frs11,12 for 38Ca
+    #for runnum in {262..271..1} {368..380..1} # all frs11,12 for 38Ca
+    for runnum in {368..380..1} # frs122 for 38Ca
     #for runnum in 238 273 361 366
     do
 	list=$list' '$runnum
@@ -19,6 +20,7 @@ function initialise () {
 function myfunc () {
     time nice root -l -b -q 'filltree.C('"$1"')' 1> ./log/run$1.log 2> ./log/err$1.log
     echo 'Finished run:'$1
+    date
 }
 
 function mapp() {
@@ -26,7 +28,7 @@ function mapp() {
     if [[ -z $MAPP_NR_CPUS ]] ; then
 	#local MAPP_NR_CPUS=$(grep "processor:" < /proc/cpuinfo | wc -l)
 	#   max core for calculation; modified by Toshiyuki Sumikama
-	local MAPP_NR_CPUS=50 # should be half as number of cores
+	local MAPP_NR_CPUS=40 # should be half as number of cores
     fi
     local mapp_pid=$(exec bash -c 'echo $PPID')
     local mapp_funname=$1
