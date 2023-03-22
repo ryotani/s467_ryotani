@@ -10,7 +10,7 @@ TFile* fout;
 Int_t Tpat;
 TClonesArray* FrsDataCA, *MusicHitCA, *TwimHitCA, *SofTrackingCA, *Mwpc0CA, *Mwpc1CA, *Mwpc2CA, *Mwpc3CA, *RoluPosCA, *TofWHitCA;
 Double_t FRSAoQ, FRSBeta, FRSBrho, FRSGamma, MusicZ;
-Double_t MusicE, TwimE, FragZ, MusicTheta, TwimTheta, Mw0_X, Mw1_X, Mw2_X, Mw3_X, Mw0_Y, Mw1_Y, Mw2_Y, Mw3_Y, ROLU_X,ROLU_Y, Tofw_Y, FragTof, FragTof_corr, FragAoQ, FragAoQ_corr, FragBrho, FragBeta, FragGamma;
+Double_t MusicE, TwimE, TwimZ, FragZ, MusicTheta, TwimTheta, Mw0_X, Mw1_X, Mw2_X, Mw3_X, Mw0_Y, Mw1_Y, Mw2_Y, Mw3_Y, ROLU_X,ROLU_Y, Tofw_Y, FragTof, FragTof_corr, FragAoQ, FragAoQ_corr, FragBrho, FragBeta, FragGamma;
 Int_t Tofw_Paddle;
 
 Long64_t total_entry=0, cnt_tpat=0, cnt_frs=0, cnt_beta=0, cnt_rolu=0, cnt_rolu0=0;
@@ -78,7 +78,7 @@ Long64_t loadtree(TString infilename){
       cnt_tpat++;
       continue; //only select non reacted
     }
-    if(FrsDataCA->GetEntriesFast()==0){
+    if(FrsDataCA->GetEntriesFast()!=4){
       if(verbose) cout<<"FRS"<<endl;
       cnt_frs++;
       continue;
@@ -121,9 +121,11 @@ Long64_t loadtree(TString infilename){
     if(TwimHitCA->GetEntriesFast()==1){
       auto twimdata = (R3BTwimHitData*)TwimHitCA->At(0);
       TwimE = twimdata->GetEave();
+      TwimZ = twimdata->GetZcharge();
       TwimTheta = twimdata->GetTheta();
     }else{
       TwimE = NAN;
+      TwimZ = NAN;
       TwimTheta = NAN;
     }
     //
@@ -259,8 +261,8 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   Int_t i=0;
   //
   tree->Branch("tpat",&Tpat);
-  tree->Branch("FRS_AoQ",&FRSAoQ);
-  tree->Branch("FRS_Brho",&FRSBrho);
+  tree->Branch("FRSAoQ",&FRSAoQ);
+  tree->Branch("FRSBrho",&FRSBrho);
   tree->Branch("FRSBeta",&FRSBeta);
   tree->Branch("FRS_Z", &MusicZ);
   //tree->Branch("FRSGamma",&FRSGamma);
@@ -277,6 +279,7 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   tree->Branch("MusicE", &MusicE);
   tree->Branch("MusicTheta", &MusicTheta);
   tree->Branch("TwimE", &TwimE);
+  tree->Branch("TwimZ", &TwimZ);
   tree->Branch("TwimTheta", &TwimTheta);
   tree->Branch("Mw0_X", &Mw0_X);
   tree->Branch("Mw1_X", &Mw1_X);
@@ -304,7 +307,7 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
     if(junk[i]!=0) continue;
     if(targetpos[i]<posmin || targetpos[i]>posmax) continue;
     cout<<runnumcsv[i]<<" "<<dumchar<<" "<<FRSsetting[i]<<" "<<dumchar<<" "<<brhocsv[i]<<" "<<dumchar<<" "<<targetpos[i]<<" "<<dumchar<<" "<<musicgain[i]<<" "<<dumchar<<" "<<junk[i]<<endl;
-    if(FRSsetting[i]==122) FRSsetting[i]=12;
+    //if(FRSsetting[i]==122) FRSsetting[i]=12;
     filename = Form("%ss467_filltree_Setting%i_%04d_%s.root", indir.Data(), FRSsetting[i], runnumcsv[i], suffix.Data());
     cout<<"Input file: "<<filename<<endl;
     ///

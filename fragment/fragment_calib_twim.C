@@ -1,18 +1,27 @@
 #define NUMPADDLE 28
+//#define IsNRich
 
 #include "fragmentana_twim.h"
 
-TString infile = "./fragment/output/mktree_fragment_Dec_empty.root";
-//TString infile = "./rootfiles/rootfiletmp/MUSIC/s467_filltree_Setting13_0340_22Sep.root";
-TString outpdf = "./fragment/output/fragment_calib_twim_Dec.pdf";
-TString brho_outpdf = "./fragment/output/fragment_calib_twim_brho_Dec.pdf";
-TString recobrho_outpdf = "./fragment/output/fragment_reco_twim_brho_Dec.pdf";
-/*
-TString infile = "./fragment/output/mktree_tofw_frs_ch2-24mm.root";
-TString outpdf = "./fragment/output/fragment_calib_twim_ch2_test.pdf";
-TString brho_outpdf = "./fragment/output/fragment_calib_twim_brho_ch2_test.pdf";
-TString recobrho_outpdf = "./fragment/output/fragment_reco_brho_ch2_test.pdf";
-*/
+TString	dir="/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/fragment/";
+
+#ifdef IsNRich
+TString infile = dir + "../rootfiles/mktree_2023/mktree_fragment_50Ca_empty.root";
+TString outpdf = dir + "output/fragment_calib_twim_Mar2023_50Ca.pdf";
+TString brho_outpdf = dir + "output/fragment_calib_twim_brho_Mar2023_quantile_50Ca.pdf";
+TString draw_output = dir + "output/fragment_calib_twim_draw_Mar2023_50Ca"; // add suffix later
+TString recobrho_outpdf = dir + "output/fragment_reco_twim_brho_Mar2023_50Ca.pdf"; // Not in this macro
+TString matoutfilename = dir + "output/fragment_fit_brho_50Ca.txt";
+TString tofparafilename = dir + "output/fragment_fit_tof_50Ca.csv";
+#else
+TString infile = dir + "../rootfiles/mktree_2023/mktree_fragment_38Ca_empty.root";
+TString outpdf = dir + "output/fragment_calib_twim_Mar2023_38Ca.pdf";
+TString brho_outpdf = dir + "output/fragment_calib_twim_brho_Mar2023_quantile_38Ca.pdf";
+TString draw_output = dir + "output/fragment_calib_twim_draw_Mar2023_38Ca.pdf";
+TString recobrho_outpdf = dir + "output/fragment_reco_twim_brho_Mar2023_38Ca.pdf";// Not in this macro
+TString matoutfilename = dir + "output/fragment_fit_brho_38Ca.txt";
+TString tofparafilename = dir + "output/fragment_fit_tof_38Ca.csv";
+#endif
 
 void initialise();
 int tofw_calib();
@@ -22,18 +31,20 @@ int draw_pidgate(TString conditions);
 int draw_transfer_corr(TString conditions);
 int draw_toflength_corr(TString conditions);
 int brho_corr();
+int draw_plots();
 
 int fragment_calib_twim(){
   if (NUMPADDLE>28) return 1;
   initialise();
   //tofw_calib();
   //loadtofpara();
-  beta_tofw = "FragBeta";
+  beta_tofw = "Frag_Beta";
   cut_mw = Form("(Mw1_X>%f)&&(Mw1_X<%f)&&", -30.,25.);
   for(int i=0;i<4;i++) cut_mw += Form("(%s>%f)&&(%s<%f)&&",axis_mw3[i].Data(),range_cut_mw3_low[i],axis_mw3[i].Data(),range_cut_mw3_high[i]);
   //cut_mw += Form("(Mw2_X>%f)&&(Mw2_X<%f)&&", -40, 40);
   transfer_mat();
   //brho_corr(); // To be done fragment_reco...
+  draw_plots();
   //
   //p->Close();
   delete ch;
@@ -95,7 +106,7 @@ int brho_corr(){
   }
   //
   c->cd(4);
-  conditions = "abs(MusicZ-20.)<0.4 && abs(FRSAoQ-2.45)<0.02"; // 49Ca
+  conditions = "abs(FRS_Z-20.)<0.4 && abs(FRSAoQ-2.45)<0.02"; // 49Ca
   h_brhobrho = new TH2D("hbrhobrho", "Brho correlation in FRS and Cave; Brho FRS /Tm; Brho Cave /Tm", 500, 8.7, 9.3, 500, 8.7, 9.3);
   fragbrhostring = Form("(%s-(%f))/(%f)", Mw3_X_mod.Data(), f_brho_mw3[cond][2]->GetParameter(0), f_brho_mw3[cond][2]->GetParameter(1));
   ch->Draw(Form("(%s):%s>>hbrhobrho", fragbrhostring.Data(), brho.Data()), conditions, "col");
@@ -117,7 +128,7 @@ int brho_corr(){
 }
 
 int transfer_mat(){
-  ofstream fout("./fragment/output/fragment_fit_brho.txt", ofstream::out);
+  ofstream fout(matoutfilename, ofstream::out);
   //
   c = new TCanvas("c","c",1200,1000);
   c -> Divide(4,4);
@@ -132,18 +143,21 @@ int transfer_mat(){
   conditions += ")";
   draw_transfer_corr(conditions);
   //
-  mwcondition = Form("&& abs(%s-(%f))<2.", axis_mw_h[0].Data(), max_mw1[0][0]);
-  mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_h[2].Data(), max_mw1[2][0]);
-  mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_v[3].Data(), max_mw1[3][1]);
+  // Plot for X-Angle
+  mwcondition = Form("&& abs(%s-(%f))<2.", axis_mw_h[0].Data(), max_mw1[0][0]);//Cut with mw2X
+  mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_h[2].Data(), max_mw1[2][0]);//Cut with mw2y
+  mwcondition += Form("&& abs(%s-(%f))<2.", axis_mw_v[3].Data(), max_mw1[3][1]);//cut with y-agngle
   //mwcondition += "&& Mw3_X < 300.";
-  
   conditions = "(";
   conditions += beamcondition;
   conditions += mwcondition;
   conditions += ")";
-  draw_transfer_corr(conditions);
+  draw_transfer_corr(conditions); // get condition with X-angle
+  Mw3_X_mod = Form("(Mw3_X - (%f) - %s *(%f))", f_mw3[cond-1][2]->GetParameter(0), axis_mw3[2].Data(), f_mw3[cond-1][2]->GetParameter(1));
+  cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   //fout << f_mw3[cond-1][2]->GetParameter(0) <<", " <<f_mw3[cond-1][2]->GetParameter(1) <<", "<<axis_mw3[2]<<endl;
   //
+  // Plot for X-Position
   // Reset the mwcondition with y and b only
   mwcondition = Form("&& abs(%s-(%f))<2", axis_mw_h[2].Data(), max_mw1[2][0]);
   mwcondition += Form("&& abs(%s-(%f))<2", axis_mw_v[3].Data(), max_mw1[3][1]);
@@ -152,10 +166,13 @@ int transfer_mat(){
   conditions += beamcondition;
   conditions += mwcondition;
   conditions += ")";
-  Mw3_X_mod = Form("(Mw3_X - (%f) - %s *(%f))", f_mw3[cond-1][2]->GetParameter(0), axis_mw3[2].Data(), f_mw3[cond-1][2]->GetParameter(1));
-  cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   draw_transfer_corr(conditions);
+  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][0]->GetParameter(0), axis_mw3[0].Data(), f_mw3[cond-1][0]->GetParameter(1));
+  cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   //
+
+  // Plot for Y
+  /*
   // Reset the mwcondition with y  only
   mwcondition = Form("&& abs(%s-(%f))<2", axis_mw_h[2].Data(), max_mw1[2][0]);
   //mwcondition += Form("&& abs(%s-(%f))<2", axis_mw_v[3].Data(), max_mw1[3][1]);
@@ -164,9 +181,9 @@ int transfer_mat(){
   conditions += beamcondition;
   conditions += mwcondition;
   conditions += ")";
-  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][0]->GetParameter(0), axis_mw3[0].Data(), f_mw3[cond-1][0]->GetParameter(1));
-  cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   draw_transfer_corr(conditions);
+  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][3]->GetParameter(0), axis_mw3[3].Data(), f_mw3[cond-1][3]->GetParameter(1));
+  cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   //
   // Reset the mwcondition
   //mwcondition = "&& Mw3_X < 300.";
@@ -174,19 +191,19 @@ int transfer_mat(){
   conditions += beamcondition;
   conditions += mwcondition;
   conditions += ")";
-  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][3]->GetParameter(0), axis_mw3[3].Data(), f_mw3[cond-1][3]->GetParameter(1));
-  cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   draw_transfer_corr(conditions);
+  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][1]->GetParameter(0), axis_mw3[1].Data(), f_mw3[cond-1][1]->GetParameter(1));
+  cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
+  */
   //
+  // Plot with Ca isotopes
   //mwcondition = "&& Mw3_X < 300.";
   conditions = "(";
   //conditions += beamcondition; // remove beta condition
   conditions += cut_mw;
-  conditions += "abs(MusicZ-20.)<0.4";
+  conditions += "abs(FRS_Z-20.)<0.4";
   conditions += mwcondition;
   conditions += ")";
-  Mw3_X_mod += Form("+ (- (%f) - %s *(%f))", f_mw3[cond-1][1]->GetParameter(0), axis_mw3[1].Data(), f_mw3[cond-1][1]->GetParameter(1));
-  cout << "Newly Corrected Mw3_X = " << Mw3_X_mod <<endl;
   draw_transfer_corr(conditions);
   //
   // Final figures
@@ -194,7 +211,7 @@ int transfer_mat(){
   //conditions += beamcondition; // remove beta condition
   conditions += cut_mw;
   conditions += Zgate;
-  //conditions += "abs(MusicZ-20.)<0.4";
+  //conditions += "abs(FRS_Z-20.)<0.4";
   //conditions += mwcondition;
   conditions += ")";
   draw_transfer_corr(conditions);
@@ -268,6 +285,51 @@ int transfer_mat(){
   return 0;
 }
 
+int draw_plots(){
+  auto c1 = new TCanvas("c1","Transfer matrix from correlations", 1200, 1000 );
+  c1->SetLogz(0);
+  c1->Divide(2,2);
+  c1->cd(1);
+  h_mw12[1][0]->SetTitle("X-Y image before GLAD; MWPC2-X / mm; MWPC2-Y / mm");
+  h_mw12[1][0]->Draw("col");
+  c1->cd(2);
+  h_mw12[1][1]->SetTitle("X-#theta_{X} image before GLAD; MWPC2-X / mm; (MWPC2-X - MWPC1-X) / mm");
+  h_mw12[1][1]->Draw("col");
+  c1->cd(3);
+  h_mw12[1][2]->SetTitle("Y-#theta_{Y} image before GLAD; MWPC2-Y / mm; (MWPC2-Y - MWPC1-Y) / mm");
+  h_mw12[1][2]->Draw("col");
+  c1->cd(4);
+  h_mw3xy[1]->Draw("col");
+  c1->Print(draw_output+"_1.png");
+  c1->Print(draw_output+".pdf(");
+  //Taking only +-2mm part
+  //
+  for(int i=0; i<4; i++){
+    c1->cd(i+1);
+    h_mw3[1][i]->Draw("colz");
+  }
+  c1->Print(draw_output+"_2.png");
+  c1->Print(draw_output+".pdf");
+  //
+  for(int i=0; i<4; i++){
+    c1->cd(i+1);
+    quantiles_mw3[1][i]->Draw("same");
+    f_mw3[1][i]->SetLineWidth(2);
+    f_mw3[1][i]->Draw("same");
+  }
+  c1->Print(draw_output+"_3.png");
+  c1->Print(draw_output+".pdf");
+  //
+  for(int i=0; i<4; i++){
+    c1->cd(i+1);
+    h_mw3[5][i]->Draw("colz");
+  }
+  //
+  c1->Print(draw_output+"_4.png");
+  c1->Print(draw_output+".pdf)");
+  return 0;
+}
+
 int draw_toflength_corr(TString conditions){
   if(cond >= NUMCOND){
     cerr<<"Too many conditions"<<endl;
@@ -286,7 +348,7 @@ int draw_toflength_corr(TString conditions){
       //
       c->cd(9+i);
       h_mwbeta[cond][i] = new TH2D(Form("h_mwbeta_%i%i",cond,i), Form("Flight length correction;%s / mm;#beta_{cave}-#beta_{frs}", axis_mw3[i].Data()), 500, i==2?-0.04:-1.*range_mw, i==2?0.04:range_mw, 500, -0.01, 0.01);
-      ch->Draw(Form("%s-Beta_S2_Cave:%s>>h_mwbeta_%i%i", beta_tofw_mod.Data(), axis_mw3[i].Data(), cond, i), conditionwithbetacut,"colz");
+      ch->Draw(Form("%s-FRSBeta:%s>>h_mwbeta_%i%i", beta_tofw_mod.Data(), axis_mw3[i].Data(), cond, i), conditionwithbetacut,"colz");
       //
       c->cd(9+i);
       //prof_mwbeta[cond][i] = h_mwbeta[cond][i]->ProfileX();
@@ -314,6 +376,10 @@ int draw_transfer_corr(TString conditions){
   }
   draw_pidgate(conditions);
   //
+  c->cd(4);
+  h_mw3xy[cond] = new TH2D(Form("h_mw3xy_%i",cond), "X-Y image after GLAD; MWPC3-X / mm; MWPC3-Y / mm",500, -100., 200., 500, -100., 100.);
+  ch->Draw(Form("Mw3_Y:Mw3_X>>h_mw3xy_%i",cond),conditionwithbetacut,"col");
+  //
   for(int i = 0; i < 4 ; i++){
       c->cd(5+i);
       h_mw12[cond][i] = new TH2D(Form("h_mw12_%i%i",cond,i), Form("Phase space before GLAD;%s / mm;%s / mm",axis_mw_h[i].Data(),axis_mw_v[i].Data()), 500, -1.*range_mw, range_mw, 500, -1.*range_mw, range_mw);
@@ -335,17 +401,22 @@ int draw_transfer_corr(TString conditions){
       }
       //
       c->cd(9+i);
-      h_mw3[cond][i] = new TH2D(Form("h_mw3_%i%i",cond,i), Form("Ion transfer through GLAD;%s / mm;Mw3_X_mod / mm", axis_mw3[i].Data()), 500, i==2?-0.04:-1.*range_mw, i==2?0.04:range_mw, 500, -500, 500);
+      h_mw3[cond][i] = new TH2D(Form("h_mw3_%i%i",cond,i), Form(";%s / mm;Mw3_X_mod / mm", axis_mw3[i].Data()), 500, i==2?-0.04:-1.*range_mw, i==2?0.04:range_mw, 500, -500, 500);
       ch->Draw(Form("%s:%s>>h_mw3_%i%i", Mw3_X_mod.Data(), axis_mw3[i].Data(), cond, i), conditionwithbetacut,"colz");
       //
       //c->cd(13+i);
       c->cd(9+i);
+      f_mw3[cond][i] = new TF1(Form("func_mw3_%i_%i",cond,i),"[0]+[1]*x", range_fit_mw3_low[i], range_fit_mw3_high[i]);
+      f_mw3[cond][i]->SetLineWidth(1);
+      quantiles_mw3[cond][i] = h_mw3[cond][i]->QuantilesX();
+      quantiles_mw3[cond][i] ->Draw("same");
+      quantiles_mw3[cond][i] -> Fit(f_mw3[cond][i], "R","");
+      /*
       prof_mw3[i] = h_mw3[cond][i]->ProfileX();
       prof_mw3[i] ->Draw("same");
       //if(mwcondition.Sizeof()>1){	      }
-      f_mw3[cond][i] = new TF1(Form("func_mw3_%i_%i",cond,i),"[0]+[1]*x", range_fit_mw3_low[i], range_fit_mw3_high[i]);
-      f_mw3[cond][i]->SetLineWidth(1);
       prof_mw3[i] -> Fit(f_mw3[cond][i], "R","");
+      */
   }
   //
   c -> Print(brho_outpdf);
@@ -355,22 +426,22 @@ int draw_transfer_corr(TString conditions){
 int draw_pidgate(TString conditions){
   cout<<"\033[1;31m Index: "<<cond<<", Draw: "<<conditions<<"\033[m"<<endl;
   c->cd(1);
-  h_frspid_mw[cond] = new TH2D(Form("h_frspid%i",cond), "PID in FRS (S2-CaveC); AoQ; MusicZ", 500, 2.2,2.7, 500,10,30);
-  ch->Draw(Form("MusicZ:FRSAoQ>>h_frspid%i",cond),conditions,"col");
+  h_frspid_mw[cond] = new TH2D(Form("h_frspid%i",cond), "PID in FRS (S2-CaveC); AoQ; FRS_Z", 500, 2.2,2.7, 500,10,30);
+  ch->Draw(Form("FRS_Z:FRSAoQ>>h_frspid%i",cond),conditions,"col");
   //
   c->cd(2);
-  h_music_twim_mw[cond] = new TH2D(Form("hmusictwim_mw%i",cond),"R3BMusic and Twim with #beta in FRS;TwimZ;MusicZ",200,10,30,200,10,30);
-  ch->Draw(Form("MusicZ:TwimZ>>hmusictwim_mw%i",cond),conditions,"col");
+  h_music_twim_mw[cond] = new TH2D(Form("hmusictwim_mw%i",cond),"R3BMusic and Twim with #beta in FRS;TwimZ;FRS_Z",200,10,30,200,10,30);
+  ch->Draw(Form("FRS_Z:TwimZ>>hmusictwim_mw%i",cond),conditions,"col");
   //
   c->cd(3);
 
   h_beta_beta_mw[cond][NUMPADDLE] = new TH2D(Form("hbetabeta_mw%i",cond), "#beta correlation: Frs vs CaveC; #beta in FRS; #beta in Cave (ns)", 500, 0.7, 0.8, 500, 0.7, 0.8);
   //
-  conditionwithbetacut = conditions + "&& (abs(FragBeta - Beta_S2_Cave)<0.004)";
+  conditionwithbetacut = conditions;// + "&& (abs(Frag_Beta - FRSBeta)<0.004)";
   /*
   conditionwithbetacut = conditions + "&&(";
     for(int i = 0 ; i<NUMPADDLE; i++){
-    TString condition_temp=Form("(Tofw_Paddle==%i && abs(%s - Beta_S2_Cave)<0.004)",i+1, fragbeta[i].Data());
+    TString condition_temp=Form("(Tofw_Paddle==%i && abs(%s - FRSBeta)<0.004)",i+1, fragbeta[i].Data());
     conditionwithbetacut += condition_temp;
     condition_temp += "&&";
     condition_temp += conditions;
@@ -381,7 +452,7 @@ int draw_pidgate(TString conditions){
     }
   }*/
   cout << "Beta Tofw: "<<beta_tofw<<endl<<" conditionwithbetacut: "<< conditionwithbetacut << endl;
-  ch->Draw(Form("%s:Beta_S2_Cave>>hbetabeta_mw%i", beta_tofw.Data(), cond), conditionwithbetacut, "col");
+  ch->Draw(Form("%s:FRSBeta>>hbetabeta_mw%i", beta_tofw.Data(), cond), conditionwithbetacut, "col");
   //
   c->cd(4);
   //
@@ -390,33 +461,33 @@ int draw_pidgate(TString conditions){
 }
 
 int tofw_calib(){
-  ofstream fout("./fragment/output/fragment_fit_tof_Nov.csv", ofstream::out);
+  ofstream fout(tofparafilename, ofstream::out);
   c = new TCanvas("c","c",1200,1000);
   c -> Divide(6,5);
   c->Print(outpdf + "[");
   c->cd(1);
-  h_frspid = new TH2D("h_frspid", "PID in FRS (S2-CaveC); AoQ; MusicZ", 500, 2.2,2.7, 500,10,30);
-  ch->Draw("MusicZ:FRSAoQ>>h_frspid","","col");
+  h_frspid = new TH2D("h_frspid", "PID in FRS (S2-CaveC); AoQ; FRS_Z", 500, 2.2,2.7, 500,10,30);
+  ch->Draw("FRS_Z:FRSAoQ>>h_frspid","","col");
   c->cd(2);
   h_tofw_paddle = new TH1D("h_tofw_paddle", "Counts in TofW paddles; Paddle ID; Counts", NUMPADDLE+1, -0.5, NUMPADDLE + 0.5);
   ch->Draw("Tofw_Paddle>>h_tofw_paddle","","");
   for(int i = 0 ; i<NUMPADDLE; i++){
     c->cd(i+1+2);
     h_beta_tof[i] = new TH2D(Form("hbetatof%i",i+1), Form("ToF vs #beta in Frs: Paddle %i; #beta in FRS; ToF between SofStart and TofW (ns)",i+1), 500, 0.7, 0.8, 500, 40,50);
-    ch->Draw(Form("FragTof:Beta_S2_Cave>>hbetatof%i",i+1),Form("Tofw_Paddle==%i",i+1),"col");
+    ch->Draw(Form("FragTof:FRSBeta>>hbetatof%i",i+1),Form("Tofw_Paddle==%i",i+1),"col");
   }
   c->Print(outpdf);
   //
   for(int i = 0 ; i<2; i++){
     c->cd(i+1);
     h_music_twim[i] = new TH2D(Form("hmusictwim%i",i),Form("R3BMusic and Twim with #beta in FRS%s",i==0?"":" (gated)"),200,10,30,200,10,30);
-    ch->Draw(Form("MusicZ:TwimZ>>hmusictwim%i",i),i==1?Zgate:"","col");
+    ch->Draw(Form("FRS_Z:TwimZ>>hmusictwim%i",i),i==1?Zgate:"","col");
   }
   //
   for(int i = 0 ; i<NUMPADDLE; i++){
     c->cd(i+1+2);
     h_beta_tof_cut[i] = new TH2D(Form("hbetatofcut%i",i+1), Form("ToF vs #beta in Frs: Paddle %i (Z gated); #beta in FRS; ToF between SofStart and TofW (ns)",i+1), 100, 0.7, 0.8, 100, 40,50);
-    ch->Draw(Form("FragTof:Beta_S2_Cave>>hbetatofcut%i",i+1),Form("Tofw_Paddle==%i&&%s",i+1,Zgate.Data()),"col");
+    ch->Draw(Form("FragTof:FRSBeta>>hbetatofcut%i",i+1),Form("Tofw_Paddle==%i&&%s",i+1,Zgate.Data()),"col");
   }
   c->Print(outpdf);
   //
@@ -446,14 +517,14 @@ int tofw_calib(){
   for(int i = 0 ; i<NUMPADDLE; i++){
     c->cd(i+1+2);
     h_beta_beta[i] = new TH2D(Form("hbetabeta%i",i+1), Form("#beta correlation: Frs vs Paddle %i; #beta in FRS; #beta in Cave (ns)",i+1), 500, 0.7, 0.8, 500, 0.7, 0.8);
-    ch->Draw(Form("%s:Beta_S2_Cave>>hbetabeta%i", fragbeta[i].Data(), i+1),Form("Tofw_Paddle==%i",i+1),"col");
+    ch->Draw(Form("%s:FRSBeta>>hbetabeta%i", fragbeta[i].Data(), i+1),Form("Tofw_Paddle==%i",i+1),"col");
   }
   c->Print(outpdf);
   //
   for(int i = 0 ; i<NUMPADDLE; i++){
     c->cd(i+1+2);
     h_beta_beta_cut[i] = new TH2D(Form("hbetabetacut%i",i+1), Form("#beta correlation: Frs vs Paddle %i (beta-gated); #beta in FRS; #beta in Cave (ns)",i+1), 500, 0.7, 0.8, 500, 0.7, 0.8);
-    ch->Draw(Form("%s:Beta_S2_Cave>>hbetabetacut%i", fragbeta[i].Data(), i+1),Form("Tofw_Paddle==%i && abs(%s - Beta_S2_Cave)<0.003",i+1, fragbeta[i].Data()),"col");
+    ch->Draw(Form("%s:FRSBeta>>hbetabetacut%i", fragbeta[i].Data(), i+1),Form("Tofw_Paddle==%i && abs(%s - FRSBeta)<0.003",i+1, fragbeta[i].Data()),"col");
   }
   c->Print(outpdf);
   //
@@ -461,10 +532,10 @@ int tofw_calib(){
   for(int i = 0 ; i<NUMPADDLE; i++){
     c->cd(i+1+2);
     h_mw_brho[i] = new TH2D(Form("hmwbrho%i", i+1), Form("Rigidity vs MWPC3-X, Paddle %i; #beta#gamma AoQ; MWPC3-X (mm)", i+1), 200, min_brho, max_brho, 200, -500, 500);
-    TString condition =  Form("Tofw_Paddle==%i && abs(%s - Beta_S2_Cave)<0.003 && %s && Beta_S2_Cave<1 && Beta_S2_Cave>0.5", i+1, fragbeta[i].Data(), Zgate.Data());
+    TString condition =  Form("Tofw_Paddle==%i && abs(%s - FRSBeta)<0.003 && %s && FRSBeta<1 && FRSBeta>0.5", i+1, fragbeta[i].Data(), Zgate.Data());
     cout << condition <<endl;
     ch->Draw(Form("Mw3_X:%s>>hmwbrho%i", brho.Data(), i+1), condition,"col");
-    //ch->Draw(Form("Mw3_X:Beta_S2_Cave*TheGamma*TheAoQ>>hmwbrho%i", i+1, brho.Data()), condition,"col");
+    //ch->Draw(Form("Mw3_X:FRSBeta*TheGamma*TheAoQ>>hmwbrho%i", i+1, brho.Data()), condition,"col");
     if(i<2) continue; // As there's many events
     h_mw_brho[NUMPADDLE] -> Add(h_mw_brho[i]);
   }
@@ -519,7 +590,7 @@ int tofw_calib(){
 }
 
 int loadtofpara(){
-  ifstream fin("./fragment/output/fragment_fit_tof_Nov.csv", ofstream::in);  if(!fin.is_open()||!fin.good()){
+  ifstream fin(tofparafilename, ofstream::in);  if(!fin.is_open()||!fin.good()){
     cerr<<"No CSV file found: "<<endl;
     return 1;
   }

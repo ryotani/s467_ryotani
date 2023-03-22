@@ -8,9 +8,10 @@ A set of macros to calibrate the reconstruction of PIDs.
 Using full statistics of data for each target runs, the calibration processes for the position correlation, the Brho reconstruction, and the mass reconstruction are proceeded.
 
 
-## mktree_tofw_frs.C
+## mktree_evt.C
 
 The first step is to merge the runs for each secondary target setups into one file. By selecting the position of target based, a merged file can be created.
+A shell script mktree.sh can be used for running for all runs.
 
 
 ## fragment_calib_twim.C

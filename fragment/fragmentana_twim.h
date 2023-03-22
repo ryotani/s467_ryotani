@@ -23,7 +23,7 @@ using namespace std;
 //TProof *p =  TProof::Open("workers=3");
 
 TCanvas *c;
-TString Zgate = "abs(MusicZ-TwimZ)<0.5";
+TString Zgate = "abs(FRS_Z-TwimZ)<0.5";
 TString fragbeta[NUMPADDLE] = {""};
 TString fragaoq[NUMPADDLE] = {""};
 Double_t mc_e = 3.1071; // m_u * c_0 / e
@@ -64,17 +64,21 @@ TString axis_mw3[4] = {"(Mw1_X+Mw2_X)/2.", "(Mw1_Y+Mw2_Y)/2.", "TwimTheta", "(Mw
 //TString axis_mw_v[4] = {"Mw1_Y", "(Mw2_X-Mw1_X)", "(Mw3_Y-Mw1_Y)", "(Mw3_Y-Mw1_Y)"};
 //TString axis_mw3[4] = {"Mw1_X", "Mw1_Y", "(Mw2_X-Mw1_X)", "(Mw3_Y-Mw1_Y)"};
 TString Mw3_X_mod = "Mw3_X";
-TH2D *h_mw12[NUMCOND][4], *h_mw3[NUMCOND][4], *h_mwbeta[NUMCOND][4];
-TProfile *prof_mw3[4], *prof_mwbeta[NUMCOND][4];
-TH1D *h_median_mwbeta[NUMCOND][4];
+TH2D *h_mw12[NUMCOND][4], *h_mw3xy[NUMCOND], *h_mw3[NUMCOND][4], *h_mwbeta[NUMCOND][4];
+TProfile *prof_mwbeta[NUMCOND][4];// *prof_mw3[4],
+TH1D *h_median_mwbeta[NUMCOND][4], *quantiles_mw3[NUMCOND][4];
 TF1 *f_mw3[NUMCOND][4], *f_mwbeta[NUMCOND][4];
-Double_t range_fit_mw3_low[4]={-25., -20., -0.012, -10.};
-Double_t range_fit_mw3_high[4]={15., -0., 0.0109, 50.};
+#ifdef IsNRich
+Double_t range_fit_mw3_low[4]={-15., -20., -0.012, 0.};
+Double_t range_fit_mw3_high[4]={15., -5., 0.003, 40.};
 Double_t range_cut_mw3_low[4]={-50., -60., -30., -60.};
 Double_t range_cut_mw3_high[4]={50., 60., 30., 60.};
-//Double_t range_cut_mw3_low[4]={-30., -60., -30., -60.};
-//Double_t range_cut_mw3_high[4]={25., 60., 30., -10.};
-//TCut cut_mw[4];
+#else
+Double_t range_fit_mw3_low[4]={-15., -20., -0.012, 0.};
+Double_t range_fit_mw3_high[4]={15., -5., 0.003, 40.};
+Double_t range_cut_mw3_low[4]={-50., -60., -30., -60.};
+Double_t range_cut_mw3_high[4]={50., 60., 30., 60.};
+#endif
 TString cut_mw = "";
 
 //For Brho reconstruction
