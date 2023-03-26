@@ -1,6 +1,7 @@
 TString indir = "/u/taniuchi/s467/rootfiles/Feb2023_FSnov22/";
 TString outdir = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/mktree_2023/";
-Bool_t verbose =false;
+TString outfilename="mktree_test_FRSSETTING_TARGET.root";
+const Bool_t verbose =false, bool_test = false;
 
 TChain *ch;// get evt as TChain
 TTree *tree;
@@ -8,14 +9,18 @@ TString filename;
 TFile* fout;
 //Define output tree
 Int_t Tpat;
-TClonesArray* FrsDataCA, *MusicHitCA, *TwimHitCA, *SofTrackingCA, *Mwpc0CA, *Mwpc1CA, *Mwpc2CA, *Mwpc3CA, *RoluPosCA, *TofWHitCA;
+TClonesArray* FrsDataCA, *MusicHitCA, *TwimHitCA, *SofTrackingCA, *Mwpc0CA, *Mwpc1CA, *Mwpc2CA, *Mwpc3CA, *RoluPosCA, *TofWHitCA, *CalifaCalCA, *CalifaClustCA;
 Double_t FRSAoQ, FRSBeta, FRSBrho, FRSGamma, MusicZ;
 Double_t MusicE, TwimE, TwimZ, FragZ, MusicTheta, TwimTheta, Mw0_X, Mw1_X, Mw2_X, Mw3_X, Mw0_Y, Mw1_Y, Mw2_Y, Mw3_Y, ROLU_X,ROLU_Y, Tofw_Y, FragTof, FragTof_corr, FragAoQ, FragAoQ_corr, FragBrho, FragBeta, FragGamma;
-Int_t Tofw_Paddle;
+Int_t Tofw_Paddle, PID_FRS_Z, PID_FRS_A;
 
 Long64_t total_entry=0, cnt_tpat=0, cnt_frs=0, cnt_beta=0, cnt_rolu=0, cnt_rolu0=0;
 
 void mktree_evt(int FRSset1 = 13, int FRSset2 = 13, int i_target=0, TString suffix = "12Feb");
+Double_t pid(Double_t zet, Double_t aoq, Int_t &Z, Int_t &A, bool isfrag=false, Int_t i=0, Int_t targ=-1);
+const Double_t rangezet = 1.11e-1, rangeaoq = 1.34e-3, sigma = 3.; // Parameters for FRS PID gates
+void setCA();
+void clearCA();
 Long64_t loadtree(TString infilename){
   
   TFile* fin = TFile::Open(infilename,"READ");
@@ -25,37 +30,11 @@ Long64_t loadtree(TString infilename){
   cout<<infilename << ", Entry: "<<nentry<<endl;
 
   ch->SetBranchAddress("EventHeader.fTpat",&Tpat);
-  // Frs has array
+  //
+  // For incoming
   ch->SetBranchAddress("FrsData",&FrsDataCA);
-  
-  //  ch->SetBranchAddress("FrsData.fAq",FRSAoQ);
-  //  ch->SetBranchAddress("FrsData.fBrho",FRSBrho);
-  //  ch->SetBranchAddress("FrsData.fBeta",FRSBeta);
-  //  ch->SetBranchAddress("FrsData.fZ", MusicZ);
-  //  ch->SetBranchAddress("FrsData(0).Gamma",&FRSGamma);
-  /*
-  ch->SetBranchAddress("MusicHitData.fE", &MusicE);
-  ch->SetBranchAddress("MusicHitData.fTheta", &MusicTheta);
-  ch->SetBranchAddress("TwimHitData.fE", &TwimE);
-  ch->SetBranchAddress("TwimHitData.fTheta", &TwimTheta);
-  ch->SetBranchAddress("SofTrackingData.fZ", &FragZ);
-  ch->SetBranchAddress("SofTrackingData.fBrho",&FragBrho);
-  ch->SetBranchAddress("SofTrackingData.fAq", &FragAoQ);
-  ch->SetBranchAddress("Mwpc0HitData.fX", &Mw0_X);
-  ch->SetBranchAddress("Mwpc1HitData.fX", &Mw1_X);
-  ch->SetBranchAddress("Mwpc2HitData.fX", &Mw2_X);
-  ch->SetBranchAddress("Mwpc3HitData.fX", &Mw3_X);
-  ch->SetBranchAddress("Mwpc0HitData.fY", &Mw0_Y);
-  ch->SetBranchAddress("Mwpc1HitData.fY", &Mw1_Y);
-  ch->SetBranchAddress("Mwpc2HitData.fY", &Mw2_Y);
-  ch->SetBranchAddress("Mwpc3HitData.fY", &Mw3_Y);
-  ch->SetBranchAddress("RoluPosData.fX", &ROLU_X);
-  ch->SetBranchAddress("RoluPosData.fY", &ROLU_Y);
-  ch->SetBranchAddress("TofWHitData.fY", &Tofw_Y);
-  ch->SetBranchAddress("TofWHitData.fTof", &FragTof);
-  ch->SetBranchAddress("TofWHitData.fPaddleId", &Tofw_Paddle);
-  */
   ch->SetBranchAddress("MusicHitData",&MusicHitCA);
+  // For fragments
   ch->SetBranchAddress("TwimHitData",&TwimHitCA);
   ch->SetBranchAddress("SofTrackingData",&SofTrackingCA);
   ch->SetBranchAddress("Mwpc0HitData",&Mwpc0CA);
@@ -64,20 +43,27 @@ Long64_t loadtree(TString infilename){
   ch->SetBranchAddress("Mwpc3HitData",&Mwpc3CA);
   ch->SetBranchAddress("RoluPosData",&RoluPosCA);
   ch->SetBranchAddress("TofWHitData",&TofWHitCA);
-  
+  //
+  // CALIFA
+  ch->SetBranchAddress("CalifaCrystalCalData",&CalifaCalCA);
+  ch->SetBranchAddress("CalifaClusterData",&CalifaClustCA);
+  //
   cout << "Start Merging" <<endl;
   for(Long64_t n=0; n<nentry; n++){
     if((n+1)%10000==0 || verbose) {
       cout<<n+1<<" entry/"<<nentry<<endl;
       //ch->Show(n);
+      if(bool_test) break;
     }
     ch->GetEntry(n);
     if(verbose) cout<<n<<" tpat:"<<Tpat <<" frs:"<<FrsDataCA->GetEntriesFast()<<endl;
+    /*
     if(Tpat!=1){
       if(verbose) cout<<"Tpat"<<endl;
       cnt_tpat++;
       continue; //only select non reacted
-    }
+      }
+    */
     if(FrsDataCA->GetEntriesFast()!=4){
       if(verbose) cout<<"FRS"<<endl;
       cnt_frs++;
@@ -101,7 +87,7 @@ Long64_t loadtree(TString infilename){
       cnt_rolu++;
       continue;
     }
-    if(ROLU_X<0.){
+    else if(ROLU_X<0.){
       cnt_rolu0++;
     }
     //
@@ -109,6 +95,13 @@ Long64_t loadtree(TString infilename){
     FRSBrho= frsdata -> GetBrho();
     FRSBeta= frsdata -> GetBeta();
     MusicZ = frsdata -> GetZ();
+    // Get PID index
+    auto tmpsigma = pid(MusicZ, FRSAoQ, PID_FRS_Z, PID_FRS_A);
+    if(verbose) cout << "Sigma:"<< tmpsigma << ", Z:"<< PID_FRS_Z << ", " <<MusicZ<<endl; 
+    if(tmpsigma > sigma){
+      PID_FRS_A = 0;
+      PID_FRS_Z = 0;
+    }
     //
     if(MusicHitCA->GetEntriesFast()==1){
       auto musicdata = (R3BMusicHitData*)MusicHitCA->At(0);
@@ -232,18 +225,12 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   //TString pdfout;
   
   //
-  FrsDataCA = new TClonesArray("R3BFrsData", 5);
-  MusicHitCA = new TClonesArray("R3BMusicHitData",1);
-  TwimHitCA = new TClonesArray("R3BTwimHitData",1);
-  SofTrackingCA = new TClonesArray("R3BSofTrackingData",1);
-  Mwpc0CA = new TClonesArray("R3BMwpcHitData",1);
-  Mwpc1CA = new TClonesArray("R3BMwpcHitData",1);
-  Mwpc2CA = new TClonesArray("R3BMwpcHitData",1);
-  Mwpc3CA = new TClonesArray("R3BMwpcHitData",1);
-  RoluPosCA = new TClonesArray("R3BMwpcHitData",1);
-  TofWHitCA = new TClonesArray("R3BSofTofWHitData",1);
-
-  TString outfilename=Form("%smktree_fragment_%s_%s.root",outdir.Data(),FRSname.Data(),targetname.Data());
+  setCA();
+  
+  //TString outfilename=Form("%smktree_fragment_%s_%s.root",outdir.Data(),FRSname.Data(),targetname.Data());
+  outfilename = outdir + outfilename;
+  outfilename.ReplaceAll("FRSSETTING",FRSname);
+  outfilename.ReplaceAll("TARGET",targetname);
   cout<<"Output file: "<<outfilename<<endl;
   TFile *fout = TFile::Open(outfilename,"RECREATE");
   //ch = new TChain("evt");
@@ -265,6 +252,8 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   tree->Branch("FRSBrho",&FRSBrho);
   tree->Branch("FRSBeta",&FRSBeta);
   tree->Branch("FRS_Z", &MusicZ);
+  tree->Branch("PID_FRS_Z", &PID_FRS_Z);
+  tree->Branch("PID_FRS_A", &PID_FRS_A);
   //tree->Branch("FRSGamma",&FRSGamma);
   //tree->Branch("Frag_AoQ", &FragAoQ_corr);
   tree->Branch("Frag_AoQ", &FragAoQ);
@@ -292,6 +281,9 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   tree->Branch("ROLU_X", &ROLU_X);
   tree->Branch("Tofw_Y", &Tofw_Y);
   tree->Branch("Tofw_Paddle", &Tofw_Paddle);
+  //
+  tree->Branch("CalifaCrystalCalData",&CalifaCalCA);
+  tree->Branch("CalifaClusterData",&CalifaClustCA);
   
   while(true){
     i++;
@@ -310,24 +302,81 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
     //if(FRSsetting[i]==122) FRSsetting[i]=12;
     filename = Form("%ss467_filltree_Setting%i_%04d_%s.root", indir.Data(), FRSsetting[i], runnumcsv[i], suffix.Data());
     cout<<"Input file: "<<filename<<endl;
-    ///
-    /// Load tree
-    //TFile *fin = TFile::Open(filename,"READ");
-    //ch = new TChain("evt");
-    //ch -> AddFile(filename);
-    total_entry += loadtree(filename);
-    //cout<< ch->GetEntries() <<endl;
+    total_entry += loadtree(filename); // Read trees and fill output trees
+    clearCA();
+    if(bool_test) break;
   }
-  //
+
   cout<<"Finished:"<<total_entry<<endl;
   cout<<"Tpat invalid events (%)"<<100.*(double)cnt_tpat/(double)total_entry<<endl;
   cout<<"FRS invalid events (%)"<<100.*(double)cnt_frs/(double)total_entry<<endl;
   cout<<"Beta invalid events (%)"<<100.*(double)cnt_beta/(double)total_entry<<endl;
   cout<<"ROLU invalid events (%)"<<100.*(double)cnt_rolu/(double)total_entry<<endl;
-  cout<<"ROLU < 0. events (%)"<<100.*(double)cnt_rolu0/(double)total_entry<<endl;
+  cout<<"ROLU < 0. events (%)"<<100.*(double)(cnt_rolu0+cnt_rolu)/(double)total_entry<<endl;
   fout->cd();
   cout<<"Output file: "<<outfilename<<endl;
   tree->Write();
   fout->Close();
-  //ch->Merge(outfilename);
 }
+
+
+Double_t pid(Double_t zet, Double_t aoq, Int_t &Z, Int_t &A, bool isfrag, Int_t i, Int_t targ){
+  Int_t tmpzet = (Int_t) (zet + 0.5);
+  Int_t tmpmass = (Int_t) ((Double_t)tmpzet * aoq + 0.5);
+  Double_t tmpaoq = (Double_t)tmpmass/((Double_t)tmpzet);
+  Double_t value = 0.;
+  Z = 0;
+  A = 0;
+  if(!isfrag){
+    //rangezet = 1.11e-1;
+    //rangeaoq = 1.34e-3;
+    value = pow(((Double_t)tmpzet - zet)/rangezet, 2) + pow((tmpaoq - aoq)/rangeaoq, 2);
+  }
+  /*
+  else if(0 <= i && i < NUMPADDLE && targ>=0 && targ<NUMTARGET){
+    if(tmpmass<0||tmpmass>=MAXA||tmpzet<MINZ||tmpzet>=MAXZ) return NAN;
+    rangezet = pid_fraggate[targ][i][tmpmass][tmpzet][1];
+    rangeaoq = pid_fraggate[targ][i][tmpmass][tmpzet][3];
+    value = pow((pid_fraggate[targ][i][tmpmass][tmpzet][0] - zet)/rangezet, 2) + pow((pid_fraggate[targ][i][tmpmass][tmpzet][2] - aoq)/rangeaoq, 2);
+    }*/
+  else{
+    return NAN;
+  }
+  if(!isnan(value)){
+    Z = tmpzet;
+    A = tmpmass;
+  }
+  return TMath::Sqrt(value);
+}
+
+void setCA(){
+  FrsDataCA = new TClonesArray("R3BFrsData", 5);
+  MusicHitCA = new TClonesArray("R3BMusicHitData",1);
+  TwimHitCA = new TClonesArray("R3BTwimHitData",1);
+  SofTrackingCA = new TClonesArray("R3BSofTrackingData",1);
+  Mwpc0CA = new TClonesArray("R3BMwpcHitData",1);
+  Mwpc1CA = new TClonesArray("R3BMwpcHitData",1);
+  Mwpc2CA = new TClonesArray("R3BMwpcHitData",1);
+  Mwpc3CA = new TClonesArray("R3BMwpcHitData",1);
+  RoluPosCA = new TClonesArray("R3BMwpcHitData",1);
+  TofWHitCA = new TClonesArray("R3BSofTofWHitData",1);
+  CalifaCalCA = new TClonesArray("R3BCalifaCrystalCalData", 1);
+  CalifaClustCA = new TClonesArray("R3BCalifaClusterData", 3);
+}
+
+void clearCA(){
+  FrsDataCA -> Clear("C"); 
+  MusicHitCA -> Clear("C");
+  TwimHitCA -> Clear("C"); 
+  SofTrackingCA -> Clear("C");
+  Mwpc0CA -> Clear("C");      
+  Mwpc1CA -> Clear("C");  
+  Mwpc2CA -> Clear("C");  
+  Mwpc3CA -> Clear("C");  
+  RoluPosCA -> Clear("C");
+  TofWHitCA -> Clear("C");
+  CalifaCalCA -> Clear("C");
+  CalifaClustCA -> Clear("C");
+}
+
+  
