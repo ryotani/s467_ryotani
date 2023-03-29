@@ -64,7 +64,8 @@ FieldCentre: Float_t 308.
 //----------------------------------------------------------------------------
 PositionX: Double_t 0.
 PositionY: Double_t 0.
-PositionZ: Double_t -68.425
+PositionZ: Double_t -2.4
+//PositionZ: Double_t -68.425
 RotationX: Double_t 0.
 RotationY: Double_t 0.
 RotationZ: Double_t 0.

@@ -1,6 +1,6 @@
 TString indir = "/u/taniuchi/s467/rootfiles/Feb2023_FSnov22/";
 TString outdir = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/mktree_2023/";
-TString outfilename="mktree_test_FRSSETTING_TARGET.root";
+TString outfilename="mktree_califa_FRSSETTING_TARGET.root";
 const Bool_t verbose =false, bool_test = false;
 
 TChain *ch;// get evt as TChain
@@ -9,10 +9,13 @@ TString filename;
 TFile* fout;
 //Define output tree
 Int_t Tpat;
+
+R3BEventHeader *b_eh;
 TClonesArray* FrsDataCA, *MusicHitCA, *TwimHitCA, *SofTrackingCA, *Mwpc0CA, *Mwpc1CA, *Mwpc2CA, *Mwpc3CA, *RoluPosCA, *TofWHitCA, *CalifaCalCA, *CalifaClustCA;
 Double_t FRSAoQ, FRSBeta, FRSBrho, FRSGamma, MusicZ;
 Double_t MusicE, TwimE, TwimZ, FragZ, MusicTheta, TwimTheta, Mw0_X, Mw1_X, Mw2_X, Mw3_X, Mw0_Y, Mw1_Y, Mw2_Y, Mw3_Y, ROLU_X,ROLU_Y, Tofw_Y, FragTof, FragTof_corr, FragAoQ, FragAoQ_corr, FragBrho, FragBeta, FragGamma;
-Int_t Tofw_Paddle, PID_FRS_Z, PID_FRS_A;
+UChar_t Tofw_Paddle;
+Int_t PID_FRS_Z, PID_FRS_A;
 
 Long64_t total_entry=0, cnt_tpat=0, cnt_frs=0, cnt_beta=0, cnt_rolu=0, cnt_rolu0=0;
 
@@ -29,7 +32,7 @@ Long64_t loadtree(TString infilename){
   Long64_t nentry = ch -> GetEntries();
   cout<<infilename << ", Entry: "<<nentry<<endl;
 
-  ch->SetBranchAddress("EventHeader.fTpat",&Tpat);
+  ch->SetBranchAddress("EventHeader.", &b_eh);
   //
   // For incoming
   ch->SetBranchAddress("FrsData",&FrsDataCA);
@@ -56,6 +59,7 @@ Long64_t loadtree(TString infilename){
       if(bool_test) break;
     }
     ch->GetEntry(n);
+    Tpat = b_eh->GetTpat();
     if(verbose) cout<<n<<" tpat:"<<Tpat <<" frs:"<<FrsDataCA->GetEntriesFast()<<endl;
     /*
     if(Tpat!=1){
@@ -201,7 +205,7 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
     posmin=1325;
     posmax=1424;
   }else if(i_target==1){
-    targetname = "ch2-24mm";
+    targetname = "ch2";
     posmin=539;
     posmax=539;
   }else if(i_target==2){
@@ -247,6 +251,7 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   //std::cout << dummyline << std::endl;
   Int_t i=0;
   //
+  tree->Branch("EventHeader.",&b_eh);
   tree->Branch("tpat",&Tpat);
   tree->Branch("FRSAoQ",&FRSAoQ);
   tree->Branch("FRSBrho",&FRSBrho);
@@ -350,6 +355,7 @@ Double_t pid(Double_t zet, Double_t aoq, Int_t &Z, Int_t &A, bool isfrag, Int_t 
 }
 
 void setCA(){
+  b_eh = new R3BEventHeader();
   FrsDataCA = new TClonesArray("R3BFrsData", 5);
   MusicHitCA = new TClonesArray("R3BMusicHitData",1);
   TwimHitCA = new TClonesArray("R3BTwimHitData",1);
