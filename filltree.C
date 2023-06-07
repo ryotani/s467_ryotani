@@ -362,6 +362,8 @@ void filltree(int runnum)
     if (fTwim)
     {
         unpacktwim->SetOnline(NOTstoremappeddata);
+        unpacktwim->SetNumTref(2);
+        unpacktwim->SetNumTtrig(2);
         source->AddReader(unpacktwim);
     }
     if (fTofW)
@@ -522,12 +524,12 @@ void filltree(int runnum)
         // R3BCalifaCrystalCal2Hit ---
         {
             R3BCalifaCrystalCal2Cluster* CalifaCal2Cluster = new R3BCalifaCrystalCal2Cluster();
-            CalifaCal2Cluster->SetCrystalThreshold(100.); // 100keV
+            //CalifaCal2Cluster->SetCrystalThreshold(100.); // 100keV
             //CalifaCal2Cluster->SetDRThreshold(10000.);    // 10MeV
-	    CalifaCal2Cluster->SetProtonClusterThreshold(10000.);    // 10MeV
+            //CalifaCal2Cluster->SetProtonClusterThreshold(10000.);    // 10MeV
             CalifaCal2Cluster->SetOnline(NOTstorehitdata);
             //CalifaCal2Cluster->SetRoundWindowAlg(0.20); // radian
-	    CalifaCal2Cluster->SetRoundWindow(0.20);
+            //CalifaCal2Cluster->SetRoundWindow(0.20);
             CalifaCal2Cluster->SelectGeometryVersion(2020);
             CalifaCal2Cluster->SetRandomization(false);
             //CalifaCal2Cluster->SetTCAName("CalifaHitData_Round020");

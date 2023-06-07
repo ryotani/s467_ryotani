@@ -1,6 +1,6 @@
-TString indir = "/u/taniuchi/s467/rootfiles/Feb2023_FSnov22/";
+TString indir = "/u/taniuchi/s467/rootfiles/CALIFA2023/";
 TString outdir = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/mktree_2023/";
-TString outfilename="mktree_califa_FRSSETTING_TARGET.root";
+TString outfilename="mktree_califa_Jun23_rolu0_FRSSETTING_TARGET.root";
 const Bool_t verbose =false, bool_test = false;
 
 TChain *ch;// get evt as TChain
@@ -19,7 +19,7 @@ Int_t PID_FRS_Z, PID_FRS_A;
 
 Long64_t total_entry=0, cnt_tpat=0, cnt_frs=0, cnt_beta=0, cnt_rolu=0, cnt_rolu0=0;
 
-void mktree_evt(int FRSset1 = 13, int FRSset2 = 13, int i_target=0, TString suffix = "12Feb");
+void mktree_evt(int FRSset1 = 13, int FRSset2 = 13, int i_target=0, TString suffix = "23May");
 Double_t pid(Double_t zet, Double_t aoq, Int_t &Z, Int_t &A, bool isfrag=false, Int_t i=0, Int_t targ=-1);
 const Double_t rangezet = 1.11e-1, rangeaoq = 1.34e-3, sigma = 3.; // Parameters for FRS PID gates
 void setCA();
@@ -83,16 +83,27 @@ Long64_t loadtree(TString infilename){
       cnt_rolu++;
       continue;
     }
+    
     auto roludata = (R3BMwpcHitData*)RoluPosCA->At(0);
     ROLU_X = roludata ->GetX();
     ROLU_Y = roludata ->GetY();
-    if(ROLU_X < -3.){
-      if(verbose) cout<<"ROLU"<<endl;
-      cnt_rolu++;
-      continue;
+    //
+    /*
+    if(Mwpc0CA->GetEntriesFast()==1 && MusicHitCA->GetEntriesFast()==1){
+      auto mw0data = (R3BMwpcHitData*)Mwpc0CA->At(0);
+      auto musicdata = (R3BMusicHitData*)MusicHitCA->At(0);
+      MusicE = musicdata->GetEave();
+      MusicTheta = musicdata->GetTheta();
+      ROLU_X = mw0data->GetX() + MusicTheta * (-211.01 + 251.6) * 10.;
+    }else{
+      MusicE = NAN;
+      MusicTheta = NAN;
+      ROLU_X = -100000.;
     }
+    */
     else if(ROLU_X<0.){
       cnt_rolu0++;
+      continue;
     }
     //
     FRSAoQ = frsdata -> GetAq();
