@@ -1,6 +1,6 @@
-TString indir = "/u/taniuchi/s467/rootfiles/CALIFA2023/";
+TString indir = "/u/taniuchi/s467/rootfiles/CALIFA2023Jul_mwpccal/";
 TString outdir = "/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/rootfiles/mktree_2023/";
-TString outfilename="mktree_califa_Jun23_rolu0_FRSSETTING_TARGET.root";
+TString outfilename="evttree_20Jul23_FRSSETTING_TARGET.root";
 const Bool_t verbose =false, bool_test = false;
 
 TChain *ch;// get evt as TChain
@@ -19,7 +19,7 @@ Int_t PID_FRS_Z, PID_FRS_A;
 
 Long64_t total_entry=0, cnt_tpat=0, cnt_frs=0, cnt_beta=0, cnt_rolu=0, cnt_rolu0=0;
 
-void mktree_evt(int FRSset1 = 13, int FRSset2 = 13, int i_target=0, TString suffix = "23May");
+void mktree_evt(int FRSset1 = 13, int FRSset2 = 13, int i_target=0, TString suffix = "8Jun");
 Double_t pid(Double_t zet, Double_t aoq, Int_t &Z, Int_t &A, bool isfrag=false, Int_t i=0, Int_t targ=-1);
 const Double_t rangezet = 1.11e-1, rangeaoq = 1.34e-3, sigma = 3.; // Parameters for FRS PID gates
 void setCA();
@@ -83,7 +83,19 @@ Long64_t loadtree(TString infilename){
       cnt_rolu++;
       continue;
     }
-    
+
+    if(Mwpc0CA->GetEntriesFast()==1){
+      auto mwpcdata = (R3BMwpcHitData*)Mwpc0CA->At(0);
+      Mw0_X = mwpcdata->GetX();
+      Mw0_Y = mwpcdata->GetY();
+    }else{
+      continue;
+    }
+
+    if(!(abs(Mw0_X)<50. && abs(Mw0_Y)<50)){
+      continue;
+    }
+
     auto roludata = (R3BMwpcHitData*)RoluPosCA->At(0);
     ROLU_X = roludata ->GetX();
     ROLU_Y = roludata ->GetY();
@@ -101,7 +113,7 @@ Long64_t loadtree(TString infilename){
       ROLU_X = -100000.;
     }
     */
-    else if(ROLU_X<0.){
+    if(ROLU_X<0.){
       cnt_rolu0++;
       continue;
     }
@@ -146,15 +158,6 @@ Long64_t loadtree(TString infilename){
       FragZ = NAN;
       FragBrho = NAN;
       FragAoQ = NAN;
-    }
-    //
-    if(Mwpc0CA->GetEntriesFast()==1){
-      auto mwpcdata = (R3BMwpcHitData*)Mwpc0CA->At(0);
-      Mw0_X = mwpcdata->GetX();
-      Mw0_Y = mwpcdata->GetY();
-    }else{
-      Mw0_X = NAN;
-      Mw0_Y = NAN;
     }
     if(Mwpc1CA->GetEntriesFast()==1){
       auto mwpcdata = (R3BMwpcHitData*)Mwpc1CA->At(0);
@@ -248,8 +251,7 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   outfilename.ReplaceAll("TARGET",targetname);
   cout<<"Output file: "<<outfilename<<endl;
   TFile *fout = TFile::Open(outfilename,"RECREATE");
-  //ch = new TChain("evt");
-  tree = new TTree("Tree", "Tree");
+  tree = new TTree("evt", "");
 
   std::ifstream RunList("/u/taniuchi/s467/ana/R3BRoot_ryotani/sofia/macros/s467_ryotani/RunSummary.csv", std::ios::in);
   if(!RunList.is_open()) std::cerr <<"No run summary found\n";
@@ -297,6 +299,19 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   tree->Branch("ROLU_X", &ROLU_X);
   tree->Branch("Tofw_Y", &Tofw_Y);
   tree->Branch("Tofw_Paddle", &Tofw_Paddle);
+  //
+  // Frs TCA
+  tree->Branch("FrsData",&FrsDataCA);
+  tree->Branch("MusicHitData",&MusicHitCA);
+  // For fragments
+  tree->Branch("TwimHitData",&TwimHitCA);
+  tree->Branch("SofTrackingData",&SofTrackingCA);
+  tree->Branch("Mwpc0HitData",&Mwpc0CA);
+  tree->Branch("Mwpc1HitData",&Mwpc1CA);
+  tree->Branch("Mwpc2HitData",&Mwpc2CA);
+  tree->Branch("Mwpc3HitData",&Mwpc3CA);
+  tree->Branch("RoluPosData",&RoluPosCA);
+  tree->Branch("TofWHitData",&TofWHitCA);
   //
   tree->Branch("CalifaCrystalCalData",&CalifaCalCA);
   tree->Branch("CalifaClusterData",&CalifaClustCA);
