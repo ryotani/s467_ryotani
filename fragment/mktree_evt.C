@@ -8,7 +8,7 @@ TTree *tree;
 TString filename;
 TFile* fout;
 //Define output tree
-Int_t Tpat;
+Int_t runnum, Tpat;
 
 R3BEventHeader *b_eh;
 TClonesArray* FrsDataCA, *MusicHitCA, *TwimHitCA, *SofTrackingCA, *Mwpc0CA, *Mwpc1CA, *Mwpc2CA, *Mwpc3CA, *RoluPosCA, *TofWHitCA, *CalifaCalCA, *CalifaClustCA;
@@ -24,14 +24,14 @@ Double_t pid(Double_t zet, Double_t aoq, Int_t &Z, Int_t &A, bool isfrag=false, 
 const Double_t rangezet = 1.11e-1, rangeaoq = 1.34e-3, sigma = 3.; // Parameters for FRS PID gates
 void setCA();
 void clearCA();
-Long64_t loadtree(TString infilename){
-  
+Long64_t loadtree(TString infilename, int runnumtmp = 0){
+
+  runnum = runnumtmp;
   TFile* fin = TFile::Open(infilename,"READ");
   TTree* ch = (TTree*)fin->Get("evt");
   //ch = new TChain("evt");
   Long64_t nentry = ch -> GetEntries();
   cout<<infilename << ", Entry: "<<nentry<<endl;
-
   ch->SetBranchAddress("EventHeader.", &b_eh);
   //
   // For incoming
@@ -264,6 +264,7 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
   //std::cout << dummyline << std::endl;
   Int_t i=0;
   //
+  tree->Branch("RunNumber",&runnum);
   tree->Branch("EventHeader.",&b_eh);
   tree->Branch("tpat",&Tpat);
   tree->Branch("FRSAoQ",&FRSAoQ);
@@ -333,7 +334,7 @@ void mktree_evt(int FRSset1, int FRSset2, int i_target, TString suffix){
     //if(FRSsetting[i]==122) FRSsetting[i]=12;
     filename = Form("%ss467_filltree_Setting%i_%04d_%s.root", indir.Data(), FRSsetting[i], runnumcsv[i], suffix.Data());
     cout<<"Input file: "<<filename<<endl;
-    total_entry += loadtree(filename); // Read trees and fill output trees
+    total_entry += loadtree(filename, runnumcsv[i]); // Read trees and fill output trees
     clearCA();
     if(bool_test) break;
   }
