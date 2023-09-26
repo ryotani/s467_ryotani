@@ -49,24 +49,24 @@ void filltree(int runnum)
     // added by KB for NeuLAND:
     const Int_t nBarsPerPlane = 50; // number of scintillator bars per plane
     const Int_t nPlanes = 16;       // number of planes (for TCAL calibration)
-    const double distanceToTarget = 1520.;
+    const double distanceToTarget = 1636.;
     const Int_t trigger = -1; // 1 - onspill, 2 - offspill. -1 - all
     double timeoffset = 0.;
     if (262 < runnum & runnum < 269)
     {
-        timeoffset = 4202. + 6.2;
+        timeoffset = 4204.3;
     }
     else if (276 < runnum & runnum < 304)
     {
-        timeoffset = 7200. + 78.0; // check spectra
+        timeoffset = 7274.1; 
     }
     else if (303 < runnum & runnum < 359)
     {
-        timeoffset = 7200. + 58.0; // check spectra
+        timeoffset = 7254.1;
     }
     else if (367 < runnum & runnum < 381)
     {
-        timeoffset = 10610. + 0.3; // check spectra
+        timeoffset = 10606.4;
     }
 
     // associate parameter file:
@@ -104,7 +104,9 @@ void filltree(int runnum)
 	for (Int_t iruns = 0; iruns < 6; iruns++)
 	  calib_file[six[j] + iruns] = six[j];
       }
-    const TString syncParFileName = TString::Format("/u/boretzky/s467/params_new_sync_%04d.root", calib_file[runnum]);
+    const TString syncParFileName = TString::Format("/u/boretzky/s467/params_new_fine5_%04d.root", calib_file[runnum]);
+    //the following file was used for testing:
+    //const TString syncParFileName = ("/u/boretzky/s467/test-aug23_v3.root");
     cout << "NeuLAND calibration parameters from:   " << syncParFileName << endl;
 
     //-------------------------------------------------------------------------
@@ -227,9 +229,13 @@ void filltree(int runnum)
         auto datime = new TDatime();
         TString str_datime = datime->AsString();
         string month = str_datime(4, 3);
-        outputFilename = dir_output;
-        outputFilename.Append(
-            Form("s467_filltree_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str()));
+        outputFilename = dir_output + outfile_template;
+	outputFilename.ReplaceAll("SETID",TString::Itoa(FRSsetting[i],10));
+	outputFilename.ReplaceAll("RUNNUM",Form("%04d",runnum));
+	outputFilename.ReplaceAll("DAY",TString::Itoa(datime->GetDay(),10));
+	outputFilename.ReplaceAll("MONTH",month.c_str());
+        //outputFilename.Append(
+	//Form("s467_filltree_neuland_Setting%i_%04d_%i%s.root", FRSsetting[i], runnum, datime->GetDay(), month.c_str()));
 
         std::cout << "LMD FILE: " << filename << std::endl;
         std::cout << "PARAM FILE (Common): " << common_paramfile << std::endl;
@@ -388,69 +394,73 @@ void filltree(int runnum)
     run->SetEventHeader(EvntHeader);
     run->SetRunId(fRunId);
     run->SetSink(new FairRootFileSink(outputFilename));
-    run->ActivateHttpServer(refresh, port);
+    //run->ActivateHttpServer(refresh, port);
 
     // Runtime data base ------------------------------------
     FairRuntimeDb* rtdb = run->GetRuntimeDb();
 
+    Bool_t kParameterMerged = kFALSE;
     FairParAsciiFileIo* parIo1 = new FairParAsciiFileIo(); // Ascii
-    if (!fCalifa)
-    {
-        TList* parList1 = new TList();
-        parList1->Add(new TObjString(musiccalfilename));
-        parList1->Add(new TObjString(frs_paramfile));
-        parList1->Add(new TObjString(fragment_paramfile));
-        parList1->Add(new TObjString(common_paramfile));
-        parIo1->open(parList1, "in");
-        rtdb->setFirstInput(parIo1);
-    }
-    else
-    {
-        if (!fCal_level_califa)
-        { // SOFIA and CALIFA mapping: Ascii files
-            TList* parList1 = new TList();
-            parList1->Add(new TObjString(musiccalfilename));
-            parList1->Add(new TObjString(frs_paramfile));
-            parList1->Add(new TObjString(fragment_paramfile));
-            parList1->Add(new TObjString(common_paramfile));
-            parList1->Add(new TObjString(califamapfilename));
-            parIo1->open(parList1);
-            rtdb->setFirstInput(parIo1);
-        }
-        else
+    FairParRootFileIo* parIo2 = new FairParRootFileIo(kParameterMerged); // Root file
+    TList* parList1 = new TList();
+    TList* parList2 = new TList();
+    //Comon parameters for particle identifications
+    parList1->Add(new TObjString(musiccalfilename));
+    parList1->Add(new TObjString(frs_paramfile));
+    parList1->Add(new TObjString(fragment_paramfile));
+    parList1->Add(new TObjString(common_paramfile));
+
+    if (fCalifa){
+      if(!fCal_level_califa)
+	{
+	  parList1->Add(new TObjString(califamapfilename));
+	}
+      else
         { // SOFIA, CALIFA mapping and CALIFA calibration parameters
-            TList* parList1 = new TList();
-            parList1->Add(new TObjString(musiccalfilename));
-            parList1->Add(new TObjString(frs_paramfile));
-            parList1->Add(new TObjString(fragment_paramfile));
-            parList1->Add(new TObjString(common_paramfile));
-            parIo1->open(parList1, "in");
-            rtdb->setFirstInput(parIo1);
-            Bool_t kParameterMerged = kFALSE;
-            FairParRootFileIo* parIo2 = new FairParRootFileIo(kParameterMerged); // Root file
-            //TList* parList2 = new TList();
-            //parList2->Add(new TObjString(califacalfilename));
-	    //parIo2->open(parList2); // See Class reference. If TList is used, allParams will be created.
-	    //
-	    parIo2->open(califacalfilename);
-            rtdb->setSecondInput(parIo2);
+	  parList2->Add(new TObjString(califacalfilename));
         }
     }
     if (fNeuland)
     {
-        // added by KB: root file for NeuLAND - test with one file
-        auto parIO = new FairParRootFileIo(false);
-        parIO->open(syncParFileName, "in");
-        rtdb->setSecondInput(parIO);
-        rtdb->addRun(999);
-        rtdb->getContainer("LandTCalPar");
-        rtdb->setInputVersion(999, (char*)"LandTCalPar", 1, 1);
-        rtdb->getContainer("NeulandHitPar");
-        rtdb->setInputVersion(999, (char*)"NeulandHitPar", 1, 1);
-        cout << "did neuland stuff for rtdb" << endl;
+      parList2->Add(new TObjString(syncParFileName));
     }
+
+    /* // To specify the directory, FairRoot RP#1324 or later should be used
+    TString newParAsciiFileName = Form("%sMergedAsciiParams%04d.par",dir_output.Data(),runnum);
+    parIo1->MergeFiles(newParAsciiFileName.Data(), parList1); 
+    parIo1->open(newParAsciiFileName.Data(), "in");
+    */
+    parIo1->open(parList1, "in");
+    rtdb->setSecondInput(parIo1); // Ascii should be second input
+
+    // For ROOT-based parameters
+    TString newParFileName = dir_output + Form("MergedRootParams%04d.root",runnum);
+    auto *newParFile = TFile::Open(newParFileName.Data(), "RECREATE");
+    if(parList2->GetEntries()>0)
+      {
+	parIo2->MergeFiles(newParFile,parList2);
+	parIo2->open(newParFile);
+	rtdb->setFirstInput(parIo2);
+	rtdb->addRun(1);
+	if(fNeuland)
+	  {
+	    rtdb->getContainer("LandTCalPar");
+	    rtdb->setInputVersion(1, (char*)"LandTCalPar", 1, 1);
+	    rtdb->getContainer("NeulandHitPar");
+	    rtdb->setInputVersion(1, (char*)"NeulandHitPar", 1, 1);
+	    cout << "did neuland stuff for rtdb" << endl;
+	  }
+	if(fCalifa)
+	  {
+	    rtdb->getContainer("califaMappingPar");
+	    rtdb->setInputVersion(1, (char*)"califaMappingPar", 1, 1);
+	    rtdb->getContainer("califaCrystalCalPar");//->setStatic();//->print();
+	    rtdb->setInputVersion(1, (char*)"califaCrystalCalPar", 1, 1);
+	    cout << "did califa stuff for rtdb" << endl;
+	  }
+      }
     rtdb->print();
-    cout<<"rtdb print end."<<endl;
+    // Parameters merged and loaded
 
     // Add analysis task ------------------------------------
     // TPCs at S2
@@ -644,6 +654,17 @@ void filltree(int runnum)
         nlhit->SetGlobalTimeOffset(timeoffset);
         nlhit->SetEnergyCutoff(0.0);
         run->AddTask(nlhit);
+
+	auto r3bNeulandClusterFinder = new R3BNeulandClusterFinder(2. * 7.5, 2. * 7.5, 2. * 7.5, 5.);
+	// changed time from 5 to 2 ns:
+	// auto r3bNeulandClusterFinder = new R3BNeulandClusterFinder(2. * 7.5, 2. * 7.5, 2. * 7.5, 2.);
+	run->AddTask(r3bNeulandClusterFinder);
+
+	/*
+	auto r3bNeulandOnlineSpectra = new R3BNeulandOnlineSpectra();
+        r3bNeulandOnlineSpectra->SetDistanceToTarget(distanceToTarget);
+	run->AddTask(r3bNeulandOnlineSpectra);
+	*/
     }
 
     // Add sofana task ------------------------------------
